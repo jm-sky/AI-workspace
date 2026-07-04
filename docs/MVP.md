@@ -41,6 +41,7 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | 9 | Routing agentów | **C — hybryda, router jako abstrakcja.** Interfejs „wiadomość → agent" z wymiennymi strategiami. Start: **jawny wybór** użytkownika; **auto-router LLM** dokładany później jako druga strategia, z możliwością jawnego nadpisania. |
 | 10 | Definiowanie agentów | **Edytor agentów dla adminów** — agent jest konfigurowalnym obiektem definiowanym przez admina; po zdefiniowaniu jest dostępny dla routera (i użytkowników). Agent scala: model, narzędzia (tools injection), pamięć (memory injection), prompt/personę, metadane routingu. |
 | 11 | Schemat obiektu Agent | Pola: **nazwa + opis** (opis używany przez auto-router), **prompt/persona**, **model** (z allow-listy, opcj. `effort`), **narzędzia MCP** (tools injection) + flaga tool search, **zakresy pamięci** (memory injection), **RAG** (on/off + źródła), **metadane routingu** (wyzwalacze/przykłady), **widoczność/uprawnienia** (zespół/tenant), **limity** (opcjonalnie, w ramach sufitów). |
+| 12 | Pamięć (memory) | **Zakresy: sesja, użytkownik, agent.** Mechanizm **B (RAG-owy):** pamięć w magazynie wektorowym; automatyczne wstrzykiwanie po przekroczeniu progu podobieństwa semantycznego **+** narzędzie dla agenta do przeszukiwania pamięci na żądanie. **Współdzieli infrastrukturę wektorową z RAG.** |
 
 ## Zakres platformy (rozszerzenie MVP)
 
@@ -75,7 +76,7 @@ Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyj
 
 ## Otwarte punkty (do ustalenia)
 
-- **Zakresy memory** i sposób ich wstrzykiwania.
+- **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii.
 - **Sekwencjonowanie budowy:** prymitywy platformy vs pierwszy agent (Jira 360°) — co pierwsze.
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
 - **Transport streamingu** wyników/kroków agenta do UI (SSE?).
