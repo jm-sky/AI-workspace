@@ -56,14 +56,33 @@
 | Prompt caching / compaction / context editing | dec. 2, Faza 1 | koszt + stabilność |
 | Selektywna pamięć + decay | dec. 12 | decay = otwarty punkt |
 
+## Runda 2 — pogłębienie
+
+### Graph RAG / RAPTOR w praktyce — uwaga na koszt indeksacji
+- Pełny GraphRAG bywa **prohibicyjnie drogi** (dużo wywołań LLM + summaryzacja). Historycznie indeksacja jednego zbioru potrafiła kosztować dziesiątki tys. USD; **Microsoft LazyGraphRAG** zbił koszt indeksacji do poziomu **vector RAG (~0,1% pełnego GraphRAG)** przy zachowaniu jakości.
+- **RAPTOR** jest drogi w budowie (rekurencyjna summaryzacja → miliony tokenów). **EraRAG** (aktualizacje przyrostowe) redukuje ~**57% tokenów** vs RAPTOR i ~**77% czasu** przebudowy grafu.
+- **Wniosek dla nas:** jeśli w ogóle graf, to **lazy/incremental** (LazyGraphRAG + przyrostowe update jak EraRAG), nigdy „pełny GraphRAG od zera przy każdej zmianie". Dla widoku 360° graf dokładamy dopiero, gdy hybrid+reranker przestanie wystarczać na pytania cross-document.
+
+### Ewaluacja RAG — mierzyć od Fazy 4
+- **RAGAS** — metryki: **faithfulness** (spójność odpowiedzi z kontekstem = anty-halucynacja), **context precision/recall**, **answer relevancy**, groundedness, hallucination detection. Praktyczne minimum: **faithfulness + recall + relevance**.
+- Benchmarki cross-document: **MultiHop-RAG** (dowody rozłożone na 2–4 dokumenty), **CRAG**.
+- **Wniosek dla nas:** od Fazy 4 utrzymywać **złoty zbiór pytań** (per typ agenta) i liczyć te 3 metryki w CI — inaczej „ulepszenia" RAG są nie do zmierzenia.
+
+### Pamięć jako zarządzany lifecycle (domyka otwarty punkt „decay")
+- Nowoczesne systemy (Mem0, Zep) traktują pamięć jako **zarządzany cykl życia, nie pasywny append**: extract → update z operacjami **ADD / UPDATE / DELETE / NOOP**; Zep utrzymuje temporalny knowledge graph.
+- **Decay/forgetting:** Ebbinghaus-inspired (MemoryBank), okresowa **konsolidacja przez refleksję** (Generative Agents).
+- **Wniosek dla nas (dec. 12 + otwarty punkt decay):** nasza pamięć powinna mieć **operacje** (dodaj/aktualizuj/usuń/scal), nie tylko dopisywanie, oraz **politykę decay/konsolidacji** (np. okresowa refleksja + wygaszanie starych, nietrafianych wpisów). To realistyczny, oszczędny wybór na później; w MVP wystarczy ADD + retrieval, ale zaprojektować interfejs pod pełny lifecycle.
+
 ## Do pogłębienia
-- **RAPTOR i Graph RAG** — jak budować (koszt indeksacji, aktualizacja grafu, utrzymanie).
-- **Eval RAG** — jak mierzyć jakość retrievalu/odpowiedzi (multi-hop, deep search benchmarks).
-- **Polityki decay/forgetting** dla pamięci per zakres.
 - **Reranker i embeddingi** — konkretny wybór technologii (wspólny z otwartym punktem „magazyn wektorowy + embeddingi").
+- **LazyGraphRAG / EraRAG** — proof-of-concept, gdy dojdziemy do cross-document 360°.
+- **Harness eval RAG w CI** — narzędzie (RAGAS/Langfuse) + złote zbiory.
 
 ## Źródła
 - RAG strategie 2025: https://synthimind.net/blog/rag-optimization-strategies-2025/ , https://blog.starmorph.com/blog/rag-techniques-compared-best-practices-guide
 - Systematic review RAG: https://arxiv.org/pdf/2507.18910
 - Context engineering / pamięć: https://mem0.ai/blog/context-engineering-ai-agents-guide , https://arxiv.org/pdf/2510.12635 (Memory as Action) , https://arxiv.org/pdf/2507.21428 (MemTool)
 - Routing: https://github.com/vllm-project/semantic-router , https://arxiv.org/pdf/2510.08731 (When to Reason) , https://arxiv.org/html/2602.02823v1 (R2-Router)
+- Graph RAG koszt/incremental: https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/ , https://arxiv.org/pdf/2506.20963 (EraRAG) , https://arxiv.org/html/2502.11371v3 (RAG vs GraphRAG)
+- Eval RAG: https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/ , https://www.confident-ai.com/blog/rag-evaluation-metrics-answer-relevancy-faithfulness-and-more
+- Pamięć / decay: https://arxiv.org/html/2601.01885v1 (Agentic Memory) , https://arxiv.org/pdf/2505.00675 (Rethinking Memory) , https://github.com/Shichun-Liu/Agent-Memory-Paper-List
