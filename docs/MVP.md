@@ -77,8 +77,18 @@ Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyj
 
 **Deliverable:** notatki i podsumowania w `docs/research/`, stopniowo budujące bazę wiedzy projektu.
 
+## Sekwencja budowy (fazy)
+
+Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem generalizacja na żywym szkielecie.
+
+- **Faza 0 — Fundament (reuse gear-stack):** auth, użytkownicy, model danych Tenant/Zespół/Użytkownik + izolacja, RBAC, kaskada konfiguracji, plumbing per-user OAuth (magazyn tokenów).
+- **Faza 1 — Pionowy plaster (Jira 360° end-to-end):** rdzeń agenta (tool runner SDK Anthropic) + trace/audyt, czat (reuse Vue `ai`) + SSE, jeden agent i 1–2 integracje MCP (Jira + GitLab) → działający widok 360° na wąskim zakresie.
+- **Faza 2 — Reszta integracji:** własne cienkie serwery MCP dla Gmail i Teams (per-user token injection) → pełny fan-out 360°.
+- **Faza 3 — Konfigurowalność:** edytor agentów (admin), abstrakcja routera (jawny wybór), tools injection, bogate bloki (karty/tabele/wykresy).
+- **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG.
+- **Faza 5 — Rozszerzenia:** auto-router LLM, tool search, onboarding tenantów (multi-tenancy B), więcej bloków.
+
 ## Otwarte punkty (do ustalenia)
 
-- **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii.
-- **Sekwencjonowanie budowy:** prymitywy platformy vs pierwszy agent (Jira 360°) — co pierwsze.
+- **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii (do rozstrzygnięcia w Fazie 4 / researchu).
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
