@@ -38,6 +38,8 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | 6 | Interfejs | **Chat-first (A)** — pełny czat: użytkownik pisze zapytanie, agent odpowiada widokiem 360°, można dopytywać. Bogaty output (karta/tabela + Markdown). Ten sam silnik (tool runner + MCP) obsłuży później inne fronty. |
 | 7 | Frontend | **Reuse Vue z gear-stack** (Vue 3 + shadcn-vue + TanStack Query + moduł `ai` jako fundament czatu: historia, kontekst, streaming). |
 | 8 | Rozwiązywanie konfiguracji | **A — kaskada z sufitami/allow-listami (governance).** Wyższy poziom ogranicza niższy: Tenant ustala allow-listę modeli i twarde limity, Zespół zawęża, Użytkownik wybiera w ramach dozwolonego. Efektywna konfiguracja = przecięcie ograniczeń + override wartości. |
+| 9 | Routing agentów | **C — hybryda, router jako abstrakcja.** Interfejs „wiadomość → agent" z wymiennymi strategiami. Start: **jawny wybór** użytkownika; **auto-router LLM** dokładany później jako druga strategia, z możliwością jawnego nadpisania. |
+| 10 | Definiowanie agentów | **Edytor agentów dla adminów** — agent jest konfigurowalnym obiektem definiowanym przez admina; po zdefiniowaniu jest dostępny dla routera (i użytkowników). Agent scala: model, narzędzia (tools injection), pamięć (memory injection), prompt/personę, metadane routingu. |
 
 ## Zakres platformy (rozszerzenie MVP)
 
@@ -72,7 +74,7 @@ Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyj
 
 ## Otwarte punkty (do ustalenia)
 
-- **Routing agentów:** jawny wybór/@-mention vs automatyczny router LLM; ilu agentów na start.
+- **Schemat definicji agenta** — pola ustawiane przez admina w edytorze (model, tools, memory, prompt, metadane routingu).
 - **Zakresy memory** i sposób ich wstrzykiwania.
 - **Sekwencjonowanie budowy:** prymitywy platformy vs pierwszy agent (Jira 360°) — co pierwsze.
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
