@@ -35,10 +35,13 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | 3 | Uwierzytelnianie | **Per-user OAuth** — agent działa w imieniu użytkownika (Jira, GitLab, Google, Microsoft). Wymaga bezpiecznego przechowywania + odświeżania tokenów i wstrzykiwania tokenu użytkownika do wywołań narzędzi. |
 | 4 | Backend | **Reuse rdzenia gear-stack** (FastAPI, users, OAuth, 2FA, RBAC, multi-tenancy, fundament API) + dołożony moduł agenta i integracje. |
 | 5 | Warstwa integracji | **Opcja 2 — własne cienkie serwery MCP** (jeden na dostawcę, opakowują REST API). Jednolity standard MCP, czyste per-user token injection, brak zależności od auth cudzych serwerów. |
+| 6 | Interfejs | **Chat-first (A)** — pełny czat: użytkownik pisze zapytanie, agent odpowiada widokiem 360°, można dopytywać. Bogaty output (karta/tabela + Markdown). Ten sam silnik (tool runner + MCP) obsłuży później inne fronty. |
 
 ## Otwarte punkty (do ustalenia)
 
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
+- **Frontend:** reuse Vue z gear-stack (w tym moduł `ai`: czat/historia/kontekst) czy nowy front.
+- **Transport streamingu** wyników/kroków agenta do UI (SSE?).
+- **Prezentacja wyniku 360°:** ustrukturyzowany JSON renderowany jako karty/tabele vs sam Markdown.
 - **Persystencja:** obiekt Task (stan/historia/artefakty), audit log.
-- **UI / chat:** reuse frontendu Vue z gear-stack czy minimalny własny.
 - **Zakres multi-tenancy** w MVP.
