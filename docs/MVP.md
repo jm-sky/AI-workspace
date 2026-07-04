@@ -44,6 +44,7 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | 12 | Pamięć (memory) | **Zakresy: sesja, użytkownik, agent.** Mechanizm **B (RAG-owy):** pamięć w magazynie wektorowym; automatyczne wstrzykiwanie po przekroczeniu progu podobieństwa semantycznego **+** narzędzie dla agenta do przeszukiwania pamięci na żądanie. **Współdzieli infrastrukturę wektorową z RAG.** |
 | 13 | Persystencja i audyt | **Lekki Task/Run + trace** teraz (rozmowy + per uruchomienie: kroki, wywołania modelu/narzędzi wej/wyj, pobrana wiedza, tokeny/koszt, czas, status; powiązane z tenantem/użytkownikiem). Pełny Task (replay/continuation) później. **Audyt dostępny z poziomu czatu**, z przyciskiem kopiowania **całego runu** i **każdego kroku** (łącznie z system promptem) — do debugowania. |
 | 14 | Wyjście do UI | **Streaming: SSE** (serwer→klient; WebSocket później, jeśli potrzebna dwukierunkowość/interrupt). **Prezentacja: Markdown (domyślnie) + rejestr bogatych bloków** renderowanych z JSON: karty, tabele, odnośniki do źródeł oraz **wykresy** (np. przychody w roku — wykres liniowy). Katalog bloków rozszerzalny (mermaid, kanban, mapy…) później. |
+| 15 | Multi-tenancy | **A na start** — dane tenant-aware i izolacja per-tenant od początku, praktycznie jeden tenant. **B wkrótce** — rejestracja tenanta, onboarding, wybór/przełączanie tenanta. **Użytkownik należy do wielu tenantów** (relacja M:N, przełączanie aktywnego tenanta). Poświadczenia OAuth per-użytkownik; dane (agenci, konfiguracja, pamięć) tenant-scoped. |
 
 ## Zakres platformy (rozszerzenie MVP)
 
@@ -81,4 +82,3 @@ Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyj
 - **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii.
 - **Sekwencjonowanie budowy:** prymitywy platformy vs pierwszy agent (Jira 360°) — co pierwsze.
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
-- **Zakres multi-tenancy** w MVP.
