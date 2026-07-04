@@ -37,6 +37,7 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | 5 | Warstwa integracji | **Opcja 2 — własne cienkie serwery MCP** (jeden na dostawcę, opakowują REST API). Jednolity standard MCP, czyste per-user token injection, brak zależności od auth cudzych serwerów. |
 | 6 | Interfejs | **Chat-first (A)** — pełny czat: użytkownik pisze zapytanie, agent odpowiada widokiem 360°, można dopytywać. Bogaty output (karta/tabela + Markdown). Ten sam silnik (tool runner + MCP) obsłuży później inne fronty. |
 | 7 | Frontend | **Reuse Vue z gear-stack** (Vue 3 + shadcn-vue + TanStack Query + moduł `ai` jako fundament czatu: historia, kontekst, streaming). |
+| 8 | Rozwiązywanie konfiguracji | **A — kaskada z sufitami/allow-listami (governance).** Wyższy poziom ogranicza niższy: Tenant ustala allow-listę modeli i twarde limity, Zespół zawęża, Użytkownik wybiera w ramach dozwolonego. Efektywna konfiguracja = przecięcie ograniczeń + override wartości. |
 
 ## Zakres platformy (rozszerzenie MVP)
 
@@ -58,9 +59,19 @@ Ustawienia na poziomach: **Aplikacja → Tenant → Zespół → Użytkownik** (
 - czy narzędzia (tools) są dostępne,
 - itd.
 
+## Research (workstream planu)
+
+Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyjny. Wyniki dokumentowane w repo (`docs/research/...`). Ścieżki (do potwierdzenia/priorytetyzacji):
+
+- **Platformy AI klasy enterprise (comparables)** — jak to robią gotowe produkty; przegląd i wnioski. Propozycja przeglądu: Glean, Microsoft 365 Copilot / Copilot Studio, Google Agentspace, Dust, Writer, Cohere North, ServiceNow AI, Salesforce Agentforce (lista do potwierdzenia).
+- **Techniki pracy z AI (z README)** — RAG, Memory Injection, RAPTOR, Graph RAG, Agentic RAG, Hybrid Search, Query/Model/Prompt/Tool Routing, Context Engineering, Prompt Engineering, Long-term Memory, Context Compression/Caching, Semantic search, Knowledge graphs.
+- **Frameworki agentowe (porównanie)** — SDK Anthropic (wybrany rdzeń) vs LangGraph vs inne; kiedy co.
+- **Źródła wiedzy / „best of AI"** — przegląd wartościowych stron/kolekcji i papers.
+
+**Deliverable:** notatki i podsumowania w `docs/research/`, stopniowo budujące bazę wiedzy projektu.
+
 ## Otwarte punkty (do ustalenia)
 
-- **Model rozwiązywania konfiguracji** między poziomami (kaskada/override, limity jako sufity, allow-listy).
 - **Routing agentów:** jawny wybór/@-mention vs automatyczny router LLM; ilu agentów na start.
 - **Zakresy memory** i sposób ich wstrzykiwania.
 - **Sekwencjonowanie budowy:** prymitywy platformy vs pierwszy agent (Jira 360°) — co pierwsze.
