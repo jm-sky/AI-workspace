@@ -90,5 +90,15 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 ## Otwarte punkty (do ustalenia)
 
-- **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii (do rozstrzygnięcia w Fazie 4 / researchu).
+- **Magazyn wektorowy + model embeddingów** (wspólny dla pamięci i RAG) — wybór technologii (Faza 4 / research).
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
+
+### Z researchu (patrz `docs/research/00-implications.md`)
+
+- **Permissions-aware retrieval** — twardy wymóg RAG przy per-user OAuth: filtrowanie po uprawnieniach użytkownika **przed** rankingiem. Do zaprojektowania w warstwie retrieval od początku.
+- **Warstwa modelu pod wielu dostawców** — mimo startu na SDK Anthropic zaprojektować abstrakcję LLM (trend „hub wielu modeli"); spójne z „dostępne modele" w konfiguracji.
+- **Pamięć jako lifecycle** — operacje ADD/UPDATE/DELETE/scal + polityka **decay/konsolidacji** (domyka wcześniejszy punkt „decay"). MVP: ADD + retrieval; interfejs zaprojektowany pod pełny lifecycle.
+- **Guardrails jako przyszłe pole agenta** — step limiters, output validators (poza MVP, ale zostawić miejsce w schemacie agenta).
+- **Admin „Control Tower"** — przyszły panel: inventory agentów + audyt + polityki (governance).
+- **Eval RAG** — od Fazy 4: RAGAS (faithfulness/recall/relevance) + złote zbiory pytań w CI; reranker do wyboru.
+- **Graph RAG tylko lazy/incremental** — jeśli w ogóle (LazyGraphRAG/EraRAG), dla cross-document 360°, nie pełny GraphRAG.
