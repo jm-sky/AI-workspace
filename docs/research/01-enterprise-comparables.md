@@ -51,13 +51,52 @@
 | Governance/audyt na poziomie tenantа (Copilot Studio) | Kaskada konfiguracji (dec. 8) + audyt (dec. 13) | ✅ zgodne |
 | Per-user vs workspace credentials (Dust) | per-user OAuth, dane tenant-scoped (dec. 3, 15) | ✅ zgodne |
 
+## Runda 2 — platformy
+
+### Salesforce Agentforce — Atlas Reasoning Engine + jawna struktura agenta
+- **Atlas Reasoning Engine** — modularny orkiestrator „System 2": planuje → wykonuje część planu → sprawdza wynik → decyduje o kolejnym kroku (dokładnie pętla agentowa jak nasza).
+- **Struktura agenta = Role / Data / Actions / Guardrails / Channel** + **Topics** (kategorie zadań). Guardrails: **step limiters** i **output validators**.
+- **Multi-agent:** agent graphs (każdy agent = własna instancja Atlas), współpraca równoległa.
+- **Wniosek dla nas:** ich model agenta jest bliski naszemu schematowi, ale dokłada dwie rzeczy warte rozważenia jako **przyszłe pola agenta: Guardrails** (limit kroków, walidacja wyjścia) i **Channel** (gdzie agent działa). „Topics" ≈ metadane routingu.
+
+### Writer — pełny własny stack (Palmyra LLM + Knowledge Graph RAG)
+- Własny LLM (Palmyra, tani, 1M kontekstu, warianty domenowe) + **Knowledge Graph RAG** jako „factual anchor" przeciw halucynacjom (odpowiedzi wyłącznie z zatwierdzonych danych).
+- **AI HQ** — centralne budowanie/wdrażanie/nadzór agentów; 200+ gotowych Skills; no-code Playbook.
+- **Governance:** KG jako single source of truth, każda akcja oparta o zweryfikowane dane firmy.
+- **Wniosek dla nas:** wzorzec **KG-grounded RAG** (graf wiedzy jako kotwica faktów) to mocny materiał do Ścieżki 2 (Graph RAG). AI HQ = centralny panel nadzoru — u nas admin/konfiguracja.
+
+### ServiceNow (Otto / AI Agent Orchestrator) — fabric + control tower
+- **AI Agent Fabric** — szyna komunikacyjna agentów, wspiera **MCP** i **A2A** (agent-to-agent).
+- **AI Control Tower** — centralny interfejs do governance/zarządzania/zabezpieczania agentów i workflow.
+- **AI Agent Orchestrator + Studio** — zespoły wyspecjalizowanych agentów współpracujące między systemami.
+- **Wniosek dla nas:** potwierdza **MCP + A2A** jako parę standardów na multi-agent; **Control Tower** = wzorzec centralnego panelu governance (nasz przyszły „admin control tower": inventory agentów, polityki, audyt).
+
+### Cohere North — security-first, prywatne wdrożenie
+- **Prywatny deployment:** on-prem / VPC / air-gapped, działa na 2 GPU; dane nie opuszczają infrastruktury klienta.
+- Granular access control, **agent autonomy policies**, ciągły red-teaming; GDPR/SOC-2/ISO 27001.
+- Chat + search; łączy Gmail, Slack, Salesforce, Outlook, Linear + **dowolne serwery MCP**.
+- **Wniosek dla nas:** **self-hosted/prywatne wdrożenie** to realny wyróżnik (spójne z README: „self-hosted deployment should also be possible"). **Agent autonomy policies** ≈ nasze guardrails/permission policies.
+
+## Nowe wzorce (runda 2) → implikacje
+
+- **Guardrails / autonomy policies** (Agentforce, Cohere) — step limiters, output validators, polityki autonomii. ⇒ rozważyć **dodanie pola „guardrails/permissions" do schematu agenta** (na razie poza MVP, ale zaprojektować miejsce).
+- **Centralny panel governance / „Control Tower"** (ServiceNow, Writer AI HQ, Copilot inventory) — jedno miejsce do nadzoru/inwentaryzacji/zabezpieczania agentów. ⇒ nasz przyszły **admin control tower** (inventory agentów + audyt + polityki).
+- **A2A obok MCP** (Copilot, ServiceNow) — protokół agent-to-agent na multi-agent. ⇒ zanotować na fazę multi-agent (obok MCP).
+- **KG-grounded RAG jako anti-hallucination** (Writer, Glean) — graf wiedzy jako kotwica faktów. ⇒ materiał do Ścieżki 2 (Graph RAG).
+- **Prywatne/self-hosted wdrożenie jako wyróżnik** (Cohere North) — zgodne z wizją self-hosted w README.
+
 ## Do pogłębienia w kolejnych rundach
-- Writer, Salesforce Agentforce, ServiceNow AI, Cohere North.
 - Jak dokładnie robią **permissions-aware RAG** przy per-user OAuth (indeksacja z ACL vs filtrowanie query-time).
 - Warstwa modelu: jak abstrahować wielu dostawców LLM, skoro rdzeń oparliśmy na SDK Anthropic (tool runner).
+- Wzorce **guardrails** (step limiters, output validators, autonomy policies) — kiedy i jak wpiąć.
+- **Graph RAG / KG-grounded** jako kierunek dla naszego RAG (Ścieżka 2).
 
 ## Źródła
 - Glean: https://www.glean.com/press/glean-introduces-third-generation-ai-assistant-new-enterprise-graph-to-enable-the-superintelligent-enterprise , https://www.glean.com/perspectives/security-permissions-aware-ai , https://futurumgroup.com/insights/glean-doubles-arr-to-200m-can-its-knowledge-graph-beat-copilot/
 - Google Agentspace: https://cloud.google.com/blog/products/ai-machine-learning/google-agentspace-enables-the-agent-driven-enterprise , https://blog.google/feed/google-agentspace/
 - Dust: https://blog.dust.tt/mcp-and-enterprise-agents-building-the-ai-operating-system-for-work/ , https://blog.dust.tt/give-dust-agents-access-to-your-internal-systems-with-custom-mcp-servers/ , https://dust.tt/blog/2025-dust-product-update-recap
 - Microsoft Copilot Studio: https://www.microsoft.com/en-us/microsoft-copilot/blog/copilot-studio/multi-agent-orchestration-maker-controls-and-more-microsoft-copilot-studio-announcements-at-microsoft-build-2025/ , https://learn.microsoft.com/en-us/microsoft-copilot-studio/whats-new
+- Salesforce Agentforce (Atlas): https://engineering.salesforce.com/inside-the-brain-of-agentforce-revealing-the-atlas-reasoning-engine/ , https://architect.salesforce.com/docs/architect/fundamentals/guide/enterprise-agentic-architecture.html
+- Writer: https://www.businesswire.com/news/home/20250410223841/en/Writer-Launches-AI-HQ-to-Revolutionize-Agentic-Work-in-the-Enterprise , https://writer.com/guides/agentic-ai-governance/
+- ServiceNow: https://newsroom.servicenow.com/press-releases/details/2025/ServiceNow-announces-new-agentic-AI-innovations-to-autonomously-solve-the-most-complex-enterprise-challenges-01-29-2025-traffic/default.aspx , https://www.servicenow.com/products/ai-agents.html
+- Cohere North: https://techcrunch.com/2025/08/06/coheres-new-ai-agent-platform-north-promises-to-keep-enterprise-data-secure/ , https://cohere.com/north
