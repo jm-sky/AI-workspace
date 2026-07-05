@@ -21,13 +21,30 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 - **Baza wektorowa:** pgvector **za interfejsem** (dopiero Faza 4).
 - **Integracje:** **własne cienkie serwery MCP** per dostawca.
 
-## Krok 0 — Bootstrap (kopia gear-stack)
+## Krok 0 — Bootstrap (kopia gear-stack) ✅
+
+**Status:** ukończony 2026-07-05.
+
+| Zadanie | Status |
+|---------|--------|
+| Kod gear-stack w repo (layout: frontend w roocie + `backend/`) | ✅ |
+| Zachowane `docs/` i `README.md` AI Workspace | ✅ |
+| Pominięte pliki narracyjne gear-stack (`BUGS.md`, `CHANGELOG.md`, …) | ✅ |
+| `src/`, `public/`, `tests/`, `scripts/`, `.github/`, konfiguracja build | ✅ |
+| `LICENSE` (proprietary — kopiowanie bez zgody zabronione) | ✅ |
+| `.gitattributes`, `.cursorrules` (oczyszczone z szumu gear-stack) | ✅ |
+| `exec.sh` zachowany | ✅ |
+| Commit bootstrap | ✅ |
+| Build/env smoke test | ⏳ WIP |
+| Świeży `CLAUDE.md` dla AI Workspace | ⏳ |
+
+**Uwagi po bootstrapie:** kod dziedziczy nazewnictwo gear-stack w Docker/env (`gear-stack-app`, `VITE_APP_ID=gear-stack`) — rename w osobnym kroku. Nie oczekuj, że wszystko od razu się buduje.
+
+### Oryginalna checklista (archiwum)
 
 - Wciągnij kod gear-stack do tego repo, **zachowując layout gear-stacka** (frontend w roocie + `backend/`).
-- **Nie nadpisuj** naszego `docs/` ani `README.md`. Pomiń: `gear-stack/docs/`, jego `README.md`, `CLAUDE.md`, pliki narracyjne (`BUGS.md`, `CHANGELOG.md`, `DEPLOYMENT.md`, `FEATURES.md`, `MIGRATION_*`, `V2_*`, `screenshot.png`, `.cursor*`, `exec.sh`) oraz `.git`.
-- Jeśli gear-stack jest lokalnie obok — kopiuj z dysku (`git -C ../gear-stack archive HEAD | tar -x` do temp, wytnij powyższe, skopiuj resztę). W innym wypadku sklonuj repo gear-stack i zrób to samo.
+- **Nie nadpisuj** naszego `docs/` ani `README.md`. Pomiń: `gear-stack/docs/`, jego `README.md`, `CLAUDE.md`, pliki narracyjne (`BUGS.md`, `CHANGELOG.md`, `DEPLOYMENT.md`, `FEATURES.md`, `MIGRATION_*`, `V2_*`, `screenshot.png`) oraz `.git`.
 - Zacommituj jako `chore: bootstrap monorepo from gear-stack (mirrored layout, WIP)`.
-- Po kopii **napraw ewentualne drobiazgi** (env, ścieżki), ale nie oczekuj, że wszystko od razu się buduje — to WIP.
 - Napisz świeży `CLAUDE.md` dla AI Workspace (konwencje z gear-stack + specyfika tego projektu).
 
 ## Faza 0 — Fundament

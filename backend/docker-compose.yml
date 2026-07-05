@@ -1,0 +1,156 @@
+name: gear-stack
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:17-alpine
+    container_name: gear-stack-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-backend}
+      - POSTGRES_USER=${POSTGRES_USER:-backend}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-gear-stack-db-secret}
+    volumes:
+      - gear_stack_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backend}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - gearstack-network
+    # Expose port only for development (comment out in production)
+    # ports:
+    #   - "5432:5432"
+
+  # Redis (for token blacklist and challenge storage)
+  redis:
+    image: redis:8-alpine
+    container_name: gear-stack-redis
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-gear-stack-redis-secret}
+    volumes:
+      - gear_stack_redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-gear-stack-redis-secret}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD:-gear-stack-redis-secret} ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - gearstack-network
+    # Expose port only for development (comment out in production)
+    # ports:
+    #   - "${REDIS_FORWARD_PORT:-6379}:6379"
+
+  # Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: backend:latest
+    container_name: gear-stack-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - PROJECT_NAME=${PROJECT_NAME:-backend}
+      - APP_PORT=${APP_PORT:-8000}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-gear-stack-db-secret}@db:5432/${POSTGRES_DB:-backend}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-gear-stack-redis-secret}@redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:3000"]}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - GOOGLE_OAUTH_REDIRECT_URI=${GOOGLE_OAUTH_REDIRECT_URI}
+      - FACEBOOK_OAUTH_CLIENT_ID=${FACEBOOK_OAUTH_CLIENT_ID}
+      - FACEBOOK_OAUTH_CLIENT_SECRET=${FACEBOOK_OAUTH_CLIENT_SECRET}
+      - FACEBOOK_OAUTH_REDIRECT_URI=${FACEBOOK_OAUTH_REDIRECT_URI}
+      - RECAPTCHA_ENABLED=${RECAPTCHA_ENABLED}
+      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - RECAPTCHA_MIN_SCORE=${RECAPTCHA_MIN_SCORE}
+      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-}
+      # S3 Storage Configuration
+      - STORAGE_TYPE=${STORAGE_TYPE:-local}
+      - STORAGE_S3_BUCKET=${STORAGE_S3_BUCKET:-}
+      - STORAGE_S3_ACCESS_KEY=${STORAGE_S3_ACCESS_KEY:-}
+      - STORAGE_S3_SECRET_KEY=${STORAGE_S3_SECRET_KEY:-}
+      - STORAGE_S3_REGION=${STORAGE_S3_REGION:-us-east-1}
+      - STORAGE_S3_ENDPOINT_URL=${STORAGE_S3_ENDPOINT_URL:-}
+      - STORAGE_S3_PUBLIC_ENDPOINT_URL=${STORAGE_S3_PUBLIC_ENDPOINT_URL:-}
+      # Stripe Billing Configuration
+      - STRIPE_ENABLED=${STRIPE_ENABLED:-false}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_PRO_MONTHLY_PRICE_ID=${STRIPE_PRO_MONTHLY_PRICE_ID}
+      - STRIPE_PRO_ANNUAL_PRICE_ID=${STRIPE_PRO_ANNUAL_PRICE_ID}
+      - STRIPE_PRO_PLUS_MONTHLY_PRICE_ID=${STRIPE_PRO_PLUS_MONTHLY_PRICE_ID}
+      - STRIPE_PRO_PLUS_ANNUAL_PRICE_ID=${STRIPE_PRO_PLUS_ANNUAL_PRICE_ID}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"  # Only localhost access (reverse proxy required)
+    volumes:
+      # Mount uploads directory for persistent file storage (optional - S3 is preferred)
+      - gear_stack_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - gearstack-network
+
+    # Resource limits (optional, adjust as needed)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2.0'
+    #       memory: 1G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 256M
+
+networks:
+  gearstack-network:
+    name: gearstack-network
+    external: true
+
+volumes:
+  gear_stack_postgres_data:
+    driver: local
+  gear_stack_redis_data:
+    driver: local
+  gear_stack_uploads:
+    driver: local
+

@@ -1,6 +1,6 @@
 # Dokumentacja AI Workspace — indeks
 
-Punkt wejścia do planu MVP i wyników researchu. Projekt jest w **fazie wizji i architektury**; plan MVP jest ustalony, research (runda 1) zrobiony.
+Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, research (runda 1) zrobiony. **Krok 0 (bootstrap kodu z gear-stack) — ✅ ukończony** (2026-07-05); następny krok: Faza 0 (fundament multi-tenancy, konfiguracja kaskadowa, OAuth tokens).
 
 ## Nawigacja
 

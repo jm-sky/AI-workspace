@@ -1,0 +1,122 @@
+# Cursor Rules for AI Workspace
+
+## Source of Truth
+
+- **docs/README.md** — documentation index; start here.
+- **docs/MVP.md** — architectural decisions, build phases, open points.
+- **docs/IMPLEMENTATION_KICKOFF.md** — bootstrap status and implementation prompt.
+- **docs/research/** — research synthesis and background.
+
+Do not change architectural decisions without user confirmation.
+
+## Docker Safety Rule
+
+**CRITICAL:** **NEVER run Docker commands if the project directory name starts with underscore (e.g., `_ai-workspace-dev`)**
+
+- Underscore prefix indicates a development directory on the production server
+- Running Docker in such directories can cause conflicts with production services
+- If the current working directory starts with `_`, do not execute any `docker` or `docker-compose` commands
+
+**Docker Compose Project Naming:**
+- Use `COMPOSE_PROJECT_NAME=ai-workspace` in `backend/.env` when diverging from inherited gear-stack defaults
+- Inherited container names (`gear-stack-*`) remain until renamed in a dedicated migration
+
+## Project Architecture
+
+**Monorepo layout (mirrored from gear-stack):**
+- Frontend: Vue 3 in repo root (`src/`)
+- Backend: FastAPI in `backend/`
+- API proxy: `/api/*` → backend (configured in `vite.config.ts`)
+
+**Inherited stack (to be adapted):** Vue 3 + shadcn-vue + Pinia + TanStack Query + FastAPI + Postgres + Docker Compose.
+
+**Target direction (see MVP):** chat-first AI Workspace, agent tool runner (Anthropic SDK + MCP), multi-tenancy, SSE streaming.
+
+## Question vs. Action Protocol
+
+**CRITICAL:** When user asks a question, answer first, then ask for confirmation before making code changes.
+
+**DO NOT** code automatically when user only asks a question. Only make changes when:
+- User explicitly requests change ("Add...", "Fix...", "Implement...")
+- User confirms after you ask
+- User clearly describes a bug needing fix
+
+## Reka-ui / shadcn-vue Checkbox
+
+**CRITICAL:** Checkbox uses `model-value` / `v-model`, **NOT** `checked` / `v-model:checked`.
+
+```vue
+<Checkbox v-model="checked" />
+<!-- or -->
+<Checkbox :model-value="checked" @update:model-value="checked = $event" />
+```
+
+`v-model:checked` only works with `defineModel()` in component props.
+
+## TypeScript Conventions
+
+- Create dedicated union types instead of inline definitions
+- Always use `@/` alias for absolute imports from `src/`
+- Types in module-specific `types/` directories
+- Prefer interfaces for object shapes, types for unions/primitives
+- Explicit types for `ref<T>`, `computed<T>`, `reactive<T>`
+
+## Code Style & ESLint
+
+- No semicolons
+- Single quotes
+- Import sorting: alphabetical with groups (external → internal)
+- Self-closing tags: `<Component />`
+- Max 3 attributes per line (single-line), 1 per line (multi-line)
+- Unused variables starting with `_` are allowed
+- **No line breaks before `else`, `catch`, `finally`**
+
+## Vue 3.5+ Best Practices
+
+- Use `defineModel()` instead of props + emit for v-model
+- Destructured props are reactive (no `toRefs` needed)
+- Prop shortcuts: `<Dialog :open />` when name matches variable
+- Declaration order in `<script setup>`: composables → props → model → emits → computed/state → functions
+- Use route helpers from `routes.ts` instead of hardcoded paths
+
+## TailwindCSS
+
+- Prefer `size-{value}` over separate `w-` / `h-` when equal
+- Button component already has `flex` and `gap-2` — no `mr-2` on icons inside buttons
+- Mobile-first responsive design
+
+## Backend
+
+**FastAPI dependencies:** Annotated dependencies (`AdminUser`, `CurrentUser`) as function parameters, NOT in `dependencies=[Depends(...)]`.
+
+**CLI (inherited container names until renamed):**
+```bash
+docker exec gear-stack-app python -m cli db init
+docker exec gear-stack-app python -m cli db migrate
+docker exec gear-stack-app python -m pytest tests/ -v
+```
+
+## Testing
+
+```bash
+pnpm test:run          # Frontend (vitest)
+pnpm lint              # ESLint
+pnpm type-check        # vue-tsc
+```
+
+## API Integration
+
+- Use `apiClient` from `@/shared/services/apiClient`
+- TanStack Query for server state
+- JWT + WebAuthn auth (inherited from gear-stack core)
+
+## Service Layer Pattern
+
+- Stores: CRUD + persistence
+- Services: business logic, validation, calculations
+
+## Internationalization
+
+- Use `t()` from `useI18n()`
+- Keys: `moduleName.section.key`
+- Module translations in `src/modules/{module}/i18n/locales/{lang}.ts`

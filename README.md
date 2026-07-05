@@ -1,6 +1,6 @@
 # AI Workspace / AI Operating System
 
-> **Status:** Vision / Research / Early Design
+> **Status:** Bootstrap complete (gear-stack mirror) — Faza 0 (fundament) next
 
 ## Idea
 

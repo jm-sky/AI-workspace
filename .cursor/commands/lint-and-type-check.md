@@ -1,0 +1,2 @@
+- Uruchom `pnpm lint` oraz `pnpm type-check`
+- Popraw błędy
