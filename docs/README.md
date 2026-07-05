@@ -8,7 +8,8 @@ Punkt wejścia do planu MVP i wyników researchu. Projekt jest w **fazie wizji i
 - [`../README.md`](../README.md) — wizja produktu (AI Workspace / AI Operating System).
 
 ### Plan MVP
-- [`MVP.md`](MVP.md) — **główny dokument planu**: 15 decyzji architektonicznych, schemat agenta, sekwencja budowy (fazy) i otwarte punkty. Zacznij tutaj.
+- [`MVP.md`](MVP.md) — **główny dokument planu**: 17 decyzji architektonicznych, schemat agenta, sekwencja budowy (fazy) i otwarte punkty. Zacznij tutaj.
+- [`IMPLEMENTATION_KICKOFF.md`](IMPLEMENTATION_KICKOFF.md) — **prompt startowy** dla sesji Claude Code (Opus) rozpoczynającej implementację (bootstrap + Faza 0/1).
 
 ### Research (`research/`)
 - [`research/00-implications.md`](research/00-implications.md) — **synteza: research → wnioski dla planu** (co potwierdzone, co dopiąć, reguły projektowe). Czytać razem z `MVP.md`.
