@@ -32,7 +32,7 @@ Punkt wejścia do planu MVP i wyników researchu. Projekt jest w **fazie wizji i
 | 13 | Audyt | **Lekki Task/Run + trace**; audyt w czacie z kopiowaniem runu/kroku |
 | 14 | Wyjście | **SSE** + Markdown + bogate bloki (karty/tabele/wykresy) |
 | 15 | Multi-tenancy | **A teraz** (tenant-aware), **B wkrótce**; user w wielu tenantach (M:N) |
-| 16 | Repo i stack | **Monorepo** (backend FastAPI + frontend Vue); klon gear-stack → własne życie; Postgres/Docker |
+| 16 | Repo i stack | **Monorepo**, layout jak gear-stack (frontend w roocie + `backend/`); kopia gear-stack → własne życie; Postgres/Docker |
 | 17 | Baza wektorowa | **pgvector** (reuse Postgresa, permissions-aware filter w SQL); swap na Qdrant za interfejsem |
 
 Scenariusz MVP: agent buduje **widok 360°** wokół **issue z Jiry** (Jira → Klient → fan-out do GitLab/Gmail/Teams).
