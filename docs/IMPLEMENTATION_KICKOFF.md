@@ -7,7 +7,7 @@
 
 Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** zgodnie z gotowym planem w tym repo.
 
-**Najpierw przeczytaj:** `docs/README.md` → `docs/MVP.md` → `docs/research/00-implications.md`. To jest źródło prawdy; nie zmieniaj decyzji bez potwierdzenia użytkownika.
+**Najpierw przeczytaj:** `docs/README.md` → `docs/MVP.md` → `docs/research/2026-07-04--000--implications.md`. To jest źródło prawdy; nie zmieniaj decyzji bez potwierdzenia użytkownika.
 
 ## Zasady nienaruszalne (z decyzji 1–17)
 
@@ -63,7 +63,7 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 
-- `OPENROUTER_API_KEY` (dostęp do OpenRouter). **Domyślny model:** rekomendacja **Gemini Flash** (patrz `docs/research/05-model-selection.md`); potwierdź z użytkownikiem, sprawdź aktualne ID/ceny na OpenRouter, docelowo zwaliduj A/B na zadaniu 360°.
+- `OPENROUTER_API_KEY` (dostęp do OpenRouter). **Domyślny model:** rekomendacja **Gemini Flash** (patrz `docs/research/2026-07-06--005--model-selection.md`); potwierdź z użytkownikiem, sprawdź aktualne ID/ceny na OpenRouter, docelowo zwaliduj A/B na zadaniu 360°.
 - Aplikacje OAuth dla **Jira + GitLab** (client id/secret, scopes, redirect URI).
 - Instancje testowe **Jira + GitLab**.
 

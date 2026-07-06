@@ -29,7 +29,7 @@ Czołówka tool-callingu jest wyrównana, a **Gemini Flash siedzi tuż przy szcz
 - **Default: Gemini Flash (najnowszy Flash na OpenRouter).** Najlepszy profil tanio+niezawodny tool-calling; cała pętla na tym zyskuje.
 - **Allow-lista (konfiguracja, dec. 8):** Gemini Flash (default) + jeden **mocniejszy** do trudnej syntezy (np. Claude Sonnet / GPT-5) jako per-agent override + jeden **skrajnie tani** (DeepSeek V3.x). To wprost realizuje „dostępne modele + domyślny" z kaskady konfiguracji.
 - **Per-agent override:** agent „Jira 360°" może dostać mocniejszy model, jeśli Flash nie domyka syntezy — bez zmiany defaultu platformy.
-- **Nie zamykać na sztywno — zwalidować A/B** na realnym zadaniu 360° (harness eval z `02-ai-techniques.md`): niezawodność tool-callingu i jakość syntezy vs koszt. Dopiero wynik A/B „zabetonuje" default.
+- **Nie zamykać na sztywno — zwalidować A/B** na realnym zadaniu 360° (harness eval z `2026-07-04--002--ai-techniques.md`): niezawodność tool-callingu i jakość syntezy vs koszt. Dopiero wynik A/B „zabetonuje" default.
 
 ## Do zrobienia przy implementacji
 - Sprawdzić **aktualne ID modeli i ceny** na OpenRouter (zmienne co tydzień).

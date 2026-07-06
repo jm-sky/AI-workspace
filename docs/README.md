@@ -11,13 +11,20 @@ Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, resear
 - [`MVP.md`](MVP.md) — **główny dokument planu**: 17 decyzji architektonicznych, schemat agenta, sekwencja budowy (fazy) i otwarte punkty. Zacznij tutaj.
 - [`IMPLEMENTATION_KICKOFF.md`](IMPLEMENTATION_KICKOFF.md) — **prompt startowy** dla sesji Claude Code (Opus) rozpoczynającej implementację (bootstrap + Faza 0/1).
 
+### Katalogi robocze
+- [`issues/README.md`](issues/README.md) — błędy, usprawnienia, dług techniczny
+- [`reviews/README.md`](reviews/README.md) — przeglądy (security, jakość kodu, UX, performance)
+- [`research/README.md`](research/README.md) — analizy, spike'i, porównania przed decyzją
+- [`plans/README.md`](plans/README.md) — plany implementacji funkcji i większych zmian
+
 ### Research (`research/`)
-- [`research/00-implications.md`](research/00-implications.md) — **synteza: research → wnioski dla planu** (co potwierdzone, co dopiąć, reguły projektowe). Czytać razem z `MVP.md`.
-- [`research/01-enterprise-comparables.md`](research/01-enterprise-comparables.md) — 8 platform enterprise (Glean, Google Agentspace, Dust, Microsoft Copilot Studio, Salesforce Agentforce, Writer, ServiceNow, Cohere North).
-- [`research/02-ai-techniques.md`](research/02-ai-techniques.md) — techniki AI: rodzina RAG, routing, context engineering, pamięć (+ koszt GraphRAG, eval RAG, lifecycle pamięci).
-- [`research/03-agent-frameworks.md`](research/03-agent-frameworks.md) — frameworki agentowe: SDK Anthropic vs LangGraph + kryteria przełączenia.
-- [`research/04-knowledge-sources.md`](research/04-knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
-- [`research/05-model-selection.md`](research/05-model-selection.md) — wybór domyślnego modelu na OpenRouter (rekomendacja: Gemini Flash).
+Indeks: [`research/README.md`](research/README.md). Skrót:
+- [`research/2026-07-04--000--implications.md`](research/2026-07-04--000--implications.md) — **synteza: research → wnioski dla planu** (czytać razem z `MVP.md`).
+- [`research/2026-07-04--001--enterprise-comparables.md`](research/2026-07-04--001--enterprise-comparables.md) — 8 platform enterprise.
+- [`research/2026-07-04--002--ai-techniques.md`](research/2026-07-04--002--ai-techniques.md) — techniki AI: RAG, routing, context engineering, pamięć.
+- [`research/2026-07-04--003--agent-frameworks.md`](research/2026-07-04--003--agent-frameworks.md) — frameworki agentowe: SDK Anthropic vs LangGraph.
+- [`research/2026-07-04--004--knowledge-sources.md`](research/2026-07-04--004--knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
+- [`research/2026-07-06--005--model-selection.md`](research/2026-07-06--005--model-selection.md) — wybór domyślnego modelu na OpenRouter (Gemini Flash).
 
 ## Skrót decyzji (z `MVP.md`)
 
@@ -40,5 +47,6 @@ Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, resear
 Scenariusz MVP: agent buduje **widok 360°** wokół **issue z Jiry** (Jira → Klient → fan-out do GitLab/Gmail/Teams).
 
 ## Zasady dla dokumentacji
-- Nowe notatki z researchu: kolejne `research/NN-*.md`, linkowane w `research/00-implications.md`.
+- Konwencja plików w `issues/`, `reviews/`, `research/`, `plans/`: `YYYY-MM-DD--NNN--slug.md` (`NNN` — trzycyfrowy numer w obrębie katalogu).
+- Nowe wpisy: utwórz plik, dodaj wiersz w `README.md` danego katalogu.
 - Decyzje i otwarte punkty aktualizować w `MVP.md`.

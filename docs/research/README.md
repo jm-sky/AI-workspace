@@ -1,0 +1,20 @@
+# Research
+
+Analizy, spike'i, porównania i notatki przed decyzją.
+
+## Status values
+
+`todo` · `planned` · `in progress` · `done` · `verification needed`
+
+## Index
+
+| ID | File | Summary | Status |
+|----|------|---------|--------|
+| 000 | [2026-07-04--000--implications.md](2026-07-04--000--implications.md) | Synteza: research → wnioski dla planu | `done` |
+| 001 | [2026-07-04--001--enterprise-comparables.md](2026-07-04--001--enterprise-comparables.md) | 8 platform enterprise (Glean, Agentspace, Dust, Copilot Studio, Agentforce, Writer, ServiceNow, Cohere North) | `done` |
+| 002 | [2026-07-04--002--ai-techniques.md](2026-07-04--002--ai-techniques.md) | Techniki AI: RAG, routing, context engineering, pamięć | `done` |
+| 003 | [2026-07-04--003--agent-frameworks.md](2026-07-04--003--agent-frameworks.md) | Frameworki agentowe: SDK Anthropic vs LangGraph | `done` |
+| 004 | [2026-07-04--004--knowledge-sources.md](2026-07-04--004--knowledge-sources.md) | Kuratorowana baza źródeł / „best of AI" | `done` |
+| 005 | [2026-07-06--005--model-selection.md](2026-07-06--005--model-selection.md) | Wybór domyślnego modelu na OpenRouter (Gemini Flash) | `done` |
+
+When adding a new entry: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.

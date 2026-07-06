@@ -388,4 +388,4 @@ Planning and research live under [`docs/`](docs/) — start with the index:
 
 - **[docs/README.md](docs/README.md)** — documentation index.
 - **[docs/MVP.md](docs/MVP.md)** — MVP plan: architectural decisions, agent schema, build sequence, open points.
-- **[docs/research/](docs/research/)** — research workstream (enterprise comparables, AI techniques, agent frameworks, knowledge sources) and the [implications synthesis](docs/research/00-implications.md).
+- **[docs/research/](docs/research/)** — research workstream; indeks w [research/README.md](docs/research/README.md), synteza w [implications](docs/research/2026-07-04--000--implications.md).

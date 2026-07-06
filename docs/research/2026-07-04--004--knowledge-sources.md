@@ -62,7 +62,7 @@ Najbliższe naszemu rdzeniowi (SDK Anthropic, tool runner) — czytać w pierwsz
 
 ## Jak używać
 - Do bazy wiedzy projektu: przy każdej fazie z `../MVP.md` sięgać po ⭐ z odpowiedniej sekcji.
-- Notatki z lektur zapisywać jako kolejne `docs/research/NN-*.md` i linkować w `00-implications.md`.
+- Notatki z lektur zapisywać jako kolejne `docs/research/YYYY-MM-DD--NNN--slug.md` i dodawać wiersz w `docs/research/README.md`.
 
 ## Źródła (skąd ta lista)
 - https://www.firecrawl.dev/blog/best-ai-resources

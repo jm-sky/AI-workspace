@@ -5,7 +5,7 @@
 - **docs/README.md** — documentation index; start here.
 - **docs/MVP.md** — architectural decisions, build phases, open points.
 - **docs/IMPLEMENTATION_KICKOFF.md** — bootstrap status and implementation prompt.
-- **docs/research/** — research synthesis and background.
+- **docs/issues/**, **docs/reviews/**, **docs/research/**, **docs/plans/** — indexed work docs (`YYYY-MM-DD--NNN--slug.md`).
 
 Do not change architectural decisions without user confirmation.
 

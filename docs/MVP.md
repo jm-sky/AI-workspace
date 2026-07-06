@@ -92,11 +92,11 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 ## Otwarte punkty (do ustalenia)
 
-- **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/05-model-selection.md`.
+- **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/2026-07-06--005--model-selection.md`.
 - **Model embeddingów + reranker** (do pgvectora) — wybór technologii (Faza 4 / research).
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
 
-### Z researchu (patrz `docs/research/00-implications.md`)
+### Z researchu (patrz `docs/research/2026-07-04--000--implications.md`)
 
 - **Permissions-aware retrieval** — twardy wymóg RAG przy per-user OAuth: filtrowanie po uprawnieniach użytkownika **przed** rankingiem. Do zaprojektowania w warstwie retrieval od początku.
 - **Warstwa modelu pod wielu dostawców** — mimo startu na SDK Anthropic zaprojektować abstrakcję LLM (trend „hub wielu modeli"); spójne z „dostępne modele" w konfiguracji.

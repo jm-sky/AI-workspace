@@ -1,14 +1,14 @@
 # Research → wnioski dla planu (synteza)
 
 > Konsolidacja wniosków z researchu w jednym miejscu — do wykorzystania później przy implementacji.
-> Źródła szczegółowe: `01-enterprise-comparables.md`, `02-ai-techniques.md`, `03-agent-frameworks.md`.
+> Źródła szczegółowe: `2026-07-04--001--enterprise-comparables.md`, `2026-07-04--002--ai-techniques.md`, `2026-07-04--003--agent-frameworks.md`.
 > Decyzje MVP: `../MVP.md`.
 
 ## 1. Co research potwierdził (zielone światło dla decyzji)
 
 - **MCP jako standard integracji** (Dust, Copilot Studio, Cohere, ServiceNow, PydanticAI/OpenAI/ADK) → dec. 5 (własne serwery MCP) + przenośność narzędzi między frameworkami.
 - **No-code edytor agentów** (Agentspace, Copilot Studio, Dust, Writer AI HQ) → dec. 10–11 (edytor agentów).
-- **SDK dostawcy na prosty single-agent loop, framework grafowy na multi-agent** → dec. 2 (tool runner teraz, LangGraph później). Kryteria przełączenia: `03-agent-frameworks.md`.
+- **SDK dostawcy na prosty single-agent loop, framework grafowy na multi-agent** → dec. 2 (tool runner teraz, LangGraph później). Kryteria przełączenia: `2026-07-04--003--agent-frameworks.md`.
 - **Governance/audyt na poziomie tenantа** (Copilot Studio, ServiceNow Control Tower) → dec. 8 (kaskada z sufitami) + dec. 13 (audyt).
 - **Agentic RAG „za darmo" z pętli agenta** → dec. 12 (auto-injection + narzędzie retrieval na żądanie).
 - **Selektywna pamięć + kompresja** (context rot) → dec. 12; unikać „wrzuć wszystko".
