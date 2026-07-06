@@ -92,7 +92,7 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 ## Otwarte punkty (do ustalenia)
 
-- **Domyślny model (OpenRouter)** — do ustalenia; cost-sensitive (Claude drogi). Kandydat: tańszy model o dobrym tool-callingu; do wyboru w konfiguracji „dostępne modele".
+- **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/05-model-selection.md`.
 - **Model embeddingów + reranker** (do pgvectora) — wybór technologii (Faza 4 / research).
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
 

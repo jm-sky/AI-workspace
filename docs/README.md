@@ -17,6 +17,7 @@ Punkt wejścia do planu MVP i wyników researchu. Projekt jest w **fazie wizji i
 - [`research/02-ai-techniques.md`](research/02-ai-techniques.md) — techniki AI: rodzina RAG, routing, context engineering, pamięć (+ koszt GraphRAG, eval RAG, lifecycle pamięci).
 - [`research/03-agent-frameworks.md`](research/03-agent-frameworks.md) — frameworki agentowe: SDK Anthropic vs LangGraph + kryteria przełączenia.
 - [`research/04-knowledge-sources.md`](research/04-knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
+- [`research/05-model-selection.md`](research/05-model-selection.md) — wybór domyślnego modelu na OpenRouter (rekomendacja: Gemini Flash).
 
 ## Skrót decyzji (z `MVP.md`)
 

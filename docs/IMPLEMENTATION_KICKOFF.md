@@ -46,7 +46,7 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 
-- `OPENROUTER_API_KEY` (dostęp do OpenRouter). **Domyślny model do ustalenia** z użytkownikiem (cost-sensitive; Claude drogi) — do czasu ustalenia użyj taniego modelu o dobrym tool-callingu i zapytaj o preferencję.
+- `OPENROUTER_API_KEY` (dostęp do OpenRouter). **Domyślny model:** rekomendacja **Gemini Flash** (patrz `docs/research/05-model-selection.md`); potwierdź z użytkownikiem, sprawdź aktualne ID/ceny na OpenRouter, docelowo zwaliduj A/B na zadaniu 360°.
 - Aplikacje OAuth dla **Jira + GitLab** (client id/secret, scopes, redirect URI).
 - Instancje testowe **Jira + GitLab**.
 
