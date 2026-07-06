@@ -1,19 +1,19 @@
-name: gear-stack-dev
+name: ai-workspace-dev
 
 services:
   # PostgreSQL Database
   db:
     image: postgres:17-alpine
-    container_name: gear-stack-db
+    container_name: ai-workspace-db
     restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-backend}
       - POSTGRES_USER=${POSTGRES_USER:-backend}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-gear-stack-db-secret}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ai-workspace-db-secret}
     volumes:
-      - gear_stack_postgres_data:/var/lib/postgresql/data
+      - ai_workspace_postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:${DB_FORWARD_PORT:-5432}:5432"  # Only localhost access
+      - "127.0.0.1:${DB_FORWARD_PORT:-5435}:5432"  # Only localhost access
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backend}"]
       interval: 10s
@@ -25,27 +25,27 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - gear-stack-network
+      - ai-workspace-network
 
   # Redis (for token blacklist and challenge storage)
   redis:
     image: redis:8-alpine
-    container_name: gear-stack-redis
+    container_name: ai-workspace-redis
     restart: unless-stopped
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-gear-stack-redis-secret}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-ai-workspace-redis-secret}
     ports:
-      - "127.0.0.1:${REDIS_FORWARD_PORT:-6379}:6379"  # Only localhost access
+      - "127.0.0.1:${REDIS_FORWARD_PORT:-6382}:6379"  # Only localhost access
     volumes:
-      - gear_stack_redis_data:/data
+      - ai_workspace_redis_data:/data
     command: >
       redis-server
       --appendonly yes
-      --requirepass ${REDIS_PASSWORD:-gear-stack-redis-secret}
+      --requirepass ${REDIS_PASSWORD:-ai-workspace-redis-secret}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD:-gear-stack-redis-secret} ping | grep PONG"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD:-ai-workspace-redis-secret} ping | grep PONG"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -55,15 +55,15 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - gear-stack-network
+      - ai-workspace-network
 
   # Application (Development Mode)
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: backend:dev
-    container_name: gear-stack-app
+    image: ai-workspace-backend:dev
+    container_name: ai-workspace-app
     restart: unless-stopped
     depends_on:
       db:
@@ -74,14 +74,14 @@ services:
       - .env
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      - PROJECT_NAME=${PROJECT_NAME:-backend}
+      - PROJECT_NAME=${PROJECT_NAME:-ai-workspace}
       - APP_PORT=${APP_PORT:-8000}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-gear-stack-db-secret}@db:5432/${POSTGRES_DB:-backend}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-gear-stack-redis-secret}@redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-ai-workspace-db-secret}@db:5432/${POSTGRES_DB:-backend}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-ai-workspace-redis-secret}@redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
-      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:3000"]}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5176"]}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5176}
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
       - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
       - GOOGLE_OAUTH_REDIRECT_URI=${GOOGLE_OAUTH_REDIRECT_URI}
@@ -92,7 +92,7 @@ services:
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
       - RECAPTCHA_MIN_SCORE=${RECAPTCHA_MIN_SCORE}
-      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-http://localhost:8000}
+      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-http://localhost:8003}
       # MinIO/S3 Storage Configuration (optional - set STORAGE_TYPE=s3 to use)
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
       - STORAGE_S3_BUCKET=${STORAGE_S3_BUCKET:-uploads}
@@ -111,7 +111,7 @@ services:
       - STRIPE_PRO_PLUS_MONTHLY_PRICE_ID=${STRIPE_PRO_PLUS_MONTHLY_PRICE_ID}
       - STRIPE_PRO_PLUS_ANNUAL_PRICE_ID=${STRIPE_PRO_PLUS_ANNUAL_PRICE_ID}
     ports:
-      - "127.0.0.1:${APP_PORT:-8000}:8000"  # Only localhost access (Caddy proxy)
+      - "127.0.0.1:${APP_PORT:-8003}:8000"  # Only localhost access (Caddy proxy)
     volumes:
       # Mount source code for hot reload
       # Paths are relative to docker-compose.dev.yml location (backend/ directory)
@@ -125,30 +125,27 @@ services:
       - ./cli.py:/app/cli.py:ro,delegated
       - ./images:/app/images:ro,delegated
       # Mount uploads directory for persistent file storage
-      - gear_stack_uploads:/app/uploads
+      - ai_workspace_uploads:/app/uploads
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     networks:
-      - gear-stack-network
+      - ai-workspace-network
       - rustfs-network
 
 networks:
-  gear-stack-network:
-    name: gear-stack-network
+  ai-workspace-network:
+    name: ai-workspace-network
   rustfs-network:
     name: rustfs-network
     external: true
 
 volumes:
-  gear_stack_postgres_data:
-    name: backend_gear_stack_postgres_data
-    external: true
-  gear_stack_redis_data:
-    name: backend_gear_stack_redis_data
-    external: true
-  gear_stack_uploads:
-    name: backend_gear_stack_uploads
-    external: true
+  ai_workspace_postgres_data:
+    name: ai_workspace_postgres_data
+  ai_workspace_redis_data:
+    name: ai_workspace_redis_data
+  ai_workspace_uploads:
+    name: ai_workspace_uploads

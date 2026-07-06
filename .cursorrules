@@ -17,9 +17,27 @@ Do not change architectural decisions without user confirmation.
 - Running Docker in such directories can cause conflicts with production services
 - If the current working directory starts with `_`, do not execute any `docker` or `docker-compose` commands
 
-**Docker Compose Project Naming:**
-- Use `COMPOSE_PROJECT_NAME=ai-workspace` in `backend/.env` when diverging from inherited gear-stack defaults
-- Inherited container names (`gear-stack-*`) remain until renamed in a dedicated migration
+**Docker Compose (this VPS — isolated from gear-stack and other apps):**
+
+| Service | Container | Host port |
+|---------|-----------|-----------|
+| Backend API | `ai-workspace-app` | `8003` |
+| PostgreSQL | `ai-workspace-db` | `5435` |
+| Redis | `ai-workspace-redis` | `6382` |
+| Vite dev server | — | `5176` |
+
+- Set `COMPOSE_PROJECT_NAME=ai-workspace` in `backend/.env`
+- Dev stack: `backend/docker-compose.dev.yml`
+- Optional MinIO dev: `backend/docker-compose.dev-minio.yml` (ports `9010`/`9011`)
+
+**CLI:**
+```bash
+docker exec ai-workspace-app python -m cli db init
+docker exec ai-workspace-app python -m cli db migrate
+docker exec ai-workspace-app python -m pytest tests/ -v
+```
+
+**Cherry-pick from gear-stack:** `./scripts/rsync-from-gear-stack.sh` (dry-run) → `--apply`
 
 ## Project Architecture
 
@@ -28,9 +46,11 @@ Do not change architectural decisions without user confirmation.
 - Backend: FastAPI in `backend/`
 - API proxy: `/api/*` → backend (configured in `vite.config.ts`)
 
-**Inherited stack (to be adapted):** Vue 3 + shadcn-vue + Pinia + TanStack Query + FastAPI + Postgres + Docker Compose.
+**Inherited stack (adapted):** Vue 3 + shadcn-vue + Pinia + TanStack Query + FastAPI + Postgres + Docker Compose.
 
-**Target direction (see MVP):** chat-first AI Workspace, agent tool runner (Anthropic SDK + MCP), multi-tenancy, SSE streaming.
+**Target direction (see MVP):** chat-first AI Workspace, OpenRouter + own tool-calling loop, MCP integrations, multi-tenancy, SSE streaming.
+
+**Modules (inherited from gear-stack, to evolve):** auth, user, settings, admin, ai, gear (legacy), stats.
 
 ## Question vs. Action Protocol
 
@@ -88,13 +108,6 @@ Do not change architectural decisions without user confirmation.
 ## Backend
 
 **FastAPI dependencies:** Annotated dependencies (`AdminUser`, `CurrentUser`) as function parameters, NOT in `dependencies=[Depends(...)]`.
-
-**CLI (inherited container names until renamed):**
-```bash
-docker exec gear-stack-app python -m cli db init
-docker exec gear-stack-app python -m cli db migrate
-docker exec gear-stack-app python -m pytest tests/ -v
-```
 
 ## Testing
 

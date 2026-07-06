@@ -26,7 +26,7 @@ const TEST_USER = {
 }
 
 const BACKEND_URL = 'http://localhost:8000'
-const DOCKER_CONTAINER = 'gear-stack-app'
+const DOCKER_CONTAINER = 'ai-workspace-app'
 
 async function runDockerCommand(command: string): Promise<{ stdout: string; stderr: string }> {
   const fullCommand = `docker exec ${DOCKER_CONTAINER} ${command}`
