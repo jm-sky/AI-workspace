@@ -18,7 +18,7 @@
 | Wniosek | Skąd | Gdzie w planie |
 |---|---|---|
 | **Permissions-aware retrieval** (filtr uprawnień przed rankingiem) | Glean; per-user OAuth | Faza 4 (RAG) — twardy wymóg, projektować od początku |
-| **Warstwa modelu pod wielu dostawców** (abstrakcja LLM) | Glean/Dust (hub LLM) | konfiguracja „dostępne modele"; zaprojektować abstrakcję mimo startu na SDK Anthropic |
+| **Warstwa modelu pod wielu dostawców** (abstrakcja LLM) | Glean/Dust (hub LLM) | **zrealizowane przez OpenRouter** (dec. 2, zmiana) — API zgodne z OpenAI + własna pętla; nie budujemy własnej abstrakcji dostawców |
 | **Pamięć jako lifecycle** (ADD/UPDATE/DELETE + decay/konsolidacja) | Mem0/Zep, MemoryBank | dec. 12 — interfejs pod pełny lifecycle; MVP: ADD + retrieval |
 | **Guardrails** (step limiters, output validators, autonomy policies) | Agentforce, Cohere | przyszłe pole schematu agenta (poza MVP) |
 | **Admin „Control Tower"** (inventory agentów + audyt + polityki) | ServiceNow, Writer AI HQ | przyszły panel admina |

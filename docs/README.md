@@ -22,7 +22,7 @@ Punkt wejścia do planu MVP i wyników researchu. Projekt jest w **fazie wizji i
 
 | # | Obszar | Decyzja |
 |---|--------|---------|
-| 1–2 | Rdzeń agenta | Agentowy; **tool runner SDK Anthropic** + narzędzia jako **MCP**; `claude-opus-4-8`; LangGraph przy multi-agent |
+| 1–2 | Rdzeń agenta | Agentowy; **OpenRouter (OpenAI-compatible) + własna pętla tool-calling** + narzędzia jako **MCP**; model domyślny TBD (cost-sensitive); bez LiteLLM; LangGraph przy multi-agent |
 | 3 | Auth | **Per-user OAuth** (Jira, GitLab, Google, Microsoft) |
 | 4 | Backend | **Reuse rdzenia gear-stack** (FastAPI, users, OAuth, RBAC, multi-tenancy) |
 | 5 | Integracje | **Własne cienkie serwery MCP** per dostawca |

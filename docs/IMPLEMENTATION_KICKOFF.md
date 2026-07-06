@@ -11,7 +11,7 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Zasady nienaruszalne (z decyzji 1–17)
 
-- **Rdzeń agenta:** tool runner z **SDK Anthropic** (`client.beta.messages.tool_runner`), model **`claude-opus-4-8`**, myślenie adaptacyjne. Narzędzia jako **MCP**. **NIE** LangGraph na tym etapie.
+- **Rdzeń agenta:** **OpenRouter (API zgodne z OpenAI) + własna pętla tool-calling.** Klient OpenAI SDK skierowany na OpenRouter; pętlę agentową piszemy sami (pełna kontrola nad trace/audytem). Narzędzia **MCP** konwertowane do formatu tool-calling OpenAI. **Model domyślny — do ustalenia** (konfigurowalny per agent/tenant, cost-sensitive; Claude drogi). **NIE** tool_runner Anthropic, **NIE** LiteLLM, **NIE** LangGraph na tym etapie.
 - **Backend:** reuse rdzenia gear-stack (FastAPI). **Monorepo z layoutem gear-stacka** (frontend Vue w roocie + `backend/`).
 - **Frontend:** reuse Vue z gear-stack (moduł `ai`), **chat-first**, streaming **SSE**.
 - **Auth:** **per-user OAuth** (Jira, GitLab, Google, Microsoft). Szyfrowany magazyn tokenów + odświeżanie; wstrzykiwanie tokenu użytkownika do wywołań narzędzi MCP.
@@ -46,7 +46,7 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 
-- `ANTHROPIC_API_KEY` + dostęp do `claude-opus-4-8`.
+- `OPENROUTER_API_KEY` (dostęp do OpenRouter). **Domyślny model do ustalenia** z użytkownikiem (cost-sensitive; Claude drogi) — do czasu ustalenia użyj taniego modelu o dobrym tool-callingu i zapytaj o preferencję.
 - Aplikacje OAuth dla **Jira + GitLab** (client id/secret, scopes, redirect URI).
 - Instancje testowe **Jira + GitLab**.
 
@@ -59,6 +59,6 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Nie buduj teraz (odłożone)
 
-Auto-router LLM, pamięć/RAG (Faza 4), pełny onboarding multi-tenant (B), guardrails, admin „control tower", katalog bloków ponad karty/tabele/wykresy, warstwa multi-model.
+Auto-router LLM, pamięć/RAG (Faza 4), pełny onboarding multi-tenant (B), guardrails, admin „control tower", katalog bloków ponad karty/tabele/wykresy. (Multi-model zapewnia OpenRouter — nie buduj własnej warstwy abstrakcji dostawców.)
 
 **Zacznij od:** przeczytania dokumentów → potwierdzenia prerekwizytów z użytkownikiem → wykonania Kroku 0 (bootstrap).
