@@ -16,6 +16,12 @@ Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, resear
 - [`reviews/README.md`](reviews/README.md) — przeglądy (security, jakość kodu, UX, performance)
 - [`research/README.md`](research/README.md) — analizy, spike'i, porównania przed decyzją
 - [`plans/README.md`](plans/README.md) — plany implementacji funkcji i większych zmian
+- [`deployment/README.md`](deployment/README.md) — wdrożenie na VPS (Caddy, domeny, deploy)
+
+### Deployment
+- [`deployment/README.md`](deployment/README.md) — indeks: domeny `ai-workspace.dev-made.it` / `api.ai-workspace.dev-made.it`, porty, ścieżki na serwerze
+- [`deployment/CADDY_DEPLOYMENT.md`](deployment/CADDY_DEPLOYMENT.md) — instrukcja wdrożenia Caddy
+- [`deployment/ai-workspace.caddy`](deployment/ai-workspace.caddy) — plik konfiguracyjny vhostów (kopiowany do `/etc/caddy/sites-available/`)
 
 ### Research (`research/`)
 Indeks: [`research/README.md`](research/README.md). Skrót:

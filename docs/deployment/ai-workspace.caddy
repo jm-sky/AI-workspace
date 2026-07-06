@@ -1,0 +1,93 @@
+# AI Workspace - Caddy Configuration
+# Deploy to /etc/caddy/sites-available/ai-workspace.caddy
+# and symlink to /etc/caddy/sites-enabled/ai-workspace.caddy
+#
+# Domains:
+#   - ai-workspace.dev-made.it      — frontend (static SPA)
+#   - api.ai-workspace.dev-made.it  — FastAPI backend
+#
+# Documentation:
+# - Header directive: https://caddyserver.com/docs/caddyfile/directives/header
+# - Reverse proxy: https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+# - Security headers: https://securityheaders.com
+#
+# Last updated: 2026-07-06
+
+ai-workspace.dev-made.it {
+  root * /var/www/ai-workspace
+  tls jan.madeyski@dev-made.it
+
+  # Security Headers
+  # Using '>' prefix to ensure headers override any backend headers (defer mode)
+  header {
+    # Content Security Policy - Google reCaptcha + Sentry + API support
+    >Content-Security-Policy "default-src 'self'; script-src 'self' blob: https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ai-workspace.dev-made.it https://www.google.com https://*.sentry.io; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+    >X-Frame-Options "DENY"
+    >X-Content-Type-Options "nosniff"
+    >X-XSS-Protection "1; mode=block"
+    >Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    >Referrer-Policy "strict-origin-when-cross-origin"
+    >Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    -Server
+  }
+
+  encode gzip zstd
+
+  @hashed_assets {
+      path /assets/*.js
+      path /assets/*.css
+      path /assets/*.woff2
+      path /assets/*.woff
+      path /assets/*.ttf
+      path /assets/*.eot
+      path /webfonts/*
+  }
+
+  @html_files {
+      path /*.html
+      path /
+  }
+
+  @static_assets {
+      path /favicon.ico
+      path /robots.txt
+      path /*.png
+      path /*.jpg
+      path /*.jpeg
+      path /*.gif
+      path /*.svg
+      path /*.ico
+  }
+
+  header @hashed_assets {
+      Cache-Control "public, max-age=31536000, immutable"
+  }
+
+  header @html_files {
+      Cache-Control "no-cache, no-store, must-revalidate"
+      Pragma "no-cache"
+      Expires "0"
+  }
+
+  header @static_assets {
+      Cache-Control "public, max-age=3600"
+  }
+
+  # API routes - proxy to FastAPI backend (port 8003)
+  handle /api/* {
+      reverse_proxy localhost:8003
+  }
+
+  # Static SPA (catch-all)
+  handle {
+      file_server
+      try_files {path} /index.html
+  }
+}
+
+# API subdomain - direct proxy to backend
+api.ai-workspace.dev-made.it {
+  reverse_proxy http://localhost:8003
+  tls jan.madeyski@dev-made.it
+}
