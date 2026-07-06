@@ -17,12 +17,13 @@ Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, resear
 - [`research/02-ai-techniques.md`](research/02-ai-techniques.md) — techniki AI: rodzina RAG, routing, context engineering, pamięć (+ koszt GraphRAG, eval RAG, lifecycle pamięci).
 - [`research/03-agent-frameworks.md`](research/03-agent-frameworks.md) — frameworki agentowe: SDK Anthropic vs LangGraph + kryteria przełączenia.
 - [`research/04-knowledge-sources.md`](research/04-knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
+- [`research/05-model-selection.md`](research/05-model-selection.md) — wybór domyślnego modelu na OpenRouter (rekomendacja: Gemini Flash).
 
 ## Skrót decyzji (z `MVP.md`)
 
 | # | Obszar | Decyzja |
 |---|--------|---------|
-| 1–2 | Rdzeń agenta | Agentowy; **tool runner SDK Anthropic** + narzędzia jako **MCP**; `claude-opus-4-8`; LangGraph przy multi-agent |
+| 1–2 | Rdzeń agenta | Agentowy; **OpenRouter (OpenAI-compatible) + własna pętla tool-calling** + narzędzia jako **MCP**; model domyślny TBD (cost-sensitive); bez LiteLLM; LangGraph przy multi-agent |
 | 3 | Auth | **Per-user OAuth** (Jira, GitLab, Google, Microsoft) |
 | 4 | Backend | **Reuse rdzenia gear-stack** (FastAPI, users, OAuth, RBAC, multi-tenancy) |
 | 5 | Integracje | **Własne cienkie serwery MCP** per dostawca |

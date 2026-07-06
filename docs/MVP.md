@@ -31,7 +31,7 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 | # | Obszar | Decyzja |
 |---|--------|---------|
 | 1 | Sterowanie agenta | **Agentowe (B)** — LLM w pętli (planuje → woła narzędzia → czyta wyniki → decyduje). |
-| 2 | Rdzeń pętli agenta | **Tool runner z SDK Anthropic** (`client.beta.messages.tool_runner`); narzędzia jako MCP. Model **`claude-opus-4-8`**, myślenie adaptacyjne. **LangGraph odłożony** do etapu multi-agent (warstwa narzędzi MCP jest przenośna). |
+| 2 | Rdzeń pętli agenta | **OpenRouter (API zgodne z OpenAI) + własna pętla tool-calling.** Klient OpenAI SDK → OpenRouter; pętlę piszemy sami (pełna kontrola nad trace/audytem, dec. 13). Narzędzia MCP (dec. 5) konwertowane do formatu tool-calling. **Model domyślny — do ustalenia** (konfigurowalny per agent/tenant, cost-sensitive; Claude drogi). **Bez LiteLLM** (OpenRouter już robi multi-provider). **LangGraph odłożony** do multi-agent. Kompromis: tracimy helper `tool_runner` i część feature'ów Anthropic-native (prompt caching sterowany z SDK, tool search, context editing) — do odzyskania później opcjonalną ścieżką „direct Anthropic" za tą samą abstrakcją modelu. |
 | 3 | Uwierzytelnianie | **Per-user OAuth** — agent działa w imieniu użytkownika (Jira, GitLab, Google, Microsoft). Wymaga bezpiecznego przechowywania + odświeżania tokenów i wstrzykiwania tokenu użytkownika do wywołań narzędzi. |
 | 4 | Backend | **Reuse rdzenia gear-stack** (FastAPI, users, OAuth, 2FA, RBAC, multi-tenancy, fundament API) + dołożony moduł agenta i integracje. |
 | 5 | Warstwa integracji | **Opcja 2 — własne cienkie serwery MCP** (jeden na dostawcę, opakowują REST API). Jednolity standard MCP, czyste per-user token injection, brak zależności od auth cudzych serwerów. |
@@ -92,6 +92,7 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 ## Otwarte punkty (do ustalenia)
 
+- **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/05-model-selection.md`.
 - **Model embeddingów + reranker** (do pgvectora) — wybór technologii (Faza 4 / research).
 - **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
 
