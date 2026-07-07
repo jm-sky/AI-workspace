@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gear-stack-backend"
+name = "ai-workspace-backend"
 version = "2.13.0"
-description = "Gear Stack API Backend"
+description = "AI Workspace API Backend"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}

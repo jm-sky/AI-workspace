@@ -23,7 +23,7 @@ test.describe('E2E - Login', () => {
     expect(page.url()).toContain('/dashboard')
 
     // Verify token is stored in localStorage
-    const token = await page.evaluate(() => localStorage.getItem('gear-stack:token'))
+    const token = await page.evaluate(() => localStorage.getItem('ai-workspace:token'))
     expect(token).toBeTruthy()
     expect(token?.length).toBeGreaterThan(0)
   })
@@ -47,7 +47,7 @@ test.describe('E2E - Login', () => {
     expect(page.url()).toContain('/auth/login')
 
     // Token should not be stored
-    const token = await page.evaluate(() => localStorage.getItem('gear-stack:token'))
+    const token = await page.evaluate(() => localStorage.getItem('ai-workspace:token'))
     expect(token).toBeNull()
   })
 

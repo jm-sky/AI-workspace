@@ -18,7 +18,7 @@ class LocalStorageAdapter(StorageAdapter):
 
         Args:
             base_path: Base directory for file storage
-            base_url: Base URL for serving files (e.g., https://api.gear-stack.com). If None, uses relative paths.
+            base_url: Base URL for serving files (e.g., https://api.ai-workspace.dev-made.it). If None, uses relative paths.
         """
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)

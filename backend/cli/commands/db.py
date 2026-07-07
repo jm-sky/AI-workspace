@@ -586,7 +586,7 @@ async def _seed_catalogue(db: "AsyncSession") -> None:
         console.print("[yellow]No owner or admin user found. Creating placeholder 'system' user...[/yellow]")
         system_user = UserDB(
             id=generate_id(),
-            email="system@gearstack.local",
+            email="system@ai-workspace.local",
             name="System User",
             is_admin=True,
             is_active=True,

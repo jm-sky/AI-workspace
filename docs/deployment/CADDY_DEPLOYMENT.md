@@ -69,7 +69,7 @@ pnpm build
 ./scripts/frontend_build_deploy.sh
 ```
 
-> **Uwaga:** skrypt `scripts/frontend_build_deploy.sh` nadal wskazuje na `/var/www/gear-stack` — przed deployem AI Workspace trzeba go zaktualizować (docelowo `/var/www/ai-workspace`).
+> **Uwaga:** skrypt `scripts/frontend_build_deploy.sh` wdraża build do `/var/www/ai-workspace`.
 
 Produkcyjny build powinien używać `.env.production` z `VITE_API_BASE_URL=https://api.ai-workspace.dev-made.it/api` (wzorzec jak gear-stack — API na osobnej subdomenie).
 

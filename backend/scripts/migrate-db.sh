@@ -18,10 +18,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Default values
-DB_CONTAINER="gear-stack-db"
+DB_CONTAINER="ai-workspace-db"
 DB_NAME="${POSTGRES_DB:-backend}"
 DB_USER="${POSTGRES_USER:-backend}"
-DUMP_FILE="gear-stack-db-dump-$(date +%Y%m%d-%H%M%S).sql"
+DUMP_FILE="ai-workspace-db-dump-$(date +%Y%m%d-%H%M%S).sql"
 
 # Parse arguments
 OLD_SERVER="${1}"

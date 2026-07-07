@@ -41,7 +41,7 @@ OLD_SERVER=user@stary-serwer.com NEW_SERVER=user@nowy-serwer.com ./migrate-db-si
 ssh user@stary-serwer.com
 
 # Utwórz dump
-docker exec gear-stack-db pg_dump -U backend -d backend --clean --if-exists --no-owner --no-acl > /tmp/db-dump.sql
+docker exec ai-workspace-db pg_dump -U backend -d backend --clean --if-exists --no-owner --no-acl > /tmp/db-dump.sql
 
 # Sprawdź rozmiar
 ls -lh /tmp/db-dump.sql
@@ -61,10 +61,10 @@ scp user@stary-serwer.com:/tmp/db-dump.sql user@nowy-serwer.com:/tmp/db-dump.sql
 ssh user@nowy-serwer.com
 
 # Zrestoruj bazę (UWAGA: nadpisze istniejące dane!)
-docker exec -i gear-stack-db psql -U backend -d backend < /tmp/db-dump.sql
+docker exec -i ai-workspace-db psql -U backend -d backend < /tmp/db-dump.sql
 
 # Sprawdź czy dane są na miejscu
-docker exec gear-stack-db psql -U backend -d backend -c "\dt"
+docker exec ai-workspace-db psql -U backend -d backend -c "\dt"
 ```
 
 ### Krok 4: Wyczyść pliki tymczasowe
@@ -83,8 +83,8 @@ Jeśli masz szybkie połączenie między serwerami:
 
 ```bash
 # Z lokalnego komputera
-ssh user@stary-serwer.com "docker exec gear-stack-db pg_dump -U backend -d backend --clean --if-exists --no-owner --no-acl" | \
-  ssh user@nowy-serwer.com "docker exec -i gear-stack-db psql -U backend -d backend"
+ssh user@stary-serwer.com "docker exec ai-workspace-db pg_dump -U backend -d backend --clean --if-exists --no-owner --no-acl" | \
+  ssh user@nowy-serwer.com "docker exec -i ai-workspace-db psql -U backend -d backend"
 ```
 
 ## Weryfikacja migracji
@@ -96,11 +96,11 @@ Po migracji sprawdź:
 ssh user@nowy-serwer.com
 
 # Sprawdź tabele
-docker exec gear-stack-db psql -U backend -d backend -c "\dt"
+docker exec ai-workspace-db psql -U backend -d backend -c "\dt"
 
 # Sprawdź liczbę rekordów w głównych tabelach
-docker exec gear-stack-db psql -U backend -d backend -c "SELECT COUNT(*) FROM users;"
-docker exec gear-stack-db psql -U backend -d backend -c "SELECT COUNT(*) FROM gear_containers;"
+docker exec ai-workspace-db psql -U backend -d backend -c "SELECT COUNT(*) FROM users;"
+docker exec ai-workspace-db psql -U backend -d backend -c "SELECT COUNT(*) FROM gear_containers;"
 ```
 
 ## Rozwiązywanie problemów
@@ -127,19 +127,19 @@ Upewnij się, że masz uprawnienia do:
 
 Upewnij się, że baza istnieje na nowym serwerze:
 ```bash
-docker exec gear-stack-db psql -U backend -l
+docker exec ai-workspace-db psql -U backend -l
 ```
 
 Jeśli nie istnieje, utwórz ją:
 ```bash
-docker exec gear-stack-db psql -U backend -c "CREATE DATABASE backend;"
+docker exec ai-workspace-db psql -U backend -c "CREATE DATABASE backend;"
 ```
 
 ### Problem: "connection refused"
 
 Upewnij się, że kontener PostgreSQL jest uruchomiony:
 ```bash
-docker ps | grep gear-stack-db
+docker ps | grep ai-workspace-db
 ```
 
 Jeśli nie działa, uruchom:

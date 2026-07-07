@@ -40,7 +40,7 @@ export const test = base.extend<AuthFixtures>({
     await page.waitForURL('**/dashboard', { timeout: 15000 })
 
     // Verify token is stored
-    const token = await page.evaluate(() => localStorage.getItem('gear-stack:token'))
+    const token = await page.evaluate(() => localStorage.getItem('ai-workspace:token'))
     if (!token) {
       throw new Error('Login failed - no token in localStorage')
     }

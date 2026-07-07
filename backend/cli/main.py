@@ -280,7 +280,7 @@ def show_group_interactive_menu(group_key: str, group_info: dict) -> None:
 def _show_interactive_menu() -> None:
     """Show interactive menu for command selection using arrow keys."""
     console.print()
-    console.print(Panel.fit("[bold cyan]Gear Stack CLI - Interactive Mode[/bold cyan]", border_style="cyan"))
+    console.print(Panel.fit("[bold cyan]AI Workspace CLI - Interactive Mode[/bold cyan]", border_style="cyan"))
     console.print()
 
     # Prepare choices for questionary

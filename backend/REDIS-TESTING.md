@@ -14,7 +14,7 @@ REDIS_URL="redis://redis:6379/0"
 
 # WebAuthn Configuration
 WEBAUTHN_RP_ID="localhost"
-WEBAUTHN_RP_NAME="Gear-Stack"
+WEBAUTHN_RP_NAME="AI Workspace"
 WEBAUTHN_ORIGIN="http://localhost:5176"
 ```
 
@@ -31,11 +31,11 @@ Redis jest dostępny we wszystkich konfiguracjach:
 
 ```bash
 # Test połączenia
-docker exec gear-stack-redis redis-cli ping
+docker exec ai-workspace-redis redis-cli ping
 # Oczekiwany wynik: PONG
 
 # Sprawdź klucze w Redis
-docker exec gear-stack-redis redis-cli KEYS "*"
+docker exec ai-workspace-redis redis-cli KEYS "*"
 ```
 
 ### 2. Test Token Blacklist
@@ -78,7 +78,7 @@ curl -X POST http://localhost:8000/api/auth/logout \
 
 ```bash
 # Sprawdź, czy token jest w blacklist
-docker exec gear-stack-redis redis-cli KEYS "blacklist:token:*"
+docker exec ai-workspace-redis redis-cli KEYS "blacklist:token:*"
 
 # Powinien pokazać klucz z hash'em tokenu
 ```
@@ -114,11 +114,11 @@ curl -X POST http://localhost:8000/api/two-factor/webauthn/register/initiate \
 
 ```bash
 # Sprawdź, czy challenge jest w Redis
-docker exec gear-stack-redis redis-cli KEYS "webauthn:challenge:*"
+docker exec ai-workspace-redis redis-cli KEYS "webauthn:challenge:*"
 
 # Powinien pokazać klucz z challenge token
 # Sprawdź TTL (powinien być ~300 sekund)
-docker exec gear-stack-redis redis-cli TTL "webauthn:challenge:CHALLENGE_TOKEN"
+docker exec ai-workspace-redis redis-cli TTL "webauthn:challenge:CHALLENGE_TOKEN"
 ```
 
 #### Krok 3: Dokończ rejestrację
@@ -127,7 +127,7 @@ Po dokończeniu rejestracji (z prawdziwym WebAuthn credential), challenge powini
 
 ```bash
 # Sprawdź, czy challenge został usunięty
-docker exec gear-stack-redis redis-cli KEYS "webauthn:challenge:*"
+docker exec ai-workspace-redis redis-cli KEYS "webauthn:challenge:*"
 
 # Powinno być puste (challenge został "skonsumowany")
 ```
@@ -136,14 +136,14 @@ docker exec gear-stack-redis redis-cli KEYS "webauthn:challenge:*"
 
 ```bash
 # Ustaw test key z TTL 10 sekund
-docker exec gear-stack-redis redis-cli SET test:key "test_value" EX 10
+docker exec ai-workspace-redis redis-cli SET test:key "test_value" EX 10
 
 # Sprawdź TTL
-docker exec gear-stack-redis redis-cli TTL test:key
+docker exec ai-workspace-redis redis-cli TTL test:key
 
 # Poczekaj 10 sekund i sprawdź ponownie
 sleep 11
-docker exec gear-stack-redis redis-cli GET test:key
+docker exec ai-workspace-redis redis-cli GET test:key
 # Powinno zwrócić (nil) - klucz wygasł
 ```
 
@@ -153,22 +153,22 @@ docker exec gear-stack-redis redis-cli GET test:key
 
 ```bash
 # Monitor wszystkich komend Redis w czasie rzeczywistym
-docker exec -it gear-stack-redis redis-cli MONITOR
+docker exec -it ai-workspace-redis redis-cli MONITOR
 
 # Statystyki Redis
-docker exec gear-stack-redis redis-cli INFO stats
+docker exec ai-workspace-redis redis-cli INFO stats
 ```
 
 ### Sprawdź użycie pamięci
 
 ```bash
-docker exec gear-stack-redis redis-cli INFO memory
+docker exec ai-workspace-redis redis-cli INFO memory
 ```
 
 ### Sprawdź aktywne połączenia
 
 ```bash
-docker exec gear-stack-redis redis-cli CLIENT LIST
+docker exec ai-workspace-redis redis-cli CLIENT LIST
 ```
 
 ## 🐛 Debugowanie
@@ -178,24 +178,24 @@ docker exec gear-stack-redis redis-cli CLIENT LIST
 1. Sprawdź, czy Redis działa:
 ```bash
 docker ps | grep redis
-docker logs gear-stack-redis
+docker logs ai-workspace-redis
 ```
 
 2. Sprawdź zmienną REDIS_URL w kontenerze:
 ```bash
-docker exec gear-stack-app env | grep REDIS
+docker exec ai-workspace-app env | grep REDIS
 ```
 
 3. Sprawdź logi aplikacji:
 ```bash
-docker logs gear-stack-app --tail 50 | grep -i redis
+docker logs ai-workspace-app --tail 50 | grep -i redis
 ```
 
 ### Problem: Token nie jest blacklistowany
 
 1. Sprawdź logi podczas wylogowania:
 ```bash
-docker logs gear-stack-app -f
+docker logs ai-workspace-app -f
 # Wykonaj logout w innym terminalu
 ```
 
@@ -209,12 +209,12 @@ docker logs gear-stack-app -f
 
 1. Sprawdź, czy challenge_store jest zainicjalizowany:
 ```bash
-docker logs gear-stack-app | grep "challenge store"
+docker logs ai-workspace-app | grep "challenge store"
 ```
 
 2. Sprawdź konfigurację Redis:
 ```bash
-docker exec gear-stack-app python -c "
+docker exec ai-workspace-app python -c "
 from app.core.config import settings
 print(f'Redis URL: {settings.redis.url}')
 print(f'Challenge prefix: {settings.redis.webauthn_challenge_prefix}')
