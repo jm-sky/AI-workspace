@@ -44,6 +44,8 @@ MODEL_MODULES = [
     "app.modules.teams.db_models",
     "app.modules.workspace_config.db_models",
     "app.modules.integrations.db_models",
+    "app.modules.agent.db_models",
+    "app.modules.memory.db_models",
     "app.modules.two_factor.db_models",
     "app.modules.gear.db_models",
     "app.modules.gear_settings.db_models",

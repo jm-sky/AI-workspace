@@ -10,7 +10,7 @@ class AgentChatRequest(BaseModel):
     """User message to the workspace agent."""
 
     message: str = Field(..., min_length=1, max_length=8000)
-    agentKey: str = Field(default="jira-360", alias="agent_key")
+    agentKey: str = Field(default="github-workspace", alias="agent_key")
     model: str | None = None
 
     model_config = {"populate_by_name": True}

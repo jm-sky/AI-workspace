@@ -52,6 +52,7 @@ class AgentLoopService:
         tool_registry: AgentToolRegistry,
         api_key: str | None = None,
         max_steps: int | None = None,
+        agent_key: str = "github-workspace",
     ):
         key = api_key or settings.ai.openrouter_api_key
         if not key:
@@ -60,6 +61,7 @@ class AgentLoopService:
         self.model = model
         self.system_prompt = system_prompt
         self.tool_registry = tool_registry
+        self.agent_key = agent_key
         self.max_steps = max_steps or settings.ai.agent_max_steps
         self.client = AsyncOpenAI(
             api_key=key,
@@ -144,7 +146,9 @@ class AgentLoopService:
                 content = assistant_message.content or ""
                 total_tokens = prompt_tokens + completion_tokens
                 cost = calculate_cost(self.model, prompt_tokens, completion_tokens)
-                blocks = _build_blocks_from_trace(steps_trace, content)
+                blocks = _build_blocks_from_trace(
+                    steps_trace, content, agent_key=self.agent_key
+                )
                 yield AgentLoopEvent(
                     event="run_complete",
                     data={
@@ -224,11 +228,23 @@ class AgentLoopService:
 def _build_blocks_from_trace(
     steps_trace: list[dict[str, Any]],
     markdown: str,
+    *,
+    agent_key: str = "github-workspace",
 ) -> list[dict[str, Any]]:
-    """Build minimal rich blocks (cards/tables) for the 360° view."""
+    """Build minimal rich blocks (cards/tables) from tool results."""
     _ = markdown
     blocks: list[dict[str, Any]] = []
 
+    if agent_key == "jira-360":
+        blocks.extend(_jira_360_blocks(steps_trace))
+    else:
+        blocks.extend(_github_workspace_blocks(steps_trace))
+
+    return blocks
+
+
+def _jira_360_blocks(steps_trace: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = []
     jira_data: dict[str, Any] | None = None
     gitlab_rows: list[dict[str, Any]] = []
 
@@ -279,6 +295,92 @@ def _build_blocks_from_trace(
                 "type": "table",
                 "title": "GitLab",
                 "data": {"columns": ["type", "title", "state", "url"], "rows": gitlab_rows},
+            }
+        )
+
+    return blocks
+
+
+def _github_workspace_blocks(steps_trace: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = []
+    repo_card: dict[str, Any] | None = None
+    issue_rows: list[dict[str, Any]] = []
+
+    for step in steps_trace:
+        if step.get("stepType") != "tool_result":
+            continue
+        name = step.get("name")
+        output = step.get("outputData") or {}
+        if "error" in output:
+            continue
+
+        if name == "github_get_repository":
+            repo_card = {
+                "type": "card",
+                "title": output.get("full_name", "Repository"),
+                "data": {
+                    "description": output.get("description"),
+                    "language": output.get("language"),
+                    "stars": output.get("stars"),
+                    "open_issues": output.get("open_issues"),
+                    "url": output.get("url"),
+                },
+            }
+        elif name in ("github_search_issues", "github_list_repository_issues"):
+            for issue in output.get("issues", []):
+                issue_rows.append(
+                    {
+                        "number": issue.get("number"),
+                        "type": issue.get("type"),
+                        "title": issue.get("title"),
+                        "state": issue.get("state"),
+                        "url": issue.get("url"),
+                    }
+                )
+        elif name == "github_get_issue":
+            issue_rows.append(
+                {
+                    "number": output.get("number"),
+                    "type": output.get("type"),
+                    "title": output.get("title"),
+                    "state": output.get("state"),
+                    "url": output.get("url"),
+                }
+            )
+        elif name == "github_search_repositories":
+            repos = output.get("repositories", [])
+            if repos:
+                blocks.append(
+                    {
+                        "type": "table",
+                        "title": "Repositories",
+                        "data": {
+                            "columns": ["full_name", "language", "stars", "url"],
+                            "rows": [
+                                {
+                                    "full_name": repo.get("full_name"),
+                                    "language": repo.get("language"),
+                                    "stars": repo.get("stars"),
+                                    "url": repo.get("url"),
+                                }
+                                for repo in repos[:10]
+                            ],
+                        },
+                    }
+                )
+
+    if repo_card:
+        blocks.insert(0, repo_card)
+
+    if issue_rows:
+        blocks.append(
+            {
+                "type": "table",
+                "title": "Issues & PRs",
+                "data": {
+                    "columns": ["number", "type", "title", "state", "url"],
+                    "rows": issue_rows[:15],
+                },
             }
         )
 

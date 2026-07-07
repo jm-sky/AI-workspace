@@ -3,7 +3,7 @@ name: ai-workspace
 services:
   # PostgreSQL Database
   db:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17
     container_name: ai-workspace-db
     restart: unless-stopped
     environment:

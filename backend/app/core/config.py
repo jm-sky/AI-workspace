@@ -689,8 +689,38 @@ class AISettings(BaseSettings):
         description="Maximum tool-calling loop iterations per agent run",
         gt=0,
     )
+    memory_enabled: bool = Field(
+        default=True,
+        validation_alias="AI_MEMORY_ENABLED",
+        description="Enable semantic memory storage and injection",
+    )
+    memory_embedding_model: str = Field(
+        default="openai/text-embedding-3-small",
+        validation_alias="AI_MEMORY_EMBEDDING_MODEL",
+        description="Embedding model on OpenRouter for memory vectors",
+    )
+    memory_embedding_dimensions: int = Field(
+        default=1536,
+        validation_alias="AI_MEMORY_EMBEDDING_DIMENSIONS",
+        description="Vector dimensions for memory embeddings",
+        gt=0,
+    )
+    memory_similarity_threshold: float = Field(
+        default=0.55,
+        validation_alias="AI_MEMORY_SIMILARITY_THRESHOLD",
+        description="Minimum cosine similarity for memory retrieval",
+        ge=0.0,
+        le=1.0,
+    )
+    memory_injection_limit: int = Field(
+        default=5,
+        validation_alias="AI_MEMORY_INJECTION_LIMIT",
+        description="Max memories auto-injected into agent system prompt",
+        ge=0,
+        le=20,
+    )
 
-    @field_validator("enabled", "cache_enabled", mode="before")
+    @field_validator("enabled", "cache_enabled", "memory_enabled", mode="before")
     @classmethod
     def parse_bool_field(cls, v: str | bool) -> bool:
         """Parse boolean field from string or bool."""

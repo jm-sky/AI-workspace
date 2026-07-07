@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Brain, Info, Settings as SettingsIcon } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import {
   Sidebar,
   SidebarContent,
@@ -14,13 +14,14 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { SettingsRoutePaths } from '@/modules/settings/routes'
 import SessionHistoryList from '@/modules/workspace/components/SessionHistoryList.vue'
 import { useChatSessionNavContext } from '@/modules/workspace/composables/useChatSessionNav'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 import { PublicRoutePaths } from '@/router/publicRoutes'
 
 const { t } = useI18n()
+const route = useRoute()
 const { isMobile, setOpenMobile } = useSidebar()
 
 const {
@@ -70,17 +71,21 @@ const handleNewChat = async () => {
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <SidebarMenuButton disabled>
-                <Brain class="size-4" />
-                <span>{{ t('workspace.nav.memory') }}</span>
-              </SidebarMenuButton>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {{ t('workspace.nav.memorySoon') }}
-            </TooltipContent>
-          </Tooltip>
+          <RouterLink
+            v-slot="{ href, navigate, isActive }"
+            :to="WorkspaceRoutePath.Memory"
+            custom
+          >
+            <SidebarMenuButton
+              :is-active="isActive || route.path.startsWith(WorkspaceRoutePath.Memory)"
+              as="a"
+              :href="href"
+              @click="navigate"
+            >
+              <Brain class="size-4" />
+              <span>{{ t('workspace.nav.memory') }}</span>
+            </SidebarMenuButton>
+          </RouterLink>
         </SidebarMenuItem>
 
         <SidebarMenuItem>

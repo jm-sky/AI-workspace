@@ -27,7 +27,7 @@ export async function streamAgentChat(
     },
     body: JSON.stringify({
       message: request.message,
-      agentKey: request.agentKey ?? 'jira-360',
+      agentKey: request.agentKey ?? 'github-workspace',
       model: request.model,
     }),
   })

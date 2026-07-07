@@ -74,7 +74,7 @@ export function useAgentChat() {
 
     try {
       await streamAgentChat(
-        { message: message.trim(), agentKey: 'jira-360' },
+        { message: message.trim(), agentKey: 'github-workspace' },
         {
           onStep: (event) => {
             steps.value.push(event)

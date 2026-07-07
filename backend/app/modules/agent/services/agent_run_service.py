@@ -9,7 +9,9 @@ from app.modules.agent.exceptions import (
     AgentNotConfiguredError,
     AgentToolsDisabledError,
 )
+from app.modules.agent.prompts.github_workspace import GITHUB_WORKSPACE_SYSTEM_PROMPT
 from app.modules.agent.prompts.jira_360 import JIRA_360_SYSTEM_PROMPT
+from app.modules.memory.services.memory_service import MemoryService
 from app.modules.agent.repositories import AgentRunRepository
 from app.modules.agent.schemas import AgentRunResponse, AgentRunStepResponse
 from app.modules.agent.services.agent_loop import AgentLoopEvent, AgentLoopService
@@ -21,6 +23,7 @@ from app.modules.workspace_config.resolver import WorkspaceConfigResolver
 
 
 AGENT_PROMPTS: dict[str, str] = {
+    "github-workspace": GITHUB_WORKSPACE_SYSTEM_PROMPT,
     "jira-360": JIRA_360_SYSTEM_PROMPT,
 }
 
@@ -71,7 +74,7 @@ class AgentRunService:
         *,
         tenant_ctx: TenantContext,
         message: str,
-        agent_key: str = "jira-360",
+        agent_key: str = "github-workspace",
         model: str | None = None,
     ) -> AsyncIterator[AgentLoopEvent]:
         resolved_model = await self._resolve_model(
@@ -79,26 +82,43 @@ class AgentRunService:
             tenant_ctx=tenant_ctx,
             requested_model=model,
         )
-        system_prompt = self._system_prompt(agent_key)
+        base_prompt = self._system_prompt(agent_key)
 
         run = await self.run_repo.create_run(
             tenant_id=tenant_ctx.tenant_id,
             user_id=tenant_ctx.user_id,
             agent_key=agent_key,
             input_message=message,
-            system_prompt=system_prompt,
+            system_prompt=base_prompt,
             model=resolved_model,
         )
         await self.db.commit()
 
+        memory_service = MemoryService(self.db)
+        memory_context = await memory_service.build_injection_context(
+            tenant_ctx=tenant_ctx,
+            user_message=message,
+            agent_key=agent_key,
+            session_id=run.id,
+        )
+        system_prompt = f"{base_prompt}\n\n{memory_context}" if memory_context else base_prompt
+
+        if memory_context and system_prompt != run.system_prompt:
+            run.system_prompt = system_prompt
+            await self.db.commit()
+
         tool_registry = build_tool_registry(
             tenant_ctx=tenant_ctx,
             token_service=self.token_service,
+            db=self.db,
+            agent_key=agent_key,
+            session_id=run.id,
         )
         loop = AgentLoopService(
             model=resolved_model,
             system_prompt=system_prompt,
             tool_registry=tool_registry,
+            agent_key=agent_key,
         )
 
         step_index = 0
