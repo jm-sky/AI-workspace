@@ -43,7 +43,7 @@ class MemoryRepository:
                     content, source, entry_metadata, embedding, created_at, updated_at
                 ) VALUES (
                     :id, :tenant_id, :user_id, :scope, :agent_key, :session_id,
-                    :content, :source, CAST(:metadata AS jsonb), :embedding::vector, :created_at, :updated_at
+                    :content, :source, CAST(:metadata AS jsonb), CAST(:embedding AS vector), :created_at, :updated_at
                 )
                 """
             ),
@@ -178,14 +178,14 @@ class MemoryRepository:
                 SELECT
                     id, tenant_id, user_id, scope, agent_key, session_id,
                     content, source, entry_metadata, created_at, updated_at,
-                    1 - (embedding <=> :query_vec::vector) AS similarity
+                    1 - (embedding <=> CAST(:query_vec AS vector)) AS similarity
                 FROM memory_entries
                 WHERE tenant_id = :tenant_id
                   AND user_id = :user_id
                   AND embedding IS NOT NULL
                   AND {scope_filter}
-                  AND 1 - (embedding <=> :query_vec::vector) >= :min_similarity
-                ORDER BY embedding <=> :query_vec::vector
+                  AND 1 - (embedding <=> CAST(:query_vec AS vector)) >= :min_similarity
+                ORDER BY embedding <=> CAST(:query_vec AS vector)
                 LIMIT :limit
                 """
             ),

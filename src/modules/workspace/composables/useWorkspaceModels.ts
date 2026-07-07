@@ -35,7 +35,9 @@ export function useWorkspaceModels() {
     const catalog = catalogQuery.data.value?.models ?? []
     if (allowed.length === 0) return catalog
     const allowedSet = new Set(allowed)
-    return catalog.filter((model) => allowedSet.has(model.id))
+    const filtered = catalog.filter((model) => allowedSet.has(model.id))
+    if (filtered.length === 0 && catalog.length > 0) return catalog
+    return filtered
   })
 
   const pickDefaultModelId = (models: IAiModel[], defaultModel?: string | null): string | null => {
