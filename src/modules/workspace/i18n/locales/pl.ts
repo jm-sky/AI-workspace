@@ -2,11 +2,13 @@ export const workspacePl = {
   workspace: {
     nav: {
       section: 'Workspace',
-      chat: 'AI Workspace',
+      chat: 'Czat',
       settings: 'Ustawienia',
+      memory: 'Pamięć',
+      memorySoon: 'Wkrótce (Faza 4)',
     },
     chat: {
-      title: 'AI Workspace',
+      title: 'Czat',
       subtitle: 'Jira 360° — wpisz klucz zadania (np. IT-123)',
       empty: 'Zapytaj o zadanie Jira, aby zbudować widok 360°.',
       thinking: 'Agent pracuje…',

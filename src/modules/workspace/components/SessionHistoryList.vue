@@ -45,8 +45,8 @@ const statusLabel = (status: string): string => {
 </script>
 
 <template>
-  <aside class="flex h-full w-72 shrink-0 flex-col border-r bg-muted/20">
-    <div class="flex flex-col gap-2 border-b p-3">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex shrink-0 flex-col gap-2 border-b p-3">
       <Button
         variant="outline"
         class="w-full justify-start"
@@ -66,7 +66,7 @@ const statusLabel = (status: string): string => {
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-2">
+    <div class="min-h-0 flex-1 overflow-y-auto p-2">
       <div
         v-if="isLoading"
         class="flex items-center justify-center py-12 text-sm text-muted-foreground"
@@ -107,5 +107,5 @@ const statusLabel = (status: string): string => {
         </button>
       </div>
     </div>
-  </aside>
+  </div>
 </template>
