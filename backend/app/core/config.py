@@ -837,12 +837,12 @@ class WorkspaceSettings(BaseSettings):
     model_config = _base_config
 
     default_allowed_models: str | list[str] = Field(
-        default='["google/gemini-flash-1.5-8b"]',
+        default='["qwen/qwen3-30b-a3b-instruct-2507","google/gemini-2.5-flash","google/gemini-2.5-flash-lite","anthropic/claude-sonnet-4.5"]',
         validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
         description="Default allow-list of LLM model IDs",
     )
     default_model: str = Field(
-        default="google/gemini-flash-1.5-8b",
+        default="qwen/qwen3-30b-a3b-instruct-2507",
         validation_alias="WORKSPACE_DEFAULT_MODEL",
         description="Default LLM model ID",
     )
