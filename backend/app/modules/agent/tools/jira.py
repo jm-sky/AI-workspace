@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.modules.agent.exceptions import AgentToolError
 from app.modules.agent.tools.base import AgentTool, AgentToolDefinition
 from app.modules.integrations.service import IntegrationTokenService
+from app.modules.tenants.service import TenantContext
 
 
 class JiraGetIssueTool(AgentTool):
@@ -17,10 +18,10 @@ class JiraGetIssueTool(AgentTool):
     def __init__(
         self,
         *,
-        user_id: str,
+        tenant_ctx: TenantContext,
         token_service: IntegrationTokenService,
     ):
-        self.user_id = user_id
+        self.tenant_ctx = tenant_ctx
         self.token_service = token_service
 
     @property
@@ -52,7 +53,12 @@ class JiraGetIssueTool(AgentTool):
         if not base_url:
             raise AgentToolError("JIRA_BASE_URL is not configured")
 
-        token = await self.token_service.get_access_token(self.user_id, "jira")
+        token = await self.token_service.resolve_access_token(
+            user_id=self.tenant_ctx.user_id,
+            tenant_id=self.tenant_ctx.tenant_id,
+            team_id=self.tenant_ctx.team_id,
+            provider="jira",
+        )
         client_field = settings.integrations.jira_client_field
 
         url = f"{base_url}/rest/api/3/issue/{issue_key}"

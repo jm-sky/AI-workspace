@@ -209,10 +209,48 @@ class TestIntegrationTokenService:
         token_row.encrypted_access_token = encrypt_integration_token("secret-token")
 
         repo = MagicMock()
-        repo.get_token = AsyncMock(return_value=token_row)
+        repo.find_user_scoped = AsyncMock(return_value=token_row)
         repo.decrypt_access_token.return_value = "secret-token"
 
         service = IntegrationTokenService(repo)
         result = await service.get_access_token("user-1", "jira")
 
         assert result == "secret-token"
+
+    @pytest.mark.asyncio
+    async def test_resolve_access_token_prefers_personal(self, monkeypatch):
+        test_key = Fernet.generate_key().decode()
+        monkeypatch.setattr(
+            "app.modules.integrations.crypto.settings.integrations.token_encryption_key",
+            test_key,
+        )
+
+        personal = MagicMock()
+        personal.expires_at = None
+        personal.encrypted_refresh_token = None
+        personal.encrypted_access_token = encrypt_integration_token("personal-token")
+        personal.provider = "github"
+
+        team = MagicMock()
+        team.expires_at = None
+        team.encrypted_refresh_token = None
+        team.encrypted_access_token = encrypt_integration_token("team-token")
+
+        repo = MagicMock()
+        repo.find_user_scoped = AsyncMock(return_value=personal)
+        repo.find_team_scoped = AsyncMock(return_value=team)
+        repo.find_tenant_scoped = AsyncMock(return_value=None)
+        repo.decrypt_access_token.side_effect = lambda row: (
+            "personal-token" if row is personal else "team-token"
+        )
+
+        service = IntegrationTokenService(repo)
+        result = await service.resolve_access_token(
+            user_id="user-1",
+            tenant_id="tenant-1",
+            team_id="team-1",
+            provider="github",
+        )
+
+        assert result == "personal-token"
+        repo.find_team_scoped.assert_not_called()

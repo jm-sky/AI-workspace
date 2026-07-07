@@ -162,11 +162,64 @@ export const settingsEn = {
       providers: {
         google: 'Google',
         facebook: 'Facebook',
+        github: 'GitHub',
       },
       connection: {
         linked: 'Connected',
         deleted: 'OAuth connection has been removed',
         confirm_delete: 'Are you sure you want to remove the connection to {provider}?',
+      },
+    },
+    integrations: {
+      title: 'Integrations',
+      description: 'Connect GitHub and other tools for AI agents (per-user OAuth tokens)',
+      login_required: 'Please log in to manage integrations.',
+      connections_title: 'Active connections',
+      no_connections: 'No integrations connected yet.',
+      tenant_required: 'Select an active workspace (tenant) before connecting integrations.',
+      github_not_configured: 'GitHub OAuth is not configured on the server.',
+      github_app_permissions_hint:
+        'GitHub App: API permissions come from your app manifest on GitHub (not from scope checkboxes below). Ensure Issues, Pull requests, and Contents (read) are enabled.',
+      providers: {
+        github: 'GitHub',
+      },
+      scopes: {
+        title: 'Permissions (scopes)',
+        github: {
+          read_user: 'Read user profile',
+          read_user_desc: 'Required to identify your GitHub account.',
+          repo: 'Repository access',
+          repo_desc: 'Read issues, pull requests, and repository metadata.',
+        },
+      },
+      visibility: {
+        title: 'Visibility',
+        user: 'Personal',
+        team: 'Team',
+        tenant: 'Tenant',
+        user_hint: 'Only you can use this connection in agent runs.',
+        team_hint: 'All members of the selected team can use this connection.',
+        tenant_hint: 'All members of the current tenant can use this connection.',
+        team_select: 'Team',
+      },
+      connect: {
+        github: 'Connect GitHub',
+        redirecting: 'Redirecting to GitHub…',
+      },
+      connection: {
+        linked: 'Connected',
+        deleted: 'Integration connection removed',
+        confirm_delete: 'Remove the {provider} integration?',
+      },
+      callback: {
+        processing_title: 'Connecting integration',
+        failed_title: 'Connection failed',
+        processing: 'Completing {provider} authorization…',
+        success: '{provider} connected successfully',
+        failed: 'Failed to connect integration',
+        cancelled: 'Authorization was cancelled',
+        invalid_parameters: 'Invalid OAuth callback parameters',
+        invalid_state: 'Invalid OAuth state — please try again',
       },
     },
     storage: {

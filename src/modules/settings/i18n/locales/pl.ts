@@ -162,11 +162,64 @@ export const settingsPl = {
       providers: {
         google: 'Google',
         facebook: 'Facebook',
+        github: 'GitHub',
       },
       connection: {
         linked: 'Połączone',
         deleted: 'Połączenie OAuth zostało usunięte',
         confirm_delete: 'Czy na pewno chcesz usunąć połączenie z {provider}?',
+      },
+    },
+    integrations: {
+      title: 'Integracje',
+      description: 'Połącz GitHub i inne narzędzia dla agentów AI (tokeny OAuth per-user)',
+      login_required: 'Zaloguj się, aby zarządzać integracjami.',
+      connections_title: 'Aktywne połączenia',
+      no_connections: 'Brak podłączonych integracji.',
+      tenant_required: 'Wybierz aktywny workspace (tenant), zanim podłączysz integracje.',
+      github_not_configured: 'OAuth GitHub nie jest skonfigurowany na serwerie.',
+      github_app_permissions_hint:
+        'GitHub App: uprawnienia API wynikają z manifestu aplikacji na GitHubie (nie z pól scope poniżej). Włącz Issues, Pull requests i Contents (odczyt).',
+      providers: {
+        github: 'GitHub',
+      },
+      scopes: {
+        title: 'Uprawnienia (scope)',
+        github: {
+          read_user: 'Odczyt profilu użytkownika',
+          read_user_desc: 'Wymagane do identyfikacji konta GitHub.',
+          repo: 'Dostęp do repozytoriów',
+          repo_desc: 'Odczyt issue, pull requestów i metadanych repozytoriów.',
+        },
+      },
+      visibility: {
+        title: 'Widoczność',
+        user: 'Osobista',
+        team: 'Zespół',
+        tenant: 'Tenant',
+        user_hint: 'Tylko Ty możesz używać tego połączenia w agentach.',
+        team_hint: 'Wszyscy członkowie wybranego zespołu mogą używać tego połączenia.',
+        tenant_hint: 'Wszyscy członkowie bieżącego tenanta mogą używać tego połączenia.',
+        team_select: 'Zespół',
+      },
+      connect: {
+        github: 'Połącz GitHub',
+        redirecting: 'Przekierowanie do GitHub…',
+      },
+      connection: {
+        linked: 'Połączone',
+        deleted: 'Połączenie integracji zostało usunięte',
+        confirm_delete: 'Usunąć integrację {provider}?',
+      },
+      callback: {
+        processing_title: 'Łączenie integracji',
+        failed_title: 'Połączenie nie powiodło się',
+        processing: 'Kończenie autoryzacji {provider}…',
+        success: 'Połączono {provider}',
+        failed: 'Nie udało się połączyć integracji',
+        cancelled: 'Autoryzacja została anulowana',
+        invalid_parameters: 'Nieprawidłowe parametry OAuth',
+        invalid_state: 'Nieprawidłowy stan OAuth — spróbuj ponownie',
       },
     },
     storage: {

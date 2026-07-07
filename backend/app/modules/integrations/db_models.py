@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,15 +14,19 @@ class IntegrationOAuthTokenDB(Base):
     """Encrypted OAuth tokens for external integrations (not login OAuth)."""
 
     __tablename__ = "integration_oauth_tokens"
-    __table_args__ = (
-        UniqueConstraint("user_id", "provider", name="uq_integration_oauth_tokens_user_provider"),
-    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    user_id: Mapped[str] = mapped_column(
+    owner_user_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    visibility_scope: Mapped[str] = mapped_column(String(20), nullable=False, default="user")
+    tenant_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    team_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("teams.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     encrypted_access_token: Mapped[str] = mapped_column(Text, nullable=False)
     encrypted_refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     token_type: Mapped[str] = mapped_column(String(50), default="Bearer", nullable=False)

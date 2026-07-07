@@ -15,3 +15,11 @@ class IntegrationTokenNotFoundError(IntegrationError):
 
 class IntegrationTokenExpiredError(IntegrationError):
     """Token expired and could not be refreshed."""
+
+
+class IntegrationOAuthStateError(IntegrationError):
+    """Invalid or expired OAuth state."""
+
+
+class IntegrationPermissionError(IntegrationError):
+    """Caller lacks permission for this integration action."""

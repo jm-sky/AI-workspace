@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import DeleteAccountCard from '@/modules/settings/components/DeleteAccountCard.vue'
+import IntegrationConnectionsCard from '../components/IntegrationConnectionsCard.vue'
 import OAuthConnectionsCard from '../components/OAuthConnectionsCard.vue'
 import PreferencesSettingsCard from '../components/PreferencesSettingsCard.vue'
 import SecuritySettingsCard from '../components/SecuritySettingsCard.vue'
@@ -31,6 +32,9 @@ const { t } = useI18n()
 
         <!-- OAuth Connections -->
         <OAuthConnectionsCard />
+
+        <!-- External integrations (GitHub, Jira, GitLab) -->
+        <IntegrationConnectionsCard />
 
         <!-- Storage Usage -->
         <StorageUsageCard />

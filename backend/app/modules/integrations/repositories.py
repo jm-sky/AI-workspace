@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Depends
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.id_utils import generate_id
@@ -14,38 +14,112 @@ from app.modules.integrations.crypto import (
     encrypt_integration_token,
 )
 from app.modules.integrations.db_models import IntegrationOAuthTokenDB
+from app.modules.integrations.types import IntegrationVisibilityScope
 
 
 class IntegrationTokenRepository:
-    """Data access for per-user integration OAuth tokens."""
+    """Data access for integration OAuth tokens with visibility scopes."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_token(
-        self, user_id: str, provider: str
-    ) -> IntegrationOAuthTokenDB | None:
+    async def get_by_id(self, connection_id: str) -> IntegrationOAuthTokenDB | None:
         result = await self.db.execute(
             select(IntegrationOAuthTokenDB).where(
-                IntegrationOAuthTokenDB.user_id == user_id,
-                IntegrationOAuthTokenDB.provider == provider,
+                IntegrationOAuthTokenDB.id == connection_id
             )
         )
         return result.scalar_one_or_none()
 
-    async def list_for_user(self, user_id: str) -> list[IntegrationOAuthTokenDB]:
+    async def find_user_scoped(
+        self, owner_user_id: str, provider: str
+    ) -> IntegrationOAuthTokenDB | None:
         result = await self.db.execute(
-            select(IntegrationOAuthTokenDB)
-            .where(IntegrationOAuthTokenDB.user_id == user_id)
-            .order_by(IntegrationOAuthTokenDB.provider)
+            select(IntegrationOAuthTokenDB).where(
+                IntegrationOAuthTokenDB.owner_user_id == owner_user_id,
+                IntegrationOAuthTokenDB.provider == provider,
+                IntegrationOAuthTokenDB.visibility_scope
+                == IntegrationVisibilityScope.USER.value,
+            )
         )
-        return list(result.scalars().all())
+        return result.scalar_one_or_none()
 
-    async def upsert_token(
+    async def find_team_scoped(
+        self, team_id: str, provider: str
+    ) -> IntegrationOAuthTokenDB | None:
+        result = await self.db.execute(
+            select(IntegrationOAuthTokenDB).where(
+                IntegrationOAuthTokenDB.team_id == team_id,
+                IntegrationOAuthTokenDB.provider == provider,
+                IntegrationOAuthTokenDB.visibility_scope
+                == IntegrationVisibilityScope.TEAM.value,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def find_tenant_scoped(
+        self, tenant_id: str, provider: str
+    ) -> IntegrationOAuthTokenDB | None:
+        result = await self.db.execute(
+            select(IntegrationOAuthTokenDB).where(
+                IntegrationOAuthTokenDB.tenant_id == tenant_id,
+                IntegrationOAuthTokenDB.provider == provider,
+                IntegrationOAuthTokenDB.visibility_scope
+                == IntegrationVisibilityScope.TENANT.value,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def list_visible_for_user(
         self,
         *,
         user_id: str,
+        tenant_id: str,
+        team_ids: list[str],
+    ) -> list[IntegrationOAuthTokenDB]:
+        conditions = [
+            (
+                (IntegrationOAuthTokenDB.owner_user_id == user_id)
+                & (
+                    IntegrationOAuthTokenDB.visibility_scope
+                    == IntegrationVisibilityScope.USER.value
+                )
+            ),
+            (
+                (IntegrationOAuthTokenDB.tenant_id == tenant_id)
+                & (
+                    IntegrationOAuthTokenDB.visibility_scope
+                    == IntegrationVisibilityScope.TENANT.value
+                )
+            ),
+        ]
+        if team_ids:
+            conditions.append(
+                (IntegrationOAuthTokenDB.team_id.in_(team_ids))
+                & (
+                    IntegrationOAuthTokenDB.visibility_scope
+                    == IntegrationVisibilityScope.TEAM.value
+                )
+            )
+
+        result = await self.db.execute(
+            select(IntegrationOAuthTokenDB)
+            .where(or_(*conditions))
+            .order_by(
+                IntegrationOAuthTokenDB.provider,
+                IntegrationOAuthTokenDB.visibility_scope,
+            )
+        )
+        return list(result.scalars().all())
+
+    async def upsert_connection(
+        self,
+        *,
+        owner_user_id: str,
         provider: str,
+        visibility_scope: str,
+        tenant_id: str | None,
+        team_id: str | None,
         access_token: str,
         refresh_token: str | None = None,
         token_type: str = "Bearer",
@@ -53,7 +127,13 @@ class IntegrationTokenRepository:
         scopes: str | None = None,
         provider_metadata: dict[str, Any] | None = None,
     ) -> IntegrationOAuthTokenDB:
-        existing = await self.get_token(user_id, provider)
+        existing = await self._find_existing(
+            provider=provider,
+            visibility_scope=visibility_scope,
+            owner_user_id=owner_user_id,
+            tenant_id=tenant_id,
+            team_id=team_id,
+        )
         encrypted_access = encrypt_integration_token(access_token)
         encrypted_refresh = (
             encrypt_integration_token(refresh_token) if refresh_token else None
@@ -73,8 +153,11 @@ class IntegrationTokenRepository:
 
         token = IntegrationOAuthTokenDB(
             id=generate_id(),
-            user_id=user_id,
+            owner_user_id=owner_user_id,
             provider=provider,
+            visibility_scope=visibility_scope,
+            tenant_id=tenant_id,
+            team_id=team_id,
             encrypted_access_token=encrypted_access,
             encrypted_refresh_token=encrypted_refresh,
             token_type=token_type,
@@ -87,11 +170,46 @@ class IntegrationTokenRepository:
         await self.db.refresh(token)
         return token
 
-    async def delete_token(self, user_id: str, provider: str) -> bool:
+    async def _find_existing(
+        self,
+        *,
+        provider: str,
+        visibility_scope: str,
+        owner_user_id: str,
+        tenant_id: str | None,
+        team_id: str | None,
+    ) -> IntegrationOAuthTokenDB | None:
+        stmt = select(IntegrationOAuthTokenDB).where(
+            IntegrationOAuthTokenDB.provider == provider,
+            IntegrationOAuthTokenDB.visibility_scope == visibility_scope,
+        )
+        if visibility_scope == IntegrationVisibilityScope.USER.value:
+            stmt = stmt.where(
+                IntegrationOAuthTokenDB.owner_user_id == owner_user_id
+            )
+        elif visibility_scope == IntegrationVisibilityScope.TEAM.value:
+            stmt = stmt.where(IntegrationOAuthTokenDB.team_id == team_id)
+        elif visibility_scope == IntegrationVisibilityScope.TENANT.value:
+            stmt = stmt.where(IntegrationOAuthTokenDB.tenant_id == tenant_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def delete_connection(self, connection_id: str) -> bool:
         result = await self.db.execute(
             delete(IntegrationOAuthTokenDB).where(
-                IntegrationOAuthTokenDB.user_id == user_id,
+                IntegrationOAuthTokenDB.id == connection_id
+            )
+        )
+        await self.db.commit()
+        return result.rowcount > 0
+
+    async def delete_user_provider(self, owner_user_id: str, provider: str) -> bool:
+        result = await self.db.execute(
+            delete(IntegrationOAuthTokenDB).where(
+                IntegrationOAuthTokenDB.owner_user_id == owner_user_id,
                 IntegrationOAuthTokenDB.provider == provider,
+                IntegrationOAuthTokenDB.visibility_scope
+                == IntegrationVisibilityScope.USER.value,
             )
         )
         await self.db.commit()

@@ -395,6 +395,23 @@ class OAuthSettings(BaseSettings):
         description="Facebook OAuth redirect URI",
     )
 
+    # GitHub login (GitHub App user-to-server or OAuth App)
+    github_client_id: str = Field(
+        default="",
+        validation_alias="GITHUB_OAUTH_CLIENT_ID",
+        description="GitHub App OAuth client ID for login",
+    )
+    github_client_secret: str = Field(
+        default="",
+        validation_alias="GITHUB_OAUTH_CLIENT_SECRET",
+        description="GitHub App OAuth client secret for login",
+    )
+    github_redirect_uri: str = Field(
+        default="",
+        validation_alias="GITHUB_OAUTH_REDIRECT_URI",
+        description="GitHub login callback URL (e.g. /auth/github)",
+    )
+
 
 class EmailSettings(BaseSettings):
     """Email service configuration."""
@@ -850,6 +867,26 @@ class IntegrationSettings(BaseSettings):
         default="",
         validation_alias="GITLAB_BASE_URL",
         description="GitLab instance base URL (e.g. https://gitlab.com)",
+    )
+    github_oauth_client_id: str = Field(
+        default="",
+        validation_alias="GITHUB_INTEGRATION_OAUTH_CLIENT_ID",
+        description="GitHub App OAuth client ID (user-to-server flow)",
+    )
+    github_oauth_client_secret: str = Field(
+        default="",
+        validation_alias="GITHUB_INTEGRATION_OAUTH_CLIENT_SECRET",
+        description="GitHub App OAuth client secret",
+    )
+    github_oauth_redirect_uri: str = Field(
+        default="",
+        validation_alias="GITHUB_INTEGRATION_OAUTH_REDIRECT_URI",
+        description="GitHub App OAuth callback URL (frontend route)",
+    )
+    github_app_id: str = Field(
+        default="",
+        validation_alias="GITHUB_APP_ID",
+        description="GitHub App ID (numeric) — enables App-specific OAuth behavior",
     )
 
 

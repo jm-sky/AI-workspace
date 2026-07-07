@@ -92,7 +92,7 @@ class AgentRunService:
         await self.db.commit()
 
         tool_registry = build_tool_registry(
-            user_id=tenant_ctx.user_id,
+            tenant_ctx=tenant_ctx,
             token_service=self.token_service,
         )
         loop = AgentLoopService(
