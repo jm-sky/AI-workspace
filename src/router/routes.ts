@@ -1,20 +1,15 @@
 import { adminRoutes } from '@/modules/admin/routes'
-import { AuthRoutePaths, authRoutes } from '@/modules/auth/config/routes'
+import { authRoutes } from '@/modules/auth/config/routes'
 import { billingRoutes } from '@/modules/billing/routes'
 import { settingsRoutes } from '@/modules/settings/routes'
 import { userRoutes } from '@/modules/user/routes'
-import { WorkspaceRoutePath, workspaceRoutes } from '@/modules/workspace/routes'
+import { workspaceRoutes } from '@/modules/workspace/routes'
 import { publicRoutes } from '@/router/publicRoutes'
 import type { RouteRecordRaw } from 'vue-router'
 
 export const routes: RouteRecordRaw[] = [
   // Landing page (public)
   ...publicRoutes.filter(route => route.name === 'landing'),
-  // Default app entry — AI workspace chat
-  {
-    path: AuthRoutePaths.dashboard,
-    redirect: WorkspaceRoutePath.Chat,
-  },
   // Other public pages (about, cookies, privacy, terms, contact)
   ...publicRoutes.filter(route => route.name !== 'landing' && route.name !== 'not-found'),
   // Module routes
