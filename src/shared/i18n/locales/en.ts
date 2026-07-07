@@ -516,6 +516,26 @@ export default {
       },
     },
   },
+  workspace: {
+    nav: {
+      section: 'Workspace',
+      chat: 'AI Workspace',
+    },
+    chat: {
+      title: 'AI Workspace',
+      subtitle: 'Jira 360° — enter an issue key (e.g. IT-123)',
+      empty: 'Ask about a Jira issue to build a 360° view.',
+      placeholder: 'IT-123 or describe your request',
+      send: 'Send',
+      thinking: 'Agent is working…',
+    },
+    audit: {
+      title: 'Run trace',
+      copyRun: 'Copy run',
+      copied: 'Run copied to clipboard',
+      copyFailed: 'Failed to copy run',
+    },
+  },
   aiContext: {
     title: 'AI Context',
     subtitle: 'Short description of AI Workspace in Markdown format for AI assistants like ChatGPT',

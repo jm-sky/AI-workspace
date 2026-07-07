@@ -666,6 +666,12 @@ class AISettings(BaseSettings):
         validation_alias="AI_CACHE_TTL_EMBED",
         description="Cache TTL for embeddings (days)",
     )
+    agent_max_steps: int = Field(
+        default=10,
+        validation_alias="AGENT_MAX_STEPS",
+        description="Maximum tool-calling loop iterations per agent run",
+        gt=0,
+    )
 
     @field_validator("enabled", "cache_enabled", mode="before")
     @classmethod
@@ -821,7 +827,7 @@ class WorkspaceSettings(BaseSettings):
 
 
 class IntegrationSettings(BaseSettings):
-    """Per-user integration OAuth token vault configuration."""
+    """Per-user integration OAuth token vault and provider API configuration."""
 
     model_config = _base_config
 
@@ -829,6 +835,21 @@ class IntegrationSettings(BaseSettings):
         default="",
         validation_alias="INTEGRATION_TOKEN_ENCRYPTION_KEY",
         description="Fernet key for integration OAuth tokens (Jira, GitLab, etc.)",
+    )
+    jira_base_url: str = Field(
+        default="",
+        validation_alias="JIRA_BASE_URL",
+        description="Jira Cloud/Server base URL (e.g. https://company.atlassian.net)",
+    )
+    jira_client_field: str = Field(
+        default="customfield_10001",
+        validation_alias="JIRA_CLIENT_FIELD",
+        description="Jira custom field ID for Klient / client name",
+    )
+    gitlab_base_url: str = Field(
+        default="",
+        validation_alias="GITLAB_BASE_URL",
+        description="GitLab instance base URL (e.g. https://gitlab.com)",
     )
 
 

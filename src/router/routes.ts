@@ -5,6 +5,7 @@ import { billingRoutes } from '@/modules/billing/routes'
 import { gearRoutes } from '@/modules/gear/routes'
 import { settingsRoutes } from '@/modules/settings/routes'
 import { userRoutes } from '@/modules/user/routes'
+import { workspaceRoutes } from '@/modules/workspace/routes'
 import { publicRoutes } from '@/router/publicRoutes'
 import type { RouteRecordRaw } from 'vue-router'
 
@@ -23,6 +24,7 @@ export const routes: RouteRecordRaw[] = [
   // Module routes
   ...authRoutes,
   ...adminRoutes,
+  ...workspaceRoutes,
   ...aiRoutes,
   ...billingRoutes,
   ...gearRoutes,

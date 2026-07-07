@@ -36,7 +36,7 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 | `exec.sh` zachowany | ✅ |
 | Commit bootstrap | ✅ |
 | Build/env smoke test | ⏳ WIP |
-| Świeży `CLAUDE.md` dla AI Workspace | ⏳ |
+| Świeży `CLAUDE.md` dla AI Workspace | ✅ |
 
 **Uwagi po bootstrapie:** kod dziedziczy nazewnictwo gear-stack w Docker/env (`gear-stack-app`, `VITE_APP_ID=gear-stack`) — rename w osobnym kroku. Nie oczekuj, że wszystko od razu się buduje.
 

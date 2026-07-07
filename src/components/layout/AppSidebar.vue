@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BackpackIcon, BookIcon, Globe, Info, Package, ShoppingCart } from 'lucide-vue-next'
+import { BackpackIcon, BookIcon, Globe, Info, Package, ShoppingCart, Sparkles } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useGearV2 } from '@/modules/gear/composables/useGearV2'
 import { GearRoutePath } from '@/modules/gear/routes'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 import { PublicRoutePaths } from '@/router/publicRoutes'
 import type { IGearItemV2 } from '@/modules/gear/types/gear.types.v2'
 
@@ -28,6 +29,14 @@ const { rootContainers: rootContainersV2, getItems } = useGearV2()
 onMounted(() => {
   getItems({ itemType: 'container' }).catch(() => {})
 })
+
+const workspaceLinks = computed(() => [
+  {
+    to: WorkspaceRoutePath.Chat,
+    label: t('workspace.nav.chat', 'AI Workspace'),
+    icon: Sparkles,
+  },
+])
 
 // Linki: Mój sprzęt
 const myGearLinks = computed(() => [
@@ -78,6 +87,30 @@ const rootContainers = computed<IGearItemV2[]>(() => {
 <template>
   <Sidebar collapsible="icon">
     <SidebarContent class="overflow-x-hidden max-h-[90vh] overflow-y-auto">
+      <!-- Sekcja: AI Workspace -->
+      <SidebarGroup>
+        <SidebarGroupLabel>{{ t('workspace.nav.section', 'Workspace') }}</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem v-for="link in workspaceLinks" :key="link.to">
+              <RouterLink v-slot="{ href, navigate, isActive }" :to="link.to" custom>
+                <SidebarMenuButton
+                  :is-active="isActive"
+                  as="a"
+                  :href="href"
+                  @click="navigate"
+                >
+                  <component :is="link.icon" />
+                  <span>{{ link.label }}</span>
+                </SidebarMenuButton>
+              </RouterLink>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarSeparator />
+
       <!-- Sekcja: Mój sprzęt -->
       <SidebarGroup>
         <SidebarGroupLabel>{{ t('navigation.myGear', 'My Gear') }}</SidebarGroupLabel>

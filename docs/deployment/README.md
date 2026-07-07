@@ -16,7 +16,7 @@ Dokumentacja wdrożenia na VPS (OVH) z Caddy jako reverse proxy.
 | `ai-workspace.dev-made.it` | Frontend SPA |
 | `api.ai-workspace.dev-made.it` | FastAPI backend |
 
-DNS skonfigurowany (2026-07-06). Kolejny krok: wdrożenie pliku `.caddy` na serwer i deploy aplikacji — patrz [`CADDY_DEPLOYMENT.md`](CADDY_DEPLOYMENT.md).
+DNS skonfigurowany (2026-07-06). **Wdrożone na VPS** (2026-07-07): symlink w `sites-enabled/`, frontend w `/var/www/ai-workspace/`, API przez Caddy — `curl https://api.ai-workspace.dev-made.it/health`.
 
 ## Serwer
 

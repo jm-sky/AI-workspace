@@ -1,0 +1,101 @@
+import { JWT_STORE_KEY } from '@/shared/config/config'
+import type {
+  IAgentChatRequest,
+  IAgentRun,
+  IAgentStreamCompleteEvent,
+  IAgentStreamStepEvent,
+} from '@/modules/workspace/types/agent'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+
+export async function streamAgentChat(
+  request: IAgentChatRequest,
+  handlers: {
+    onStep?: (event: IAgentStreamStepEvent) => void
+    onComplete?: (event: IAgentStreamCompleteEvent) => void
+    onError?: (message: string) => void
+  },
+): Promise<void> {
+  const token = localStorage.getItem(JWT_STORE_KEY)
+  const response = await fetch(`${API_BASE}/agent/chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      message: request.message,
+      agentKey: request.agentKey ?? 'jira-360',
+      model: request.model,
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    handlers.onError?.(text || `HTTP ${response.status}`)
+    return
+  }
+
+  const reader = response.body?.getReader()
+  if (!reader) {
+    handlers.onError?.('No response stream')
+    return
+  }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const parts = buffer.split('\n\n')
+    buffer = parts.pop() ?? ''
+
+    for (const part of parts) {
+      const lines = part.split('\n')
+      let eventType = 'message'
+      let dataLine = ''
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          eventType = line.slice(6).trim()
+        } else if (line.startsWith('data:')) {
+          dataLine = line.slice(5).trim()
+        }
+      }
+
+      if (!dataLine) continue
+
+      try {
+        const payload = JSON.parse(dataLine) as Record<string, unknown>
+        if (eventType === 'step') {
+          handlers.onStep?.(payload as unknown as IAgentStreamStepEvent)
+        } else if (eventType === 'run_complete') {
+          handlers.onComplete?.(payload as unknown as IAgentStreamCompleteEvent)
+        } else if (eventType === 'error') {
+          handlers.onError?.(String(payload.message ?? 'Agent error'))
+        }
+      } catch {
+        handlers.onError?.('Failed to parse SSE payload')
+      }
+    }
+  }
+}
+
+export async function fetchAgentRun(runId: string): Promise<IAgentRun> {
+  const token = localStorage.getItem(JWT_STORE_KEY)
+  const response = await fetch(`${API_BASE}/agent/runs/${runId}/export`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (!response.ok) {
+    throw new Error(`Failed to load run: ${response.status}`)
+  }
+  return response.json() as Promise<IAgentRun>
+}
+
+export async function copyRunToClipboard(runId: string): Promise<void> {
+  const run = await fetchAgentRun(runId)
+  await navigator.clipboard.writeText(JSON.stringify(run, null, 2))
+}
