@@ -21,7 +21,7 @@ ai-workspace.dev-made.it {
   # Using '>' prefix to ensure headers override any backend headers (defer mode)
   header {
     # Content Security Policy - Google reCaptcha + Sentry + API support
-    >Content-Security-Policy "default-src 'self'; script-src 'self' blob: https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ai-workspace.dev-made.it https://www.google.com https://*.sentry.io; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    >Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.ai-workspace.dev-made.it https://www.google.com https://*.sentry.io; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
     >X-Frame-Options "DENY"
     >X-Content-Type-Options "nosniff"
