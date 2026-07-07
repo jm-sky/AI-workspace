@@ -8,6 +8,7 @@ import type { HTMLAttributes } from 'vue'
 
 defineProps<{
   cardClass?: HTMLAttributes['class']
+  flush?: boolean
 }>()
 </script>
 
@@ -20,8 +21,11 @@ defineProps<{
         <AppHeader />
 
         <!-- Main Content -->
-        <main class="w-full max-w-7xl mx-auto flex-1 py-6 px-2 sm:px-6 lg:px-8">
-          <div :class="cn('border border-border rounded-xl bg-card p-4 sm:p-6 shadow-lg w-full max-w-full', cardClass)">
+        <main :class="cn('mx-auto flex-1 max-w-full overflow-x-hidden', flush ? 'w-full py-0 px-0' : 'w-full max-w-7xl py-6 px-2 sm:px-6 lg:px-8')">
+          <div v-if="flush" class="w-full max-w-full">
+            <slot />
+          </div>
+          <div v-else :class="cn('border border-border rounded-xl bg-card p-4 sm:p-6 shadow-lg w-full max-w-full', cardClass)">
             <slot />
           </div>
         </main>

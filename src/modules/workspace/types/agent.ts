@@ -24,12 +24,22 @@ export interface IAgentRunStep {
   createdAt: string
 }
 
-export interface IAgentRun {
+export interface IAgentRunSummary {
   id: string
   agentKey: string
   status: AgentRunStatus
   inputMessage: string
   outputMessage?: string | null
+  createdAt: string
+  completedAt?: string | null
+}
+
+export interface IAgentRunsListResponse {
+  runs: IAgentRunSummary[]
+  total: number
+}
+
+export interface IAgentRun extends IAgentRunSummary {
   systemPrompt: string
   model: string
   promptTokens: number
@@ -38,8 +48,6 @@ export interface IAgentRun {
   costUsd?: number | null
   blocks: IRichBlock[]
   steps: IAgentRunStep[]
-  createdAt: string
-  completedAt?: string | null
 }
 
 export interface IAgentChatMessage {

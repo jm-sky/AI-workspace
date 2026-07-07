@@ -1,35 +1,19 @@
 <script setup lang="ts">
-import AppIcon from '@/components/ui/AppIcon.vue'
-import { computed, onMounted } from 'vue'
+import { LogInIcon, Sparkles, UserPlusIcon } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import LocalContainersStats from '@/components/layout/LocalContainersStats.vue'
-import TotalsStats from '@/components/layout/TotalsStats.vue'
-import WelcomeQuickActions from '@/components/layout/WelcomeQuickActions.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import ButtonLink from '@/components/ui/button-link/ButtonLink.vue'
 import LandingLayout from '@/layouts/LandingLayout.vue'
 import { useAuth } from '@/modules/auth/composables/useAuth'
-import { useGearStoreV2 } from '@/modules/gear/store/useGearStoreV2'
+import { AuthRoutePaths } from '@/modules/auth/config/routes'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 import { config } from '@/shared/config/config'
 
 const { t } = useI18n()
 const router = useRouter()
 const { isAuthenticated, user } = useAuth()
-const gearStore = useGearStoreV2()
 
-// Load containers from localStorage if not authenticated (V2 store auto-migrates V1 on init)
-onMounted(() => {
-  if (!isAuthenticated.value) {
-    gearStore.loadFromStorage()
-  }
-})
-
-// Check if user is not logged in but has containers in localStorage
-const hasLocalContainers = computed(() => {
-  if (isAuthenticated.value) return false
-  return gearStore.getAllContainers.length > 0
-})
-
-// If backend is disabled, redirect to home (offline mode)
 if (!config.backend.enabled) {
   router.replace({ name: 'home' })
 }
@@ -38,14 +22,12 @@ if (!config.backend.enabled) {
 <template>
   <LandingLayout>
     <div class="max-w-2xl w-full space-y-8 text-center">
-      <!-- Logo/Icon -->
       <div class="flex justify-center">
         <div class="rounded-full bg-primary/10 p-8">
           <AppIcon class="size-20" />
         </div>
       </div>
 
-      <!-- Heading -->
       <div class="space-y-4">
         <p v-if="isAuthenticated && user" class="text-2xl font-semibold text-muted-foreground">
           {{ t('landing.welcomeBack', { name: user.name }) }}
@@ -59,7 +41,6 @@ if (!config.backend.enabled) {
       </div>
     </div>
 
-    <!-- Features -->
     <div class="max-w-2xl w-full space-y-8 text-center">
       <div class="grid grid-cols-1 md:grid-cols-3 py-4 gap-6">
         <div class="space-y-2">
@@ -88,12 +69,37 @@ if (!config.backend.enabled) {
         </div>
       </div>
 
-      <WelcomeQuickActions class="max-w-md mx-auto" />
-      <LocalContainersStats v-if="hasLocalContainers" />
+      <div class="flex flex-col items-center justify-center gap-4">
+        <ButtonLink
+          v-if="isAuthenticated"
+          size="lg"
+          class="w-full sm:w-auto"
+          :to="WorkspaceRoutePath.Chat"
+        >
+          <Sparkles class="size-5" />
+          {{ t('workspace.nav.chat', 'Open AI Workspace') }}
+        </ButtonLink>
 
-      <!-- Stats Widgets (wider container) -->
-      <TotalsStats />
+        <template v-else-if="config.backend.enabled">
+          <ButtonLink
+            size="lg"
+            class="w-full sm:w-auto"
+            :to="AuthRoutePaths.login"
+          >
+            <LogInIcon class="size-5" />
+            {{ t('auth.login', 'Log In') }}
+          </ButtonLink>
+          <ButtonLink
+            size="lg"
+            variant="outline"
+            class="w-full sm:w-auto"
+            :to="AuthRoutePaths.register"
+          >
+            <UserPlusIcon class="size-5" />
+            {{ t('auth.register', 'Sign Up') }}
+          </ButtonLink>
+        </template>
+      </div>
     </div>
   </LandingLayout>
 </template>
-

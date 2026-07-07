@@ -190,7 +190,7 @@ export default {
       description: 'Aplikacja AI Workspace zbiera następujące dane:',
       items: {
         account: 'Dane konta: email, imię i nazwisko (wymagane do utworzenia konta)',
-        gear: 'Dane dotyczące sprzętu: kontenery, przedmioty, wagi, statusy (przechowywane w bazie danych)',
+        gear: 'Dane workspace: sesje czatu, uruchomienia agentów, trace i metadane integracji (przechowywane w bazie)',
         settings: 'Ustawienia aplikacji: preferencje językowe, jednostki wagowe, inne ustawienia',
         usage: 'Dane użytkowania: logi dostępu, akcje podejmowane w aplikacji (w celu zapewnienia bezpieczeństwa i poprawy usługi)',
       },

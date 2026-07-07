@@ -84,7 +84,7 @@ export const settingsPl = {
     },
     preferences: {
       title: 'Preferencje Sprzętu',
-      description: 'Zarządzaj preferencjami i ustawieniami dotyczącymi sprzętu',
+      description: 'Zarządzaj preferencjami i ustawieniami workspace',
       save: 'Zapisz',
       saved: 'Zapisano',
       preferredWeightUnit: {

@@ -190,7 +190,7 @@ export default {
       description: 'AI Workspace application collects the following data:',
       items: {
         account: 'Account data: email, full name (required to create an account)',
-        gear: 'Gear data: containers, items, weights, statuses (stored in database)',
+        gear: 'Workspace data: chat sessions, agent runs, traces, and integration metadata (stored in database)',
         settings: 'Application settings: language preferences, weight units, other settings',
         usage: 'Usage data: access logs, actions taken in the application (for security and service improvement purposes)',
       },

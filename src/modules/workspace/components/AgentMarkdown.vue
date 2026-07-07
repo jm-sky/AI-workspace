@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { secureMarkdownHtml } from '@/shared/utils/markdownPostProcess'
-import type { IRichBlock } from '@/modules/workspace/types/agent'
 
 const { content } = defineProps<{
   content: string

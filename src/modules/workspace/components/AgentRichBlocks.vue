@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { IRichBlock } from '@/modules/workspace/types/agent'
 import AgentMarkdown from '@/modules/workspace/components/AgentMarkdown.vue'
+import type { IRichBlock } from '@/modules/workspace/types/agent'
 
 const { blocks } = defineProps<{
   blocks: IRichBlock[]

@@ -1,7 +1,9 @@
 import { JWT_STORE_KEY } from '@/shared/config/config'
+import { apiClient } from '@/shared/services/apiClient'
 import type {
   IAgentChatRequest,
   IAgentRun,
+  IAgentRunsListResponse,
   IAgentStreamCompleteEvent,
   IAgentStreamStepEvent,
 } from '@/modules/workspace/types/agent'
@@ -82,6 +84,24 @@ export async function streamAgentChat(
       }
     }
   }
+}
+
+export async function listAgentRuns(params?: {
+  limit?: number
+  offset?: number
+}): Promise<IAgentRunsListResponse> {
+  const response = await apiClient.get<IAgentRunsListResponse>('/agent/runs', {
+    params: {
+      limit: params?.limit ?? 50,
+      offset: params?.offset ?? 0,
+    },
+  })
+  return response.data
+}
+
+export async function getAgentRun(runId: string): Promise<IAgentRun> {
+  const response = await apiClient.get<IAgentRun>(`/agent/runs/${runId}`)
+  return response.data
 }
 
 export async function fetchAgentRun(runId: string): Promise<IAgentRun> {

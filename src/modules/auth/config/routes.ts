@@ -17,7 +17,7 @@ export const AuthRoutePaths = {
   verifyEmail: import.meta.env.VITE_AUTH_VERIFY_EMAIL_PATH ?? `${AUTH_BASE_PATH}/verify-email`,
   oauthCallback: import.meta.env.VITE_AUTH_OAUTH_CALLBACK_PATH ?? `${AUTH_BASE_PATH}/callback/:provider`,
   githubLogin: import.meta.env.VITE_GITHUB_OAUTH_CALLBACK_PATH ?? `${AUTH_BASE_PATH}/github`,
-  dashboard: import.meta.env.VITE_AUTH_DASHBOARD_PATH ?? '/dashboard',
+  dashboard: import.meta.env.VITE_AUTH_DASHBOARD_PATH ?? '/workspace',
 } as const
 
 // Named route versions (when using Vue Router named routes)

@@ -84,7 +84,7 @@ export const settingsEn = {
     },
     preferences: {
       title: 'Gear Preferences',
-      description: 'Manage your gear-specific preferences and settings',
+      description: 'Manage your workspace preferences and settings',
       save: 'Save',
       saved: 'Saved',
       preferredWeightUnit: {

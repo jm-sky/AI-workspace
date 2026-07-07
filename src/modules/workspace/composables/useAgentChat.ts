@@ -1,10 +1,51 @@
 import { ref } from 'vue'
-import { copyRunToClipboard, streamAgentChat } from '@/modules/workspace/services/agentApiService'
+import {
+  copyRunToClipboard,
+  getAgentRun,
+  streamAgentChat,
+} from '@/modules/workspace/services/agentApiService'
 import type {
+  AgentStepType,
   IAgentChatMessage,
+  IAgentRun,
+  IAgentRunStep,
   IAgentStreamStepEvent,
   IRichBlock,
 } from '@/modules/workspace/types/agent'
+
+function mapPersistedStep(step: IAgentRunStep): IAgentStreamStepEvent {
+  return {
+    type: step.stepType as AgentStepType,
+    stepIndex: step.stepIndex,
+    tool: step.name ?? undefined,
+    arguments: step.inputData ?? undefined,
+    result: step.outputData ?? undefined,
+    runId: undefined,
+  }
+}
+
+function runToMessages(run: IAgentRun): IAgentChatMessage[] {
+  const messages: IAgentChatMessage[] = [
+    {
+      id: `user-${run.id}`,
+      role: 'user',
+      content: run.inputMessage,
+      runId: run.id,
+    },
+  ]
+
+  if (run.outputMessage) {
+    messages.push({
+      id: `assistant-${run.id}`,
+      role: 'assistant',
+      content: run.outputMessage,
+      runId: run.id,
+      blocks: run.blocks,
+    })
+  }
+
+  return messages
+}
 
 export function useAgentChat() {
   const messages = ref<IAgentChatMessage[]>([])
@@ -13,8 +54,8 @@ export function useAgentChat() {
   const error = ref<string | null>(null)
   const activeRunId = ref<string | null>(null)
 
-  const sendMessage = async (message: string) => {
-    if (!message.trim() || isLoading.value) return
+  const sendMessage = async (message: string): Promise<string | undefined> => {
+    if (!message.trim() || isLoading.value) return undefined
 
     isLoading.value = true
     error.value = null
@@ -74,6 +115,24 @@ export function useAgentChat() {
     } finally {
       isLoading.value = false
     }
+
+    return runId
+  }
+
+  const loadRun = async (runId: string) => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const run = await getAgentRun(runId)
+      messages.value = runToMessages(run)
+      steps.value = run.steps.map(mapPersistedStep)
+      activeRunId.value = run.id
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to load session'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
   }
 
   const copyActiveRun = async () => {
@@ -95,6 +154,7 @@ export function useAgentChat() {
     error,
     activeRunId,
     sendMessage,
+    loadRun,
     copyActiveRun,
     clearChat,
   }

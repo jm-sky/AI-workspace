@@ -1,24 +1,6 @@
 // shared/config/config.ts
 
-// Supported locales type (defined here to avoid cyclic dependencies)
 export type SupportedLocale = 'en' | 'pl'
-export type TGearWeightUnit = 'g' | 'kg' | 'oz' | 'lb'
-
-export interface IAiModelPricing {
-  input: number // per 1M tokens
-  output: number // per 1M tokens
-}
-
-export interface IAiModel {
-  id: string
-  name: string
-  provider: string
-  context_window: number
-  pricing: IAiModelPricing
-  recommended_for: string[]
-  description?: string
-  available?: boolean
-}
 
 export const config = {
   app: {
@@ -59,24 +41,8 @@ export const config = {
       enabled: !!import.meta.env.VITE_GITHUB_OAUTH_CLIENT_ID,
     },
   },
-  features: {
-    imageSearch: {
-      enabled: import.meta.env.VITE_ENABLE_IMAGE_SEARCH === 'true',
-    },
-    ai: {
-      enabled: import.meta.env.VITE_ENABLE_AI === 'true',
-    },
-    inlineEditing: {
-      enabled: !(import.meta.env.VITE_ENABLE_INLINE_EDITING === 'false'),
-    },
-  },
-  defaults: {
-    preferredWeightUnit: 'g' as TGearWeightUnit,
-  },
   storage: {
-    // Maximum file size for regular users (20 MB)
     maxFileSize: import.meta.env.VITE_MAX_FILE_SIZE ? parseInt(import.meta.env.VITE_MAX_FILE_SIZE) : 20 * 1024 * 1024,
-    // Maximum file size for administrators (50 MB)
     maxFileSizeAdmin: import.meta.env.VITE_MAX_FILE_SIZE_ADMIN ? parseInt(import.meta.env.VITE_MAX_FILE_SIZE_ADMIN) : 50 * 1024 * 1024,
   },
   sentry: {
@@ -89,22 +55,9 @@ export const config = {
   },
 }
 
-// osobna zmienna do użycia w localStorage / store
 export const DARK_MODE_STORAGE_KEY = `${config.app.id}:dark-mode`
 export const JWT_STORE_KEY = `${config.app.id}:token`
 export const LOCALE_STORAGE_KEY = `${config.app.id}:locale`
 export const SETTINGS_STORAGE_KEY = `${config.app.id}:settings`
 export const CORE_SETTINGS_STORAGE_KEY = `${config.app.id}:core-settings`
-export const GEAR_SETTINGS_STORAGE_KEY = `${config.app.id}:gear-settings`
 export const USER_STORAGE_KEY = `${config.app.id}:user`
-export const ITEMS_TABLE_COLUMN_VISIBILITY_KEY = `${config.app.id}:items-table-column-visibility`
-export const ITEMS_TABLE_EDIT_MODE_KEY = `${config.app.id}:items-table-edit-mode`
-export const ALL_ITEMS_TABLE_COLUMN_VISIBILITY_KEY = `${config.app.id}:all-items-table-column-visibility`
-export const ALL_ITEMS_PAGE_FILTERS_KEY = `${config.app.id}:all-items-page:filters`
-export const SHOPPING_PLANNING_PAGE_FILTERS_KEY = `${config.app.id}:shopping-planning-page:filters`
-export const SHOPPING_PLANNING_PAGE_FILTERS_COLLAPSED_KEY = `${config.app.id}:shopping-planning-page:filters-collapsed`
-export const CONTAINERS_STORAGE_KEY = `${config.app.id}:containers`
-export const CONTAINERS_LIST_PAGE_FILTERS_KEY = `${config.app.id}:containers-list-page:filters`
-export const PUBLIC_CONTAINERS_BROWSER_PAGE_FILTERS_KEY = `${config.app.id}:public-containers-browser-page:filters`
-export const CATALOGUE_BROWSER_PAGE_FILTERS_KEY = `${config.app.id}:catalogue-browser-page:filters`
-export const UPDATE_FROM_CATALOGUE_FIELDS_KEY = `${config.app.id}:update-from-catalogue-fields`

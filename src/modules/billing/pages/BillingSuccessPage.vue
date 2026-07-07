@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
-import { GearRoutePath } from '@/modules/gear/routes'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 import { useSubscription } from '../composables/useSubscription'
 import { BillingRoutePaths } from '../routes'
 
@@ -25,7 +25,7 @@ onMounted(async () => {
 })
 
 const handleGoToApp = () => {
-  router.push(GearRoutePath.Containers)
+  router.push(WorkspaceRoutePath.Chat)
 }
 
 const handleManageBilling = () => {

@@ -1,8 +1,8 @@
 import { apiClient } from '@/shared/services/apiClient'
 import type {
   IntegrationAuthUrlResponse,
-  IntegrationConnectRequest,
   IntegrationConnection,
+  IntegrationConnectRequest,
   IntegrationOAuthCallbackRequest,
   IntegrationSetup,
 } from '@/modules/settings/types/integration'

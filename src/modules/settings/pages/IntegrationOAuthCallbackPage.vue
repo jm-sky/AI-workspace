@@ -5,8 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useIntegrationOAuth } from '@/modules/settings/composables/useIntegrationOAuth'
-import { integrationService } from '@/modules/settings/services/integrationService'
 import { SettingsRoutePaths } from '@/modules/settings/routes'
+import { integrationService } from '@/modules/settings/services/integrationService'
 
 const { t } = useI18n()
 const route = useRoute()
