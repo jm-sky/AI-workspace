@@ -157,6 +157,36 @@ class TestTenantWorkspaceService:
         user_repo.set_active_workspace.assert_awaited_once_with("user-1", "tenant-1", None)
 
     @pytest.mark.asyncio
+    async def test_ensure_personal_workspace_creates_tenant(self, user: User):
+        tenant = TenantDB(
+            id="tenant-new",
+            name="User's Workspace",
+            description=None,
+            owner_id="user-1",
+            created_at=datetime.now(UTC),
+        )
+        membership = TenantMembershipDB(
+            tenant_id="tenant-new",
+            user_id="user-1",
+            role="owner",
+            created_at=datetime.now(UTC),
+        )
+
+        tenant_repo = AsyncMock()
+        tenant_repo.list_for_user.return_value = []
+        tenant_repo.create_tenant.return_value = (tenant, membership)
+        team_repo = AsyncMock()
+        user_repo = AsyncMock()
+
+        service = TenantWorkspaceService(tenant_repo, team_repo, user_repo)
+        workspace = await service.ensure_personal_workspace(user)
+
+        assert workspace is not None
+        assert workspace.tenant_id == "tenant-new"
+        tenant_repo.create_tenant.assert_awaited_once()
+        user_repo.set_active_workspace.assert_awaited_once_with("user-1", "tenant-new", None)
+
+    @pytest.mark.asyncio
     async def test_workspace_claims_include_team(self, user: User):
         service = TenantWorkspaceService(AsyncMock(), AsyncMock(), AsyncMock())
         from app.modules.tenants.service import TenantContext

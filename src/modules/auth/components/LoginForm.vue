@@ -13,6 +13,7 @@ import OAuthGoogleButton from '@/modules/auth/components/OAuthGoogleButton.vue'
 import { useAuth } from '@/modules/auth/composables/useAuth'
 import { AuthRouteNames, AuthRoutePaths } from '@/modules/auth/config/routes'
 import { loginSchema } from '@/modules/auth/validation/login.schema'
+import { resolvePostAuthPath } from '@/modules/tenants/composables/useTenantWorkspace'
 import { useHandleError } from '@/shared/composables/useHandleError'
 import { useRecaptcha } from '@/shared/composables/useRecaptcha'
 import { config } from '@/shared/config/config'
@@ -73,7 +74,8 @@ const onSubmit = handleSubmit(async (values: LoginCredentials) => {
     // Normal login success - emit success event and redirect to dashboard
     emit('success')
     const redirectTo = typeof route.query.redirectTo === 'string' ? route.query.redirectTo : undefined
-    await router.push(redirectTo ?? AuthRoutePaths.dashboard)
+    const target = await resolvePostAuthPath(redirectTo ?? AuthRoutePaths.dashboard)
+    await router.push(target)
   } catch (err: unknown) {
     handleUnauthorizedFormError(err, setErrors)
   }

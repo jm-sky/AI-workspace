@@ -5,6 +5,7 @@ import {
   listMemories,
   searchMemories,
 } from '@/modules/workspace/services/memoryApiService'
+import { getApiErrorMessage } from '@/shared/utils/apiError'
 import type { IMemoryEntry, MemoryScope } from '@/modules/workspace/types/memory'
 
 export function useMemoryBrowser() {
@@ -39,7 +40,7 @@ export function useMemoryBrowser() {
       entries.value = response.entries
       total.value = response.total
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load memories'
+      error.value = getApiErrorMessage(err, 'Failed to load memories')
     } finally {
       isLoading.value = false
     }
@@ -63,7 +64,7 @@ export function useMemoryBrowser() {
       isSemanticSearch.value = true
       total.value = semanticResults.value.length
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Search failed'
+      error.value = getApiErrorMessage(err, 'Search failed')
     } finally {
       isLoading.value = false
     }
@@ -76,7 +77,7 @@ export function useMemoryBrowser() {
       await createMemory({ content, scope })
       await loadEntries()
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save memory'
+      error.value = getApiErrorMessage(err, 'Failed to save memory')
       throw err
     } finally {
       isSaving.value = false
@@ -91,7 +92,7 @@ export function useMemoryBrowser() {
       semanticResults.value = semanticResults.value.filter((entry) => entry.id !== entryId)
       total.value = Math.max(0, total.value - 1)
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete memory'
+      error.value = getApiErrorMessage(err, 'Failed to delete memory')
       throw err
     }
   }

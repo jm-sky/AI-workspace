@@ -97,6 +97,9 @@ class AuthService:
             except Exception as e:
                 logger.warning(f"Failed to send email verification message: {e}")
 
+            if self.tenant_workspace_service is not None:
+                await self.tenant_workspace_service.ensure_personal_workspace(user)
+
             return user
         except UserAlreadyExistsError:
             raise
@@ -641,15 +644,11 @@ class AuthService:
             avatar_url=avatar_url,
         )
 
-        # Generate tokens
-        access_token = create_access_token({"sub": user.id})
-        refresh_token = create_refresh_token({"sub": user.id})
+        if self.tenant_workspace_service is not None:
+            await self.tenant_workspace_service.ensure_personal_workspace(user)
 
-        return LoginResponse(
-            user=UserResponse(**user.to_response()),
-            accessToken=access_token,
-            refreshToken=refresh_token,
-            tokenType="bearer",
-            expiresIn=settings.security.access_token_expires_minutes * 60,
-            requiresEmailVerification=False,  # OAuth emails are pre-verified
+        return await self._issue_login_tokens(
+            user,
+            tfa_verified=False,
+            tfa_method=None,
         )

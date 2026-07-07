@@ -10,6 +10,7 @@ import TotpVerifyForm from '@/modules/auth/components/TotpVerifyForm.vue'
 import WebAuthnVerifyForm from '@/modules/auth/components/WebAuthnVerifyForm.vue'
 import { AuthRouteNames, AuthRoutePaths } from '@/modules/auth/config/routes'
 import { useAuthStore } from '@/modules/auth/store/useAuthStore'
+import { resolvePostAuthPath } from '@/modules/tenants/composables/useTenantWorkspace'
 import type { ITwoFactorService } from '@/modules/auth/types/twoFactor.type'
 
 const props = defineProps<{
@@ -67,10 +68,9 @@ onMounted(() => {
 })
 
 const handleVerificationSuccess = async (_accessToken: string) => {
-  // Token is already set in store by the verification composable
-  // Redirect to dashboard or intended page
   const redirectTo = typeof route.query.redirectTo === 'string' ? route.query.redirectTo : AuthRoutePaths.dashboard
-  await router.push(redirectTo)
+  const target = await resolvePostAuthPath(redirectTo)
+  await router.push(target)
 }
 </script>
 

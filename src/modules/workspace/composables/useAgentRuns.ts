@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { listAgentRuns } from '@/modules/workspace/services/agentApiService'
 import { filterSessionsByQuery } from '@/modules/workspace/utils/sessionFilter'
+import { getApiErrorMessage } from '@/shared/utils/apiError'
 import type { IAgentRunSummary } from '@/modules/workspace/types/agent'
 
 export function useAgentRuns() {
@@ -20,7 +21,7 @@ export function useAgentRuns() {
       runs.value = response.runs
       total.value = response.total
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load sessions'
+      error.value = getApiErrorMessage(err, 'Failed to load sessions')
     } finally {
       isLoading.value = false
     }

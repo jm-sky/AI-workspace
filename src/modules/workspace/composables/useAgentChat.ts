@@ -4,6 +4,7 @@ import {
   getAgentRun,
   streamAgentChat,
 } from '@/modules/workspace/services/agentApiService'
+import { getApiErrorMessage } from '@/shared/utils/apiError'
 import type {
   AgentStepType,
   IAgentChatMessage,
@@ -111,7 +112,7 @@ export function useAgentChat() {
         })
       }
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Unknown error'
+      error.value = getApiErrorMessage(err, 'Unknown error')
     } finally {
       isLoading.value = false
     }
@@ -128,7 +129,7 @@ export function useAgentChat() {
       steps.value = run.steps.map(mapPersistedStep)
       activeRunId.value = run.id
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load session'
+      error.value = getApiErrorMessage(err, 'Failed to load session')
       throw err
     } finally {
       isLoading.value = false

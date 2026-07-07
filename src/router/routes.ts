@@ -2,6 +2,7 @@ import { adminRoutes } from '@/modules/admin/routes'
 import { authRoutes } from '@/modules/auth/config/routes'
 import { billingRoutes } from '@/modules/billing/routes'
 import { settingsRoutes } from '@/modules/settings/routes'
+import { tenantRoutes } from '@/modules/tenants/routes'
 import { userRoutes } from '@/modules/user/routes'
 import { workspaceRoutes } from '@/modules/workspace/routes'
 import { publicRoutes } from '@/router/publicRoutes'
@@ -14,6 +15,7 @@ export const routes: RouteRecordRaw[] = [
   ...publicRoutes.filter(route => route.name !== 'landing' && route.name !== 'not-found'),
   // Module routes
   ...authRoutes,
+  ...tenantRoutes,
   ...adminRoutes,
   ...workspaceRoutes,
   ...billingRoutes,

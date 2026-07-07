@@ -17,12 +17,20 @@ export const settingsRoutes: RouteRecordRaw[] = [
     path: SettingsRoutePaths.settings,
     name: SettingsRouteNames.settings,
     component: () => import('@/pages/settings/SettingsPage.vue'),
-    meta: { title: 'settings.page.title' },
+    meta: {
+      title: 'settings.page.title',
+      requiresAuth: true,
+      requiresTenant: true,
+    },
   },
   {
     path: SettingsRoutePaths.integrationsOAuthCallback,
     name: SettingsRouteNames.integrationsOAuthCallback,
     component: () => import('@/modules/settings/pages/IntegrationOAuthCallbackPage.vue'),
-    meta: { title: 'settings.integrations.callback.processing_title', requiresAuth: true },
+    meta: {
+      title: 'settings.integrations.callback.processing_title',
+      requiresAuth: true,
+      requiresTenant: true,
+    },
   },
 ]

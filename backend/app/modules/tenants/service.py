@@ -74,6 +74,34 @@ class TenantWorkspaceService:
 
         return None
 
+    async def ensure_personal_workspace(
+        self,
+        user: User,
+        *,
+        workspace_name: str | None = None,
+    ) -> TenantContext | None:
+        """Create a personal workspace when the user has none."""
+        tenants = await self.tenant_repo.list_for_user(user.id)
+        if tenants:
+            return await self.resolve_workspace_for_user(user)
+
+        name = (workspace_name or f"{user.name}'s Workspace").strip() or "My Workspace"
+        if len(name) > 255:
+            name = name[:255]
+
+        tenant, membership = await self.tenant_repo.create_tenant(
+            name=name,
+            description=None,
+            owner_user_id=user.id,
+        )
+        await self.user_repo.set_active_workspace(user.id, tenant.id, None)
+        return TenantContext(
+            user_id=user.id,
+            tenant_id=tenant.id,
+            tenant_role=membership.role,
+            team_id=None,
+        )
+
     async def switch_workspace(
         self,
         *,

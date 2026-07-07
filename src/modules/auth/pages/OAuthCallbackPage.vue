@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AuthRoutePaths } from '@/modules/auth/config/routes'
 import { authService } from '@/modules/auth/services/authService'
 import { useAuthStore } from '@/modules/auth/store/useAuthStore'
+import { resolvePostAuthPath } from '@/modules/tenants/composables/useTenantWorkspace'
 import { useRecaptcha } from '@/shared/composables/useRecaptcha'
 import type { AuthResponse, LoginResponse } from '../types/user.type'
 
@@ -98,7 +99,8 @@ onMounted(async () => {
       avatarUrl: authResponse.user.avatarUrl,
     })
     toast.success(t('auth.oauth.callback.success', { provider: providerParam }))
-    await router.push(AuthRoutePaths.dashboard)
+    const target = await resolvePostAuthPath(AuthRoutePaths.dashboard)
+    await router.push(target)
   } catch (err: unknown) {
     console.error('OAuth callback error:', err)
 

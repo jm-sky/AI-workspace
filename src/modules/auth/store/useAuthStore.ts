@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useUserStore } from '@/modules/user/store/useUserStore'
+import { useTenantStore } from '@/modules/tenants/store/useTenantStore'
 import { JWT_STORE_KEY } from '@/shared/config/config'
 import type { User } from '@/modules/auth/types/user.type'
 
@@ -23,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = newToken
     if (newToken) {
       localStorage.setItem(JWT_STORE_KEY, newToken)
+      useTenantStore().syncFromToken(newToken)
     } else {
       localStorage.removeItem(JWT_STORE_KEY)
     }
@@ -105,6 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
     clearRefreshToken()
     clearTwoFactorToken()
     clearUser()
+    useTenantStore().clear()
   }
 
   return {

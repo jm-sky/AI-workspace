@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { i18n } from '@/i18n'
 import { protectAdminRoutes } from '@/modules/admin/guards/adminGuard'
 import { protectRoutes } from '@/modules/auth/guards/authGuard'
+import { protectTenantRoutes } from '@/modules/tenants/guards/tenantGuard'
 import { config } from '@/shared/config/config'
 import { routes } from './routes'
 
@@ -39,6 +40,8 @@ const router = createRouter({
 
 // Install auth guard (only active when backend is enabled)
 protectRoutes(router)
+// Tenant workspace guard (after auth)
+protectTenantRoutes(router)
 // Install admin guard (checks admin access after auth)
 protectAdminRoutes(router)
 
