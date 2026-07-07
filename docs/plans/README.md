@@ -10,6 +10,6 @@ Plany implementacji funkcji i większych zmian.
 
 | ID | File | Summary | Status |
 |----|------|---------|--------|
-| 001 | [2026-07-07--001--chat-ux-settings-split.md](2026-07-07--001--chat-ux-settings-split.md) | Chat UX (thinking, audyt, model) + podział ustawień konto/workspace | in progress |
+| 001 | [2026-07-07--001--chat-ux-settings-split.md](2026-07-07--001--chat-ux-settings-split.md) | Chat UX (thinking, audyt, model) + podział ustawień konto/workspace | done |
 
 When adding a new entry: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.

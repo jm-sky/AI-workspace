@@ -2,6 +2,10 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const SettingsRoutePaths = {
   settings: import.meta.env.VITE_SETTINGS_PATH ?? '/settings',
+  account: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/account`,
+  security: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/security`,
+  connections: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/connections`,
+  storage: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/storage`,
   integrationsOAuthCallback:
     import.meta.env.VITE_INTEGRATIONS_OAUTH_CALLBACK_PATH
     ?? '/settings/integrations/callback/:provider',
@@ -9,19 +13,51 @@ export const SettingsRoutePaths = {
 
 export const SettingsRouteNames = {
   settings: 'settings',
+  account: 'settings-account',
+  security: 'settings-security',
+  connections: 'settings-connections',
+  storage: 'settings-storage',
   integrationsOAuthCallback: 'integrations-oauth-callback',
 } as const
 
 export const settingsRoutes: RouteRecordRaw[] = [
   {
     path: SettingsRoutePaths.settings,
-    name: SettingsRouteNames.settings,
-    component: () => import('@/pages/settings/SettingsPage.vue'),
+    component: () => import('@/layouts/SettingsLayout.vue'),
     meta: {
-      title: 'settings.page.title',
       requiresAuth: true,
       requiresTenant: true,
     },
+    children: [
+      {
+        path: '',
+        redirect: { name: SettingsRouteNames.account },
+      },
+      {
+        path: 'account',
+        name: SettingsRouteNames.account,
+        component: () => import('@/modules/settings/pages/AccountSettingsPage.vue'),
+        meta: { title: 'settings.nav.account' },
+      },
+      {
+        path: 'security',
+        name: SettingsRouteNames.security,
+        component: () => import('@/modules/settings/pages/SecuritySettingsPage.vue'),
+        meta: { title: 'settings.nav.security' },
+      },
+      {
+        path: 'connections',
+        name: SettingsRouteNames.connections,
+        component: () => import('@/modules/settings/pages/ConnectionsSettingsPage.vue'),
+        meta: { title: 'settings.nav.connections' },
+      },
+      {
+        path: 'storage',
+        name: SettingsRouteNames.storage,
+        component: () => import('@/modules/settings/pages/StorageSettingsPage.vue'),
+        meta: { title: 'settings.nav.storage' },
+      },
+    ],
   },
   {
     path: SettingsRoutePaths.integrationsOAuthCallback,

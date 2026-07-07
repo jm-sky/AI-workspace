@@ -6,6 +6,16 @@ export const settingsEn = {
       edit: 'Edit',
       cancel: 'Cancel',
     },
+    nav: {
+      account: 'Account',
+      security: 'Security',
+      connections: 'Connections',
+      connectionsDescription: 'OAuth login accounts and shortcut to workspace integrations',
+      storage: 'Storage',
+      workspaceIntegrationsTitle: 'Workspace integrations',
+      workspaceIntegrationsDescription: 'GitHub, Jira, and GitLab used by the chat agent',
+      workspaceIntegrationsLink: 'Go to workspace integrations',
+    },
     page: {
       title: 'Settings',
       subtitle: 'Manage your preferences and custom categories',

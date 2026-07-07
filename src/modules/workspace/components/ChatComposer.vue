@@ -8,6 +8,7 @@ const input = defineModel<string>({ required: true })
 
 defineProps<{
   isLoading?: boolean
+  isStreaming?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -43,6 +44,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       <Button
         type="submit"
         class="shrink-0"
+        :loading="isStreaming"
         :disabled="isLoading || !input.trim()"
       >
         <Send class="size-4" />

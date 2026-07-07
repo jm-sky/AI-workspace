@@ -5,9 +5,11 @@ import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import type { IAgentStreamStepEvent } from '@/modules/workspace/types/agent'
 
-const { steps, runId } = defineProps<{
+const { steps, runId, isStreaming, expanded } = defineProps<{
   steps: IAgentStreamStepEvent[]
   runId?: string | null
+  isStreaming?: boolean
+  expanded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -29,14 +31,28 @@ const stepLabel = (step: IAgentStreamStepEvent): string => {
   return step.type
 }
 
+const stepDetails = (step: IAgentStreamStepEvent): string | null => {
+  if (step.type === 'tool_call' && step.arguments) {
+    return JSON.stringify(step.arguments, null, 2)
+  }
+  if (step.type === 'tool_result' && step.result) {
+    return JSON.stringify(step.result, null, 2)
+  }
+  return null
+}
+
 const hasSteps = computed(() => steps.length > 0)
+const activeStepIndex = computed(() => (isStreaming ? steps.length - 1 : -1))
 </script>
 
 <template>
-  <div v-if="hasSteps || runId" class="rounded-lg border bg-muted/30 p-3 text-sm">
-    <div class="flex items-center justify-between gap-2 mb-2">
+  <div v-if="hasSteps || runId" class="text-sm">
+    <div
+      v-if="!expanded"
+      class="mb-2 flex items-center justify-between gap-2"
+    >
       <span class="font-medium text-muted-foreground">
-        {{ t('workspace.audit.title', 'Run trace') }}
+        {{ t('workspace.audit.title') }}
       </span>
       <Button
         v-if="runId"
@@ -45,16 +61,30 @@ const hasSteps = computed(() => steps.length > 0)
         @click="emit('copyRun')"
       >
         <Copy class="size-4" />
-        {{ t('workspace.audit.copyRun', 'Copy run') }}
+        {{ t('workspace.audit.copyRun') }}
       </Button>
     </div>
-    <ol class="space-y-1 font-mono text-xs max-h-48 overflow-y-auto">
+    <ol
+      :class="[
+        'space-y-2 font-mono text-xs',
+        expanded ? '' : 'max-h-48 overflow-y-auto',
+      ]"
+    >
       <li
         v-for="(step, index) in steps"
         :key="index"
-        class="text-muted-foreground"
+        :class="[
+          'rounded-md border p-2',
+          index === activeStepIndex ? 'border-primary/50 bg-primary/5' : 'border-transparent bg-muted/40',
+        ]"
       >
-        {{ step.stepIndex ?? index }}. {{ stepLabel(step) }}
+        <div class="text-muted-foreground">
+          {{ step.stepIndex ?? index }}. {{ stepLabel(step) }}
+        </div>
+        <pre
+          v-if="expanded && stepDetails(step)"
+          class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-[11px] text-foreground/80"
+        >{{ stepDetails(step) }}</pre>
       </li>
     </ol>
   </div>

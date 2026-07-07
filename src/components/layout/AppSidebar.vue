@@ -15,7 +15,6 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { SettingsRoutePaths } from '@/modules/settings/routes'
 import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 import { PublicRoutePaths } from '@/router/publicRoutes'
 
@@ -28,8 +27,8 @@ const workspaceLinks = computed(() => [
     icon: Sparkles,
   },
   {
-    to: SettingsRoutePaths.settings,
-    label: t('workspace.nav.settings'),
+    to: WorkspaceRoutePath.Settings,
+    label: t('workspace.nav.workspaceSettings'),
     icon: SettingsIcon,
   },
 ])

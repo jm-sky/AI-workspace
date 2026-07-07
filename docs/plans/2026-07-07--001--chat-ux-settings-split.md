@@ -1,6 +1,6 @@
 # Chat UX + podział ustawień (Claude-style)
 
-**Status:** in progress  
+**Status:** done  
 **Data:** 2026-07-07
 
 ## Cel

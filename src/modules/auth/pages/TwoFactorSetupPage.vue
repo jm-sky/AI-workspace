@@ -150,7 +150,7 @@ const handleDisableTotpSuccess = async () => {
 
           <!-- Back Button -->
           <div class="flex justify-start">
-            <ButtonLink variant="outline" :to="SettingsRoutePaths.settings">
+            <ButtonLink variant="outline" :to="SettingsRoutePaths.security">
               {{ t('common.back') }}
             </ButtonLink>
           </div>

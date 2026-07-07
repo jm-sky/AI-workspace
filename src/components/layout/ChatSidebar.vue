@@ -14,7 +14,6 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { SettingsRoutePaths } from '@/modules/settings/routes'
 import SessionHistoryList from '@/modules/workspace/components/SessionHistoryList.vue'
 import { useChatSessionNavContext } from '@/modules/workspace/composables/useChatSessionNav'
 import { WorkspaceRoutePath } from '@/modules/workspace/routes'
@@ -89,15 +88,15 @@ const handleNewChat = async () => {
         </SidebarMenuItem>
 
         <SidebarMenuItem>
-          <RouterLink v-slot="{ href, navigate, isActive }" :to="SettingsRoutePaths.settings" custom>
+          <RouterLink v-slot="{ href, navigate, isActive }" :to="WorkspaceRoutePath.Settings" custom>
             <SidebarMenuButton
-              :is-active="isActive"
+              :is-active="isActive || route.path.startsWith(WorkspaceRoutePath.Settings)"
               as="a"
               :href="href"
               @click="navigate"
             >
               <SettingsIcon class="size-4" />
-              <span>{{ t('workspace.nav.settings') }}</span>
+              <span>{{ t('workspace.nav.workspaceSettings') }}</span>
             </SidebarMenuButton>
           </RouterLink>
         </SidebarMenuItem>

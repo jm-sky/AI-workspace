@@ -6,6 +6,16 @@ export const settingsPl = {
       edit: 'Edytuj',
       cancel: 'Anuluj',
     },
+    nav: {
+      account: 'Konto',
+      security: 'Bezpieczeństwo',
+      connections: 'Połączenia',
+      connectionsDescription: 'Konta OAuth do logowania i skrót do integracji workspace',
+      storage: 'Magazyn',
+      workspaceIntegrationsTitle: 'Integracje workspace',
+      workspaceIntegrationsDescription: 'GitHub, Jira i GitLab używane przez agenta w czacie',
+      workspaceIntegrationsLink: 'Przejdź do integracji workspace',
+    },
     page: {
       title: 'Ustawienia',
       subtitle: 'Zarządzaj preferencjami i własnymi kategoriami',

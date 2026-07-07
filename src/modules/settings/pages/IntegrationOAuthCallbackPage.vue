@@ -5,8 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useIntegrationOAuth } from '@/modules/settings/composables/useIntegrationOAuth'
-import { SettingsRoutePaths } from '@/modules/settings/routes'
 import { integrationService } from '@/modules/settings/services/integrationService'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -33,20 +33,20 @@ onMounted(async () => {
 
     if (errorParam) {
       error.value = t('settings.integrations.callback.cancelled')
-      setTimeout(() => router.push(SettingsRoutePaths.settings), 2000)
+      setTimeout(() => router.push(WorkspaceRoutePath.SettingsIntegrations), 2000)
       return
     }
 
     if (!providerParam || !code || !state) {
       error.value = t('settings.integrations.callback.invalid_parameters')
-      setTimeout(() => router.push(SettingsRoutePaths.settings), 2000)
+      setTimeout(() => router.push(WorkspaceRoutePath.SettingsIntegrations), 2000)
       return
     }
 
     const storedState = getStoredState()
     if (!storedState || storedState !== state) {
       error.value = t('settings.integrations.callback.invalid_state')
-      setTimeout(() => router.push(SettingsRoutePaths.settings), 2000)
+      setTimeout(() => router.push(WorkspaceRoutePath.SettingsIntegrations), 2000)
       return
     }
 
@@ -54,12 +54,12 @@ onMounted(async () => {
 
     await integrationService.completeCallback(providerParam, { code, state })
     toast.success(t('settings.integrations.callback.success', { provider: providerParam }))
-    await router.push(SettingsRoutePaths.settings)
+    await router.push(WorkspaceRoutePath.SettingsIntegrations)
   }
   catch (err) {
     console.error('Integration OAuth callback error:', err)
     error.value = t('settings.integrations.callback.failed')
-    setTimeout(() => router.push(SettingsRoutePaths.settings), 2500)
+    setTimeout(() => router.push(WorkspaceRoutePath.SettingsIntegrations), 2500)
   }
 })
 </script>

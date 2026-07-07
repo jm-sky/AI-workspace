@@ -14,6 +14,7 @@ from app.modules.settings.router import router as settings_router
 from app.modules.teams.router import router as teams_router
 from app.modules.tenants.router import router as tenants_router
 from app.modules.users.router import router as users_router
+from app.modules.ai.routers.models import router as ai_models_router
 from app.modules.workspace_config.router import router as workspace_config_router
 
 api_router = APIRouter()
@@ -36,6 +37,7 @@ api_router.include_router(settings_router, prefix="/me/settings", tags=["Setting
 api_router.include_router(tenants_router)
 api_router.include_router(teams_router)
 api_router.include_router(workspace_config_router)
+api_router.include_router(ai_models_router, prefix="/ai", tags=["AI Models"])
 api_router.include_router(integrations_router)
 api_router.include_router(memory_router)
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CreditCard, LogIn, LogOut, SettingsIcon, ShieldIcon, UserIcon, UserPlusIcon } from 'lucide-vue-next'
+import { CreditCard, Link2, LogIn, LogOut, SettingsIcon, ShieldIcon, UserIcon, UserPlusIcon } from 'lucide-vue-next'
 import { type Component, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -60,9 +60,19 @@ const defaultCoreLinks = computed<Link[]>(() => [
     icon: UserIcon,
   },
   {
-    to: SettingsRoutePaths.settings,
-    label: t('settings.page.title', 'Settings'),
+    to: SettingsRoutePaths.account,
+    label: t('settings.nav.account', 'Account'),
     icon: SettingsIcon,
+  },
+  {
+    to: SettingsRoutePaths.security,
+    label: t('settings.nav.security', 'Security'),
+    icon: ShieldIcon,
+  },
+  {
+    to: SettingsRoutePaths.connections,
+    label: t('settings.nav.connections', 'Connections'),
+    icon: Link2,
   },
   {
     to: BillingRoutePaths.billing,
