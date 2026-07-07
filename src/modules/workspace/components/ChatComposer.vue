@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea'
 
 const input = defineModel<string>({ required: true })
 
-defineProps<{
+const { isLoading, isStreaming, canSubmit = true } = defineProps<{
   isLoading?: boolean
   isStreaming?: boolean
+  canSubmit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const handleSubmit = () => {
+  if (!canSubmit) return
   emit('submit')
 }
 
@@ -45,7 +47,7 @@ const handleKeydown = (event: KeyboardEvent) => {
         type="submit"
         class="shrink-0"
         :loading="isStreaming"
-        :disabled="isLoading || !input.trim()"
+        :disabled="isLoading || !input.trim() || !canSubmit"
       >
         <Send class="size-4" />
         <span class="hidden sm:inline">{{ t('workspace.chat.send') }}</span>

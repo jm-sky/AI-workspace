@@ -837,12 +837,12 @@ class WorkspaceSettings(BaseSettings):
     model_config = _base_config
 
     default_allowed_models: str | list[str] = Field(
-        default='["google/gemini-2.0-flash-001"]',
+        default='["google/gemini-flash-1.5-8b"]',
         validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
         description="Default allow-list of LLM model IDs",
     )
     default_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="google/gemini-flash-1.5-8b",
         validation_alias="WORKSPACE_DEFAULT_MODEL",
         description="Default LLM model ID",
     )

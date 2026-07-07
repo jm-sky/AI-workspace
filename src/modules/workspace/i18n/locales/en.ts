@@ -60,6 +60,7 @@ export const workspaceEn = {
       title: 'Run trace',
       description: 'Step history, system prompt, and session metadata',
       open: 'Audit',
+      openTooltip: 'Run audit',
       trace: 'Trace',
       systemPrompt: 'System prompt',
       session: 'Session',

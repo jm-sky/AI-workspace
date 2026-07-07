@@ -18,7 +18,7 @@ const { t } = useI18n()
 const input = ref('')
 const auditOpen = ref(false)
 
-const { getSelectedModelId } = useWorkspaceModels()
+const { getSelectedModelId, hasValidModel } = useWorkspaceModels()
 
 const {
   messages,
@@ -42,7 +42,7 @@ const { runsError, refreshRuns, setRunQuery } = useChatSessionNav({
 
 const handleSubmit = async () => {
   const text = input.value.trim()
-  if (!text) return
+  if (!text || !hasValidModel.value) return
   input.value = ''
   const runId = await sendMessage(text)
   await refreshRuns()
@@ -65,10 +65,6 @@ const handleCopyRun = async () => {
   <ChatLayout>
     <div class="flex min-h-0 flex-1 flex-col">
       <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 py-3 sm:px-6">
-        <p class="shrink-0 text-sm text-muted-foreground">
-          {{ t('workspace.chat.subtitle') }}
-        </p>
-
         <ChatToolbar
           :active-run="activeRun"
           :step-count="steps.length"
@@ -125,6 +121,7 @@ const handleCopyRun = async () => {
         v-model="input"
         :is-loading="isLoading"
         :is-streaming="isStreaming"
+        :can-submit="hasValidModel && !isLoading"
         @submit="handleSubmit"
       />
 

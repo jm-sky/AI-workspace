@@ -26,7 +26,7 @@ const selectedModelId = computed({
     v-model="selectedModelId"
     :disabled="isLoading || isUpdating || allowedModels.length === 0"
   >
-    <SelectTrigger size="sm" class="w-52 cursor-pointer">
+    <SelectTrigger size="sm" class="w-full max-w-xs cursor-pointer">
       <SelectValue :placeholder="t('workspace.model.selectPlaceholder')">
         <span v-if="selectedModel" class="flex w-full items-center gap-2">
           <span class="truncate font-medium">{{ selectedModel.name }}</span>

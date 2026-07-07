@@ -60,6 +60,7 @@ export const workspacePl = {
       title: 'Trace uruchomienia',
       description: 'Historia kroków, system prompt i metadane sesji',
       open: 'Audyt',
+      openTooltip: 'Audyt uruchomienia',
       trace: 'Trace',
       systemPrompt: 'System prompt',
       session: 'Sesja',

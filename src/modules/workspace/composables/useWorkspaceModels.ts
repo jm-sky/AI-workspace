@@ -38,17 +38,22 @@ export function useWorkspaceModels() {
     return catalog.filter((model) => allowedSet.has(model.id))
   })
 
+  const pickDefaultModelId = (models: IAiModel[], defaultModel?: string | null): string | null => {
+    if (models.length === 0) return null
+    if (defaultModel && models.some((m) => m.id === defaultModel)) {
+      return defaultModel
+    }
+    const recommended = models.find((m) => m.recommended)
+    return recommended?.id ?? models[0]?.id ?? null
+  }
+
   watch(
     [() => configQuery.data.value?.defaultModel, allowedModels],
     ([defaultModel, models]) => {
       if (selectedModelId.value && models.some((m) => m.id === selectedModelId.value)) {
         return
       }
-      if (defaultModel && models.some((m) => m.id === defaultModel)) {
-        selectedModelId.value = defaultModel
-        return
-      }
-      selectedModelId.value = models[0]?.id ?? null
+      selectedModelId.value = pickDefaultModelId(models, defaultModel)
     },
     { immediate: true },
   )
@@ -56,6 +61,8 @@ export function useWorkspaceModels() {
   const selectedModel = computed<IAiModel | undefined>(() =>
     allowedModels.value.find((m) => m.id === selectedModelId.value),
   )
+
+  const hasValidModel = computed(() => !!selectedModel.value)
 
   const selectModelMutation = useMutation({
     mutationFn: (modelId: string) => setUserDefaultModel(modelId),
@@ -82,5 +89,6 @@ export function useWorkspaceModels() {
     isUpdating: computed(() => selectModelMutation.isPending.value),
     selectModel,
     getSelectedModelId,
+    hasValidModel,
   }
 }
