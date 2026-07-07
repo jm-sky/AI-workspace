@@ -73,19 +73,19 @@ const handleLogout = async () => {
 
 <template>
   <header class="fixed left-0 top-0 z-50 w-full border-b bg-background/75 backdrop-blur-sm">
-    <div class="mx-auto flex h-(--header-height) items-center">
-      <div class="flex w-(--sidebar-width) items-center justify-start gap-6">
-        <SidebarTrigger class="ml-2.5 opacity-80" />
+    <div class="mx-auto flex h-(--header-height) items-center gap-2 px-2 sm:px-0">
+      <div class="flex min-w-0 items-center gap-2 md:w-(--sidebar-width) md:gap-6">
+        <SidebarTrigger class="shrink-0 opacity-80 md:ml-2.5" />
         <RouterLink
           :to="WorkspaceRoutePath.Chat"
-          class="flex items-center gap-2 transition-all duration-300 ease-in-out hover:scale-103 hover:brightness-80"
+          class="flex min-w-0 items-center gap-1.5 transition-all duration-300 ease-in-out hover:scale-103 hover:brightness-80 sm:gap-2"
         >
-          <AppIcon class="size-7 shrink-0" />
-          <LogoText />
+          <AppIcon class="size-6 shrink-0 sm:size-7" />
+          <LogoText class="truncate" />
         </RouterLink>
       </div>
 
-      <div class="mr-6 flex flex-1 items-center justify-end space-x-2">
+      <div class="ml-auto flex shrink-0 items-center justify-end space-x-1 sm:mr-6 sm:space-x-2">
         <nav class="flex items-center space-x-2">
           <LocaleToggle />
           <DarkModeToggle />
