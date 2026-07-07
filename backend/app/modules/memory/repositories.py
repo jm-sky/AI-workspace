@@ -150,6 +150,23 @@ class MemoryRepository:
         )
         return list(result.scalars().all()), total
 
+    @staticmethod
+    def _scope_filter_sql(
+        agent_key: str | None,
+        session_id: str | None,
+    ) -> str:
+        """Build scope ACL clause without nullable-parameter IS NULL checks (asyncpg typing)."""
+        clauses = ["scope = 'user'"]
+        if agent_key is None:
+            clauses.append("scope = 'agent'")
+        else:
+            clauses.append("(scope = 'agent' AND agent_key = :agent_key)")
+        if session_id is None:
+            clauses.append("scope = 'session'")
+        else:
+            clauses.append("(scope = 'session' AND session_id = :session_id)")
+        return f"({' OR '.join(clauses)})"
+
     async def search_similar(
         self,
         *,
@@ -164,13 +181,7 @@ class MemoryRepository:
         """Vector similarity search with tenant/user ACL filtering."""
         vector_literal = EmbeddingService.vector_to_pg_literal(embedding)
 
-        scope_filter = """
-            (
-                scope = 'user'
-                OR (scope = 'agent' AND (:agent_key IS NULL OR agent_key = :agent_key))
-                OR (scope = 'session' AND (:session_id IS NULL OR session_id = :session_id))
-            )
-        """
+        scope_filter = self._scope_filter_sql(agent_key, session_id)
 
         result = await self.db.execute(
             text(

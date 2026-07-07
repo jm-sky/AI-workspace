@@ -28,6 +28,7 @@ const {
   isLoadingRun,
   activeRunId,
   activeRun,
+  error,
   sendMessage,
   loadRun,
   copyActiveRun,
@@ -77,6 +78,13 @@ const handleCopyRun = async () => {
           class="shrink-0 text-sm text-destructive"
         >
           {{ runsError }}
+        </p>
+
+        <p
+          v-if="error"
+          class="shrink-0 text-sm text-destructive"
+        >
+          {{ error }}
         </p>
 
         <div

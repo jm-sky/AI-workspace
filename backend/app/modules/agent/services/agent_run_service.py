@@ -95,12 +95,15 @@ class AgentRunService:
         await self.db.commit()
 
         memory_service = MemoryService(self.db)
-        memory_context = await memory_service.build_injection_context(
-            tenant_ctx=tenant_ctx,
-            user_message=message,
-            agent_key=agent_key,
-            session_id=run.id,
-        )
+        try:
+            memory_context = await memory_service.build_injection_context(
+                tenant_ctx=tenant_ctx,
+                user_message=message,
+                agent_key=agent_key,
+                session_id=run.id,
+            )
+        except Exception:
+            memory_context = ""
         system_prompt = f"{base_prompt}\n\n{memory_context}" if memory_context else base_prompt
 
         if memory_context and system_prompt != run.system_prompt:

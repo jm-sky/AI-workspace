@@ -72,6 +72,9 @@ async def agent_chat_stream(
         except AgentError as exc:
             payload = json.dumps({"message": str(exc)})
             yield f"event: error\ndata: {payload}\n\n"
+        except Exception as exc:
+            payload = json.dumps({"message": str(exc)})
+            yield f"event: error\ndata: {payload}\n\n"
 
     return StreamingResponse(
         event_generator(),

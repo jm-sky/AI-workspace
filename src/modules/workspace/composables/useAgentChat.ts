@@ -118,6 +118,14 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
           role: 'assistant',
           content: `**Error:** ${error.value}`,
         })
+      } else {
+        const fallback = 'Agent did not return a response'
+        error.value = fallback
+        messages.value.push({
+          id: `assistant-error-${Date.now()}`,
+          role: 'assistant',
+          content: `**Error:** ${fallback}`,
+        })
       }
 
       if (runId) {
