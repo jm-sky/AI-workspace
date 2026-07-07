@@ -71,7 +71,11 @@ def get_auth_service(
         return service
     else:
         logger.debug("Using regular AuthService (2FA not available)")
-        return AuthService(user_repository, token_blacklist_service=blacklist_service)
+        return AuthService(
+            user_repository=user_repository,
+            token_blacklist_service=blacklist_service,
+            two_factor_repository=two_factor_repository,
+        )
 
 
 async def _verify_user_token(

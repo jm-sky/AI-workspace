@@ -4,6 +4,7 @@ This module provides Django-like commands for creating, listing, and managing us
 """
 
 import asyncio
+import sys
 from typing import Any
 
 import typer
@@ -41,11 +42,19 @@ def users_callback(ctx: typer.Context) -> None:
 @users_app.command("create")
 def users_create(
     email: str | None = typer.Option(None, "--email", "-e", help="User email address"),
-    name: str | None = typer.Option(None, "--name", "-n", help="User full name"),
+    name: str | None = typer.Option(
+        None, "--name", "-n", help="User full name (blank to guess from email)"
+    ),
     password: str | None = typer.Option(
         None,
         "--password",
         help="User password (not recommended, will prompt if not provided)",
+    ),
+    role: str | None = typer.Option(
+        None,
+        "--role",
+        "-r",
+        help="User role: admin, owner, premium, or user",
     ),
     admin: bool = typer.Option(False, "--admin", "-a", help="Create as administrator"),
     owner: bool = typer.Option(False, "--owner", "-o", help="Create as owner"),
@@ -60,6 +69,7 @@ def users_create(
 
         # Create admin user
         python -m cli users create --admin
+        python -m cli users create --role admin
 
         # Create owner user
         python -m cli users create --owner
@@ -72,15 +82,20 @@ def users_create(
             --email admin@example.com \\
             --name "Admin User" \\
             --password "SecurePass123!" \\
-            --admin
+            --role admin
     """
-    asyncio.run(_users_create_async(email, name, password, admin, owner, premium, no_input))
+    asyncio.run(
+        _users_create_async(
+            email, name, password, role, admin, owner, premium, no_input
+        )
+    )
 
 
 async def _users_create_async(
     email: str | None,
     name: str | None,
     password: str | None,
+    role: str | None,
     admin: bool,
     owner: bool,
     premium: bool,
@@ -92,13 +107,29 @@ async def _users_create_async(
     console = Console()
     console.print("\n[bold cyan]Create New User[/bold cyan]\n")
 
+    if not no_input and not sys.stdin.isatty():
+        console.print("[red]Interactive mode requires a TTY.[/red]")
+        console.print(
+            "Run with [cyan]-it[/cyan]: docker exec -it ai-workspace-app python -m cli users create"
+        )
+        console.print(
+            "Or use [cyan]--no-input[/cyan] with all options: "
+            "--email ... --name ... --password ..."
+        )
+        raise typer.Exit(1)
+
+    try:
+        is_admin, is_owner, is_premium = _resolve_role_flags(role, admin, owner, premium)
+    except ValueError as e:
+        console.print(f"\n[red]Error:[/red] {e}\n")
+        raise typer.Exit(1)
+
     # Get user details interactively if not provided
     email_value = await _get_email(console, email, no_input)
-    name_value = await _get_name(console, name, no_input)
+    name_value = await _get_name(console, name, no_input, email_value)
     password_value = await _get_password(console, password, no_input)
-    is_admin = await _get_admin_status(console, admin, no_input)
-    is_owner = owner  # Owner role is typically set via CLI flag only
-    is_premium = premium  # Premium role is typically set via CLI flag only
+    if not no_input and role is None:
+        is_admin = await _get_admin_status(console, is_admin, no_input)
 
     # Show summary
     _show_user_summary(console, email_value, name_value, is_admin, is_owner, is_premium)
@@ -157,8 +188,10 @@ async def _get_email(console: Any, email: str | None, no_input: bool) -> str:
         return email_input
 
 
-async def _get_name(console: Any, name: str | None, no_input: bool) -> str:
-    """Get user name."""
+async def _get_name(
+    console: Any, name: str | None, no_input: bool, email: str | None = None
+) -> str:
+    """Get user name (can be blank to guess from email)."""
     if name:
         return name
 
@@ -166,10 +199,19 @@ async def _get_name(console: Any, name: str | None, no_input: bool) -> str:
         raise ValueError("Name is required when --no-input is used")
 
     while True:
-        name_input = Prompt.ask("[cyan]Full name[/cyan]", default=name or "")
+        name_input = Prompt.ask(
+            "[cyan]Full name (blank to guess from email)[/cyan]", default=name or ""
+        )
 
         if not name_input:
-            console.print("[red]Name is required[/red]")
+            if email:
+                name_from_email = email.split("@")[0]
+                guessed_name = (
+                    name_from_email.replace(".", " ").replace("_", " ").title()
+                )
+                console.print(f"[dim]Using guessed name: {guessed_name}[/dim]")
+                return guessed_name
+            console.print("[red]Cannot guess name without email[/red]")
             continue
 
         if len(name_input) < 2:
@@ -177,6 +219,30 @@ async def _get_name(console: Any, name: str | None, no_input: bool) -> str:
             continue
 
         return name_input
+
+
+def _resolve_role_flags(
+    role: str | None,
+    admin: bool,
+    owner: bool,
+    premium: bool,
+) -> tuple[bool, bool, bool]:
+    """Resolve role from --role flag or legacy --admin/--owner/--premium flags."""
+    valid_roles = {"admin", "owner", "premium", "user"}
+
+    if role is not None:
+        role_lower = role.lower().strip()
+        if role_lower not in valid_roles:
+            raise ValueError(
+                f"Invalid role: {role}. Valid roles are: {', '.join(sorted(valid_roles))}"
+            )
+        return (
+            role_lower == "admin",
+            role_lower == "owner",
+            role_lower == "premium",
+        )
+
+    return admin, owner, premium
 
 
 async def _get_password(console: Any, password: str | None, no_input: bool) -> str:

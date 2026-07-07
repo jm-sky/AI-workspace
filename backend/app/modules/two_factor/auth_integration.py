@@ -40,7 +40,11 @@ class AuthServiceWith2FA(AuthService):
         two_factor_service: TwoFactorService,
         token_blacklist_service: TokenBlacklistService | None = None,
     ):
-        super().__init__(user_repository, token_blacklist_service)
+        super().__init__(
+            user_repository=user_repository,
+            token_blacklist_service=token_blacklist_service,
+            two_factor_repository=two_factor_service.repository,
+        )
         self.two_factor_service = two_factor_service
 
     async def login_user(self, email: str, password: str) -> LoginResponse | TwoFactorRequiredResponse:  # type: ignore[override]
