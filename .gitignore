@@ -38,6 +38,7 @@ CLAUDE.local.md
 # Vitest
 __screenshots__/
 .env
+.env.production
 test-results/
 
 # Database backups
