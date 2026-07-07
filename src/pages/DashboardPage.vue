@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { BackpackIcon, Globe, LogIn, Plus, UserPlus } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -72,14 +73,14 @@ const readyContainersCount = computed(() => {
       <div class="text-center space-y-4">
         <div class="flex justify-center">
           <div class="rounded-full bg-primary/10 p-6">
-            <BackpackIcon class="size-16 text-primary" />
+            <AppIcon class="size-16" />
           </div>
         </div>
         <h1 class="text-4xl font-bold">
-          {{ t('gear.page.title', 'Gear Stack') }}
+          {{ config.app.name }}
         </h1>
         <p class="text-muted-foreground text-lg max-w-2xl mx-auto">
-          {{ t('gear.page.subtitle', 'Organize and manage your gear collections') }}
+          {{ t('landing.subtitle', config.app.description) }}
         </p>
       </div>
 

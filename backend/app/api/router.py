@@ -14,10 +14,13 @@ from app.modules.gear.router import router as gear_router
 from app.modules.gear.router_v2 import router as gear_router_v2
 from app.modules.gear_settings.router import router as gear_settings_router
 from app.modules.logs.router import router as logs_router
+from app.modules.integrations.router import router as integrations_router
 from app.modules.settings.router import router as settings_router
 from app.modules.stats.router import router as stats_router
+from app.modules.teams.router import router as teams_router
 from app.modules.tenants.router import router as tenants_router
 from app.modules.users.router import router as users_router
+from app.modules.workspace_config.router import router as workspace_config_router
 
 # Main API router
 api_router = APIRouter()
@@ -49,6 +52,9 @@ api_router.include_router(stats_router, prefix="/stats", tags=["Statistics"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
 api_router.include_router(settings_router, prefix="/me/settings", tags=["Settings"])
 api_router.include_router(tenants_router)
+api_router.include_router(teams_router)
+api_router.include_router(workspace_config_router)
+api_router.include_router(integrations_router)
 
 # Register Two-Factor module (optional, added during development)
 try:

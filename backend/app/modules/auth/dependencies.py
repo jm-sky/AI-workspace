@@ -51,12 +51,18 @@ def get_auth_service(
         Depends(lambda: None) if not HAS_2FA else Depends(get_two_factor_repository)
     ),
 ) -> AuthService:
-    """Get auth service with 2FA support if available.
+    """Get auth service with 2FA support if available."""
+    from app.modules.teams.repositories import TeamRepository
+    from app.modules.tenants.repositories import TenantRepository
+    from app.modules.tenants.service import TenantWorkspaceService
 
-    Returns ``AuthServiceWith2FA`` (a subclass of ``AuthService``) when the 2FA
-    module is installed, otherwise a plain ``AuthService`` — both satisfy the
-    ``AuthService`` interface, so callers stay type-safe.
-    """
+    db = user_repository.db  # type: ignore[attr-defined]
+    workspace_service = TenantWorkspaceService(
+        tenant_repo=TenantRepository(db),
+        team_repo=TeamRepository(db),
+        user_repo=user_repository,  # type: ignore[arg-type]
+    )
+
     if HAS_2FA:
         from app.modules.two_factor.auth_integration import get_auth_service_with_2fa
 
@@ -65,17 +71,19 @@ def get_auth_service(
             two_factor_repository=two_factor_repository,
             blacklist_service=blacklist_service,
         )
+        service.tenant_workspace_service = workspace_service
         logger.debug(
             f"Created auth service: {type(service).__name__} (2FA enabled: True)"
         )
         return service
-    else:
-        logger.debug("Using regular AuthService (2FA not available)")
-        return AuthService(
-            user_repository=user_repository,
-            token_blacklist_service=blacklist_service,
-            two_factor_repository=two_factor_repository,
-        )
+
+    logger.debug("Using regular AuthService (2FA not available)")
+    return AuthService(
+        user_repository=user_repository,
+        token_blacklist_service=blacklist_service,
+        two_factor_repository=two_factor_repository,
+        tenant_workspace_service=workspace_service,
+    )
 
 
 async def _verify_user_token(

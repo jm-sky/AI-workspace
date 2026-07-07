@@ -1,6 +1,6 @@
 # AI Module
 
-OpenRouter AI integration for Gear Stack.
+OpenRouter AI integration for AI Workspace.
 
 ## Overview
 

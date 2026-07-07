@@ -80,6 +80,8 @@ class UserRepository(SearchMixin, UserRepositoryInterface):
             oauthProviderId=user_db.oauth_provider_id,
             avatarUrl=user_db.avatar_url,
             tokenVersion=user_db.token_version,
+            activeTenantId=user_db.active_tenant_id,
+            activeTeamId=user_db.active_team_id,
         )
 
     async def create_user(
@@ -233,11 +235,31 @@ class UserRepository(SearchMixin, UserRepositoryInterface):
         user_db.email_verification_sent_at = user.emailVerificationSentAt
         user_db.email_verified_at = user.emailVerifiedAt
         user_db.avatar_url = user.avatarUrl
+        user_db.active_tenant_id = user.activeTenantId
+        user_db.active_team_id = user.activeTeamId
 
         await self.db.commit()
         await self.db.refresh(user_db)
 
         # Return updated user as Pydantic model
+        return self._map_user(user_db)
+
+    async def set_active_workspace(
+        self,
+        user_id: str,
+        tenant_id: str | None,
+        team_id: str | None,
+    ) -> User:
+        stmt = select(UserDB).where(UserDB.id == user_id)
+        result = await self.db.execute(stmt)
+        user_db = result.scalar_one_or_none()
+        if user_db is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        user_db.active_tenant_id = tenant_id
+        user_db.active_team_id = team_id
+        await self.db.commit()
+        await self.db.refresh(user_db)
         return self._map_user(user_db)
 
     async def generate_reset_token(self, email: str) -> str | None:

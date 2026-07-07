@@ -34,6 +34,7 @@ class JWTPayload(TypedDict, total=False):
     email: str | None
     tid: str | None
     trol: str | None
+    tmid: str | None
     iat: int
     exp: int
     aud: str | None
@@ -43,6 +44,8 @@ class JWTPayload(TypedDict, total=False):
     tfaMethod: str | None  # 'totp' | 'webauthn'
     type: str
     emailVerified: bool | None
+    jti: str | None
+    tv: int | None
 
 
 class CreateAccessTokenOptions(TypedDict, total=False):
@@ -61,6 +64,9 @@ class CreateAccessTokenOptions(TypedDict, total=False):
     email: str | None
     tid: str | None
     trol: str | None
+    tmid: str | None
+    jti: str | None
+    tv: int | None
     tfaVerified: bool
     tfaMethod: str | None  # 'totp' | 'webauthn'
     emailVerified: bool | None
@@ -83,3 +89,5 @@ class CreateRefreshTokenOptions(TypedDict, total=False):
     tfaVerified: bool
     tfaMethod: str | None  # 'totp' | 'webauthn'
     emailVerified: bool | None
+    jti: str | None
+    tv: int | None

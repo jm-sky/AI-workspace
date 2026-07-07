@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import UserNav from '@/components/layout/UserNav.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import LogoText from '@/components/ui/LogoText.vue'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { AdminRoutePaths } from '@/modules/admin/routes'
@@ -106,6 +107,7 @@ const handleLogout = async () => {
       <div class="w-(--sidebar-width) flex items-center justify-start gap-6">
         <SidebarTrigger class="ml-2.5 opacity-80" />
         <RouterLink :to="AuthRoutePaths.dashboard" class="flex items-center gap-2 hover:brightness-80 hover:scale-103 transition-all ease-in-out duration-300">
+          <AppIcon class="size-7 shrink-0" />
           <LogoText />
         </RouterLink>
       </div>

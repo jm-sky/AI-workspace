@@ -73,14 +73,19 @@ def create_access_token(
     """
     claims: dict[str, Any] = {
         "sub": data["sub"],
-        "email": data.get("email"),
-        "tid": data.get("tid"),
-        "trol": data.get("trol"),
         "tfaPending": False,
         "tfaVerified": data.get("tfaVerified", False),
-        "tfaMethod": data.get("tfaMethod"),
-        "emailVerified": data.get("emailVerified"),
     }
+    if data.get("email") is not None:
+        claims["email"] = data.get("email")
+    if data.get("emailVerified") is not None:
+        claims["emailVerified"] = data.get("emailVerified")
+    if data.get("tfaMethod") is not None:
+        claims["tfaMethod"] = data.get("tfaMethod")
+    for key in ("tid", "trol", "tmid", "jti", "tv"):
+        value = data.get(key)
+        if value is not None:
+            claims[key] = value
     return _encode_token(
         claims,
         token_type="access",
@@ -143,12 +148,18 @@ def create_refresh_token(data: CreateRefreshTokenOptions) -> str:
     """
     claims: dict[str, Any] = {
         "sub": data["sub"],
-        "email": data.get("email"),
         "tfaVerified": data.get("tfaVerified", False),
-        "tfaMethod": data.get("tfaMethod"),
-        "emailVerified": data.get("emailVerified"),
-        # NOTE: tid/trol are NOT preserved in refresh token (security)
     }
+    if data.get("email") is not None:
+        claims["email"] = data.get("email")
+    if data.get("emailVerified") is not None:
+        claims["emailVerified"] = data.get("emailVerified")
+    if data.get("tfaMethod") is not None:
+        claims["tfaMethod"] = data.get("tfaMethod")
+    for key in ("jti", "tv"):
+        value = data.get(key)
+        if value is not None:
+            claims[key] = value
     return _encode_token(
         claims,
         token_type="refresh",

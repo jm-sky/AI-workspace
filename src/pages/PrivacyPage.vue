@@ -27,7 +27,7 @@ const { t } = useI18n()
           </h2>
           <div class="space-y-2 text-muted-foreground">
             <p>
-              {{ t('privacy.dataCollection.description', 'Aplikacja Gear Stack zbiera następujące dane:') }}
+              {{ t('privacy.dataCollection.description', 'Aplikacja AI Workspace zbiera następujące dane:') }}
             </p>
             <ul class="list-disc list-inside space-y-1">
               <li>{{ t('privacy.dataCollection.items.account', 'Dane konta: email, imię i nazwisko (wymagane do utworzenia konta)') }}</li>

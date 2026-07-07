@@ -187,7 +187,7 @@ export default {
     subtitle: 'How we protect your data',
     dataCollection: {
       title: 'Data Collection',
-      description: 'Gear Stack application collects the following data:',
+      description: 'AI Workspace application collects the following data:',
       items: {
         account: 'Account data: email, full name (required to create an account)',
         gear: 'Gear data: containers, items, weights, statuses (stored in database)',
@@ -257,7 +257,7 @@ export default {
     subtitle: 'Terms and conditions for using the service',
     acceptance: {
       title: 'Acceptance of Terms',
-      description: 'By using the Gear Stack application, you accept these terms of use. If you do not agree with any of the following terms, you should not use the service.',
+      description: 'By using the AI Workspace application, you accept these terms of use. If you do not agree with any of the following terms, you should not use the service.',
     },
     account: {
       title: 'User Account',
@@ -326,24 +326,24 @@ export default {
     },
   },
   landing: {
-    title: 'Gear Stack',
-    subtitle: 'Organize and manage your survival gear and bug-out bag equipment',
+    title: 'AI Workspace',
+    subtitle: 'AI-native workspace for organizations — chat-first agent platform',
     welcomeBack: 'Welcome back, {name}!',
     feature1: {
-      title: 'Organize',
-      description: 'Keep track of all your gear in organized containers',
+      title: 'Chat',
+      description: 'Interact naturally with AI agents through a unified chat interface',
     },
     feature2: {
-      title: 'Track',
-      description: 'Monitor weight, readiness, and expiration dates',
+      title: 'Agents',
+      description: 'Orchestrate tools, workflows, and organizational knowledge',
     },
     feature3: {
-      title: 'Prepare',
-      description: 'Be ready for any situation with a well-prepared gear stack',
+      title: 'Integrate',
+      description: 'Connect Jira, GitLab, and more via MCP integrations',
     },
     login: 'Log In',
     register: 'Sign Up',
-    footer: 'Start organizing your gear today',
+    footer: 'Start building with AI agents today',
     localData: {
       title: 'You have containers in your browser',
       description: 'Log in or register to synchronize your data',
@@ -416,22 +416,22 @@ export default {
     },
   },
   about: {
-    title: 'About Gear Stack',
-    subtitle: 'A comprehensive web application for managing survival gear, bug-out bags, and outdoor equipment',
+    title: 'About AI Workspace',
+    subtitle: 'An AI-native platform for organizations — chat-first agent orchestration',
     tableOfContents: {
       title: 'Table of Contents',
     },
     overview: {
       title: 'Overview',
-      description: 'Gear Stack is a full-stack application designed for outdoor enthusiasts, preppers, and survival gear collectors. It combines an intuitive front-end interface with a robust backend to provide secure multi-user gear management with cloud synchronization across devices.',
+      description: 'AI Workspace is a full-stack platform that combines knowledge, memory, agents, tools, and workflows into a single system. Chat is the entry point; the product is an orchestration layer where AI agents reason, access organizational knowledge, and execute tasks with full auditability.',
     },
     capabilities: {
       title: 'Key Capabilities',
-      multiUser: 'Multi-User Platform - Secure user accounts with authentication and authorization',
-      hybrid: 'Hybrid Architecture - Works offline with localStorage, syncs with cloud when online',
-      organization: 'Advanced Organization - Hierarchical container system with nested items and weight tracking',
-      metadata: 'Rich Metadata - Track weight, expiration dates, priorities, brands, and custom categories',
-      portability: 'Data Portability - Import/export functionality with AI-ready markdown format',
+      multiUser: 'Multi-Tenant Platform - Secure user accounts with authentication, RBAC, and tenant isolation',
+      hybrid: 'Chat-First UX - Natural interaction with automatic model, agent, and tool selection',
+      organization: 'Agent Orchestration - Tool-calling loop with MCP integrations and streaming SSE responses',
+      metadata: 'Cascade Configuration - App → Tenant → Team → User settings with ceilings and allow-lists',
+      portability: 'Observable AI - Task/Run trace with auditable steps, token usage, and cost tracking',
     },
     coreFeatures: {
       title: 'Core Features',
@@ -518,10 +518,10 @@ export default {
   },
   aiContext: {
     title: 'AI Context',
-    subtitle: 'Short description of Gear Stack in Markdown format for AI assistants like ChatGPT',
+    subtitle: 'Short description of AI Workspace in Markdown format for AI assistants like ChatGPT',
     card: {
       title: 'Copy Context to Clipboard',
-      description: 'Click the button below to copy the context description. You can then paste it into ChatGPT or other AI assistants to provide context about Gear Stack.',
+      description: 'Click the button below to copy the context description. You can then paste it into ChatGPT or other AI assistants to provide context about AI Workspace.',
     },
     copied: 'Context copied to clipboard',
   },

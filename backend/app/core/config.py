@@ -33,7 +33,7 @@ class AppSettings(BaseSettings):
         default="backend", validation_alias="APP_NAME", description="Application name"
     )
     display_name: str = Field(
-        default="Gear Stack",
+        default="AI Workspace",
         validation_alias="APP_DISPLAY_NAME",
         description="Application display name for emails and UI",
     )
@@ -83,7 +83,7 @@ class ServerSettings(BaseSettings):
         description="Auto-reload on code changes",
     )
     cors_origins: str | list[str] = Field(
-        default='["http://localhost:3000"]',
+        default='["http://localhost:5176"]',
         validation_alias="CORS_ORIGINS",
         description="Allowed CORS origins",
     )
@@ -182,12 +182,12 @@ class SecuritySettings(BaseSettings):
         description="JWT signing algorithm",
     )
     jwt_issuer: str = Field(
-        default="gear-stack",
+        default="ai-workspace",
         validation_alias="JWT_ISSUER",
         description="JWT 'iss' claim; verified on decode to bind tokens to this deployment",
     )
     jwt_audience: str = Field(
-        default="gear-stack",
+        default="ai-workspace",
         validation_alias="JWT_AUDIENCE",
         description="JWT 'aud' claim; verified on decode to bind tokens to this deployment",
     )
@@ -478,7 +478,7 @@ class StorageSettings(BaseSettings):
     base_url: str | None = Field(
         default=None,
         validation_alias="STORAGE_BASE_URL",
-        description="Base URL for serving uploaded files (e.g., https://api.gear-stack.com or http://localhost:8000). If not set, uses relative paths.",
+        description="Base URL for serving uploaded files (e.g., https://api.ai-workspace.dev-made.it or http://localhost:8003). If not set, uses relative paths.",
     )
 
     # S3 storage
@@ -712,7 +712,7 @@ class WebAuthnSettings(BaseSettings):
         description="WebAuthn Relying Party ID (domain)",
     )
     rp_name: str = Field(
-        default="Gear Stack",
+        default="AI Workspace",
         validation_alias="WEBAUTHN_RP_NAME",
         description="WebAuthn Relying Party Name",
     )
@@ -778,6 +778,60 @@ class StripeSettings(BaseSettings):
         return parse_bool_value(v)
 
 
+class WorkspaceSettings(BaseSettings):
+    """Default workspace configuration (app-level ceiling)."""
+
+    model_config = _base_config
+
+    default_allowed_models: str | list[str] = Field(
+        default='["google/gemini-2.0-flash-001"]',
+        validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
+        description="Default allow-list of LLM model IDs",
+    )
+    default_model: str = Field(
+        default="google/gemini-2.0-flash-001",
+        validation_alias="WORKSPACE_DEFAULT_MODEL",
+        description="Default LLM model ID",
+    )
+    default_max_tokens: int = Field(
+        default=32000,
+        validation_alias="WORKSPACE_DEFAULT_MAX_TOKENS",
+        description="Default max output tokens ceiling",
+    )
+    default_rag_enabled: bool = Field(
+        default=False,
+        validation_alias="WORKSPACE_DEFAULT_RAG_ENABLED",
+        description="Whether RAG is enabled by default",
+    )
+    default_tools_enabled: bool = Field(
+        default=True,
+        validation_alias="WORKSPACE_DEFAULT_TOOLS_ENABLED",
+        description="Whether agent tools are enabled by default",
+    )
+
+    @field_validator("default_allowed_models", mode="after")
+    @classmethod
+    def parse_allowed_models(cls, v: str | list[str]) -> list[str]:
+        return parse_list_value(v)
+
+    @field_validator("default_rag_enabled", "default_tools_enabled", mode="before")
+    @classmethod
+    def parse_workspace_bools(cls, v: str | bool) -> bool:
+        return parse_bool_value(v)
+
+
+class IntegrationSettings(BaseSettings):
+    """Per-user integration OAuth token vault configuration."""
+
+    model_config = _base_config
+
+    token_encryption_key: str = Field(
+        default="",
+        validation_alias="INTEGRATION_TOKEN_ENCRYPTION_KEY",
+        description="Fernet key for integration OAuth tokens (Jira, GitLab, etc.)",
+    )
+
+
 class Settings(BaseSettings):
     """
     Main application settings composed of nested configuration classes.
@@ -804,10 +858,12 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     webauthn: WebAuthnSettings = Field(default_factory=WebAuthnSettings)
     stripe: StripeSettings = Field(default_factory=StripeSettings)
+    workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
+    integrations: IntegrationSettings = Field(default_factory=IntegrationSettings)
 
     # Legacy compatibility - still accessible at root level
     frontend_url: str = Field(
-        default="http://localhost:3000",
+        default="http://localhost:5176",
         validation_alias="FRONTEND_URL",
         description="Frontend application URL for reset links and redirects",
     )

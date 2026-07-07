@@ -22,9 +22,9 @@ export interface IAiModel {
 
 export const config = {
   app: {
-    id: import.meta.env.VITE_APP_ID ?? 'gear-stack',
-    name: import.meta.env.VITE_APP_NAME ?? 'Gear Stack',
-    description: import.meta.env.VITE_APP_DESCRIPTION ?? 'Gear Stack for managing survival gear and bug-out bag equipment.',
+    id: import.meta.env.VITE_APP_ID ?? 'ai-workspace',
+    name: import.meta.env.VITE_APP_NAME ?? 'AI Workspace',
+    description: import.meta.env.VITE_APP_DESCRIPTION ?? 'AI-native workspace for organizations — chat-first agent platform.',
   },
   i18n: {
     defaultLocale: (import.meta.env.VITE_DEFAULT_LOCALE ?? 'en') as SupportedLocale,

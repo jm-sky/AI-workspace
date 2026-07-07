@@ -187,7 +187,7 @@ export default {
     subtitle: 'Jak chronimy Twoje dane',
     dataCollection: {
       title: 'Zbieranie danych',
-      description: 'Aplikacja Gear Stack zbiera następujące dane:',
+      description: 'Aplikacja AI Workspace zbiera następujące dane:',
       items: {
         account: 'Dane konta: email, imię i nazwisko (wymagane do utworzenia konta)',
         gear: 'Dane dotyczące sprzętu: kontenery, przedmioty, wagi, statusy (przechowywane w bazie danych)',
@@ -257,7 +257,7 @@ export default {
     subtitle: 'Warunki korzystania z serwisu',
     acceptance: {
       title: 'Akceptacja warunków',
-      description: 'Korzystając z aplikacji Gear Stack, akceptujesz niniejsze warunki korzystania. Jeśli nie zgadzasz się z którymkolwiek z poniższych warunków, nie powinieneś korzystać z serwisu.',
+      description: 'Korzystając z aplikacji AI Workspace, akceptujesz niniejsze warunki korzystania. Jeśli nie zgadzasz się z którymkolwiek z poniższych warunków, nie powinieneś korzystać z serwisu.',
     },
     account: {
       title: 'Konto użytkownika',
@@ -326,24 +326,24 @@ export default {
     },
   },
   landing: {
-    title: 'Gear Stack',
-    subtitle: 'Organizuj i zarządzaj swoim sprzętem survivalowym i wyposażeniem bug-out bag',
+    title: 'AI Workspace',
+    subtitle: 'Platforma AI dla organizacji — chat-first z agentami',
     welcomeBack: 'Witaj ponownie, {name}!',
     feature1: {
-      title: 'Organizuj',
-      description: 'Śledź cały swój sprzęt w uporządkowanych kontenerach',
+      title: 'Czat',
+      description: 'Rozmawiaj naturalnie z agentami AI w jednym interfejsie czatu',
     },
     feature2: {
-      title: 'Śledź',
-      description: 'Monitoruj wagę, gotowość i daty ważności',
+      title: 'Agenci',
+      description: 'Orkiestruj narzędzia, workflow i wiedzę organizacyjną',
     },
     feature3: {
-      title: 'Przygotuj się',
-      description: 'Bądź gotowy na każdą sytuację z dobrze przygotowanym zestawem sprzętu',
+      title: 'Integracje',
+      description: 'Połącz Jirę, GitLab i inne systemy przez MCP',
     },
     login: 'Zaloguj się',
     register: 'Załóż konto',
-    footer: 'Zacznij organizować swój sprzęt już dziś',
+    footer: 'Zacznij pracę z agentami AI już dziś',
     localData: {
       title: 'Masz kontenery w przeglądarce',
       description: 'Zaloguj się lub zarejestruj, aby zsynchronizować swoje dane',
@@ -416,22 +416,22 @@ export default {
     },
   },
   about: {
-    title: 'O aplikacji Gear Stack',
-    subtitle: 'Kompleksowa aplikacja internetowa do zarządzania sprzętem survivalowym, plecakami bug-out i wyposażeniem outdoorowym',
+    title: 'O AI Workspace',
+    subtitle: 'Platforma AI dla organizacji — orkiestracja agentów z interfejsem czatu',
     tableOfContents: {
       title: 'Spis treści',
     },
     overview: {
       title: 'Przegląd',
-      description: 'Gear Stack to aplikacja full-stack zaprojektowana dla entuzjastów outdooru, preppersów i kolekcjonerów sprzętu survivalowego. Łączy intuicyjny interfejs front-end z solidnym backendem, zapewniając bezpieczne zarządzanie sprzętem dla wielu użytkowników z synchronizacją w chmurze między urządzeniami.',
+      description: 'AI Workspace to platforma full-stack łącząca wiedzę, pamięć, agentów, narzędzia i workflow w jednym systemie. Czat jest punktem wejścia; produktem jest warstwa orkiestracji, w której agenci AI rozumują, korzystają z wiedzy organizacji i wykonują zadania z pełną audytowalnością.',
     },
     capabilities: {
       title: 'Kluczowe możliwości',
-      multiUser: 'Platforma wieloużytkownikowa - bezpieczne konta użytkowników z uwierzytelnianiem i autoryzacją',
-      hybrid: 'Architektura hybrydowa - działa offline z localStorage, synchronizuje się z chmurą gdy jest online',
-      organization: 'Zaawansowana organizacja - hierarchiczny system kontenerów z zagnieżdżonymi elementami i śledzeniem wagi',
-      metadata: 'Bogate metadane - śledzenie wagi, dat ważności, priorytetów, marek i niestandardowych kategorii',
-      portability: 'Przenośność danych - funkcjonalność importu/eksportu z formatem markdown gotowym do użycia z AI',
+      multiUser: 'Platforma multi-tenant — bezpieczne konta z uwierzytelnianiem, RBAC i izolacją tenantów',
+      hybrid: 'Interfejs chat-first — naturalna interakcja z automatycznym wyborem modelu, agenta i narzędzi',
+      organization: 'Orkiestracja agentów — pętla tool-calling z integracjami MCP i streamingiem SSE',
+      metadata: 'Konfiguracja kaskadowa — ustawienia Aplikacja → Tenant → Zespół → Użytkownik z sufitami i allow-listami',
+      portability: 'Obserwowalne AI — ślad Task/Run z audytowalnymi krokami, tokenami i kosztami',
     },
     coreFeatures: {
       title: 'Główne funkcje',
@@ -518,10 +518,10 @@ export default {
   },
   aiContext: {
     title: 'Kontekst AI',
-    subtitle: 'Krótki opis Gear Stack w formacie Markdown dla asystentów AI takich jak ChatGPT',
+    subtitle: 'Krótki opis AI Workspace w formacie Markdown dla asystentów AI takich jak ChatGPT',
     card: {
       title: 'Skopiuj kontekst do schowka',
-      description: 'Kliknij przycisk poniżej, aby skopiować opis kontekstu. Następnie możesz wkleić go do ChatGPT lub innych asystentów AI, aby zapewnić kontekst o Gear Stack.',
+      description: 'Kliknij przycisk poniżej, aby skopiować opis kontekstu. Następnie możesz wkleić go do ChatGPT lub innych asystentów AI, aby zapewnić kontekst o AI Workspace.',
     },
     copied: 'Kontekst skopiowany do schowka',
   },

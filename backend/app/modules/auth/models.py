@@ -81,6 +81,8 @@ class User(BaseModel):
     oauthProvider: str | None = None  # 'google', 'github', etc.
     oauthProviderId: str | None = None  # Provider's user ID
     avatarUrl: str | None = None  # Profile picture URL
+    activeTenantId: str | None = None
+    activeTeamId: str | None = None
 
     def verify_password(self, password: str) -> bool:
         """Verify password against stored hash."""

@@ -62,7 +62,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https:",
             "font-src 'self' data:",
-            "connect-src 'self' https://*.gear-stack.ovh https://www.google.com https://*.sentry.io",
+            "connect-src 'self' https://*.ai-workspace.dev-made.it https://www.google.com https://*.sentry.io",
             "worker-src 'self' blob:",
             "frame-src 'self' https://www.google.com https://www.gstatic.com",
             "frame-ancestors 'none'",

@@ -42,10 +42,12 @@ class AuthService:
         user_repository: UserRepositoryInterface,
         token_blacklist_service: TokenBlacklistService | None = None,
         two_factor_repository: object | None = None,
+        tenant_workspace_service: object | None = None,
     ):
         self.user_repository = user_repository
         self.token_blacklist_service = token_blacklist_service
         self.two_factor_repository = two_factor_repository
+        self.tenant_workspace_service = tenant_workspace_service
 
     async def register_user(
         self,
@@ -128,6 +130,12 @@ class AuthService:
 
         return await self._issue_login_tokens(user)
 
+    async def _workspace_claims_for_user(self, user: User) -> dict[str, str]:
+        if self.tenant_workspace_service is None:
+            return {}
+        workspace = await self.tenant_workspace_service.resolve_workspace_for_user(user)
+        return self.tenant_workspace_service.workspace_claims(workspace)
+
     async def _issue_login_tokens(
         self,
         user: User,
@@ -137,6 +145,7 @@ class AuthService:
         """Generate JWT tokens for a user and track the session in Redis."""
         session_jti = str(uuid4())
         token_version = user.tokenVersion
+        workspace_claims = await self._workspace_claims_for_user(user)
 
         access_token = create_access_token(
             data={
@@ -147,6 +156,7 @@ class AuthService:
                 "emailVerified": user.isEmailVerified,
                 "jti": session_jti,
                 "tv": token_version,
+                **workspace_claims,
             }
         )
         refresh_token = create_refresh_token(
@@ -219,6 +229,7 @@ class AuthService:
             tfa_verified_bool = (
                 old_tfa_verified if old_tfa_verified is not None else False
             )
+            workspace_claims = await self._workspace_claims_for_user(user)
             new_access_token = create_access_token(
                 data={
                     "sub": user_id,
@@ -226,7 +237,8 @@ class AuthService:
                     "tfaVerified": tfa_verified_bool,
                     "tfaMethod": old_tfa_method,
                     "emailVerified": user.isEmailVerified,
-                    # tid/trol NOT preserved (security)
+                    "tv": user.tokenVersion,
+                    **workspace_claims,
                 }
             )
             new_refresh_token = create_refresh_token(
@@ -236,6 +248,8 @@ class AuthService:
                     "tfaVerified": tfa_verified_bool,
                     "tfaMethod": old_tfa_method,
                     "emailVerified": user.isEmailVerified,
+                    "tv": user.tokenVersion,
+                    "jti": payload.get("jti"),
                 }
             )
 

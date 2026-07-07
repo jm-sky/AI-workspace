@@ -20,3 +20,18 @@ class TenantResponse(BaseModel):
 
 class TenantListResponse(BaseModel):
     tenants: list[TenantResponse]
+
+
+class SwitchTenantRequest(BaseModel):
+    tenantId: str
+    teamId: str | None = None
+
+
+class SwitchTenantResponse(BaseModel):
+    accessToken: str
+    refreshToken: str
+    tokenType: str = "bearer"
+    expiresIn: int
+    tenant: TenantResponse
+    teamId: str | None = None
+

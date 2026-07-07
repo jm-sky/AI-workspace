@@ -90,6 +90,17 @@ class TenantRepository:
         result = await self.db.execute(select(TenantDB).where(TenantDB.id == tenant_id))
         return result.scalar_one_or_none()
 
+    async def get_membership(
+        self, tenant_id: str, user_id: str
+    ) -> TenantMembershipDB | None:
+        result = await self.db.execute(
+            select(TenantMembershipDB).where(
+                TenantMembershipDB.tenant_id == tenant_id,
+                TenantMembershipDB.user_id == user_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
 
 def get_tenant_repository(db: AsyncSession = Depends(get_db)) -> TenantRepository:
     """FastAPI dependency to obtain a tenant repository."""

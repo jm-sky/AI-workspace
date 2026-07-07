@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BackpackIcon } from 'lucide-vue-next'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -41,7 +41,7 @@ if (!config.backend.enabled) {
       <!-- Logo/Icon -->
       <div class="flex justify-center">
         <div class="rounded-full bg-primary/10 p-8">
-          <BackpackIcon class="size-20 text-primary" />
+          <AppIcon class="size-20" />
         </div>
       </div>
 
@@ -51,10 +51,10 @@ if (!config.backend.enabled) {
           {{ t('landing.welcomeBack', { name: user.name }) }}
         </p>
         <h1 class="text-5xl font-bold tracking-tight">
-          {{ t('landing.title', 'Gear Stack') }}
+          {{ t('landing.title', config.app.name) }}
         </h1>
         <p class="text-xl text-muted-foreground max-w-lg mx-auto">
-          {{ t('landing.subtitle', 'Organize and manage your survival gear and bug-out bag equipment') }}
+          {{ t('landing.subtitle', config.app.description) }}
         </p>
       </div>
     </div>
@@ -64,26 +64,26 @@ if (!config.backend.enabled) {
       <div class="grid grid-cols-1 md:grid-cols-3 py-4 gap-6">
         <div class="space-y-2">
           <h3 class="font-semibold text-lg">
-            {{ t('landing.feature1.title', 'Organize') }}
+            {{ t('landing.feature1.title', 'Chat') }}
           </h3>
           <p class="text-sm text-muted-foreground">
-            {{ t('landing.feature1.description', 'Keep track of all your gear in organized containers') }}
+            {{ t('landing.feature1.description', 'Interact naturally with AI agents through a unified chat interface') }}
           </p>
         </div>
         <div class="space-y-2">
           <h3 class="font-semibold text-lg">
-            {{ t('landing.feature2.title', 'Track') }}
+            {{ t('landing.feature2.title', 'Agents') }}
           </h3>
           <p class="text-sm text-muted-foreground">
-            {{ t('landing.feature2.description', 'Monitor weight, readiness, and expiration dates') }}
+            {{ t('landing.feature2.description', 'Orchestrate tools, workflows, and organizational knowledge') }}
           </p>
         </div>
         <div class="space-y-2">
           <h3 class="font-semibold text-lg">
-            {{ t('landing.feature3.title', 'Prepare') }}
+            {{ t('landing.feature3.title', 'Integrate') }}
           </h3>
           <p class="text-sm text-muted-foreground">
-            {{ t('landing.feature3.description', 'Be ready for any situation with a well-prepared gear stack') }}
+            {{ t('landing.feature3.description', 'Connect Jira, GitLab, and more via MCP integrations') }}
           </p>
         </div>
       </div>
