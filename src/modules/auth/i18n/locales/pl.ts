@@ -93,6 +93,7 @@ export const authPl = {
       },
       totp: {
         title: 'Aplikacja uwierzytelniająca (TOTP)',
+        tab_label: 'TOTP',
         description: 'Użyj aplikacji uwierzytelniającej takiej jak Google Authenticator lub Authy',
         setup: 'Skonfiguruj aplikację uwierzytelniającą',
         cancel: 'Anuluj',
@@ -126,6 +127,7 @@ export const authPl = {
       },
       webauthn: {
         title: 'Klucze dostępu',
+        tab_label: 'Klucze dostępu',
         description: 'Użyj uwierzytelniania biometrycznego lub kluczy bezpieczeństwa',
         register: 'Zarejestruj klucz dostępu',
         register_title: 'Dodaj nowy klucz dostępu',

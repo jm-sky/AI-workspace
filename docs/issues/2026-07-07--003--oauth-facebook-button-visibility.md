@@ -17,8 +17,8 @@ Każdy provider widoczny tylko przy własnej konfiguracji; sekcja OAuth gdy wł�
 
 ## Zakres
 
-- [ ] Backport wzorca z gear-stack / zbory-chwz `LoginForm.vue`
-- [ ] `LoginForm.vue`, `RegisterForm.vue`
+- [x] Backport wzorca z gear-stack / zbory-chwz `LoginForm.vue`
+- [x] `LoginForm.vue`, `RegisterForm.vue`
 
 ## Weryfikacja
 

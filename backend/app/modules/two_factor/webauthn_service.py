@@ -124,6 +124,9 @@ class WebAuthnService:
             user_id, user_email, user_name
         )
 
+        # options_to_json returns a JSON string; API schema expects a dict
+        options = json.loads(options_json)
+
         # Create registration token
         registration_token = _create_passkey_registration_token(user_id, challenge)
 
@@ -131,7 +134,7 @@ class WebAuthnService:
         expires_at = datetime.now(UTC) + timedelta(minutes=10)
 
         return {
-            "options": options_json,
+            "options": options,
             "registrationToken": registration_token,
             "expiresAt": expires_at,
         }
