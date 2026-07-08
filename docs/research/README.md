@@ -16,5 +16,6 @@ Analizy, spike'i, porównania i notatki przed decyzją.
 | 003 | [2026-07-04--003--agent-frameworks.md](2026-07-04--003--agent-frameworks.md) | Frameworki agentowe: SDK Anthropic vs LangGraph | `done` |
 | 004 | [2026-07-04--004--knowledge-sources.md](2026-07-04--004--knowledge-sources.md) | Kuratorowana baza źródeł / „best of AI" | `done` |
 | 005 | [2026-07-06--005--model-selection.md](2026-07-06--005--model-selection.md) | Wybór domyślnego modelu na OpenRouter (Gemini Flash) | `done` |
+| 006 | [2026-07-08--006--ai-kancelaria-comparison.md](2026-07-08--006--ai-kancelaria-comparison.md) | Porównanie z ai-kancelaria: co wdrożyć w AI Workspace | `done` |
 
 When adding a new entry: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.

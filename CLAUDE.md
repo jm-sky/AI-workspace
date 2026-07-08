@@ -8,9 +8,11 @@ Chat-first platforma agentowa: OpenRouter + własna pętla tool-calling, integra
 |-------|------|
 | Indeks dokumentacji | `docs/README.md` |
 | Plan MVP, fazy, decyzje 1–17 | `docs/MVP.md` |
+| UX/UI (ChatGPT + Linear) | `DESIGN.md` |
 | Prompt startowy implementacji | `docs/IMPLEMENTATION_KICKOFF.md` |
 | Wdrożenie Caddy (VPS) | `docs/deployment/CADDY_DEPLOYMENT.md` |
 | Konwencje kodu | `.cursorrules` |
+| Porównanie z ai-kancelaria (co przenieść) | `docs/research/2026-07-08--006--ai-kancelaria-comparison.md` |
 | Kontekst serwera (nie commituj) | `CLAUDE.local.md` |
 
 **Nie zmieniaj decyzji architektonicznych z `MVP.md` bez potwierdzenia użytkownika.**

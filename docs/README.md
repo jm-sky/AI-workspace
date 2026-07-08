@@ -31,6 +31,7 @@ Indeks: [`research/README.md`](research/README.md). Skrót:
 - [`research/2026-07-04--003--agent-frameworks.md`](research/2026-07-04--003--agent-frameworks.md) — frameworki agentowe: SDK Anthropic vs LangGraph.
 - [`research/2026-07-04--004--knowledge-sources.md`](research/2026-07-04--004--knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
 - [`research/2026-07-06--005--model-selection.md`](research/2026-07-06--005--model-selection.md) — wybór domyślnego modelu na OpenRouter (Gemini Flash).
+- [`research/2026-07-08--006--ai-kancelaria-comparison.md`](research/2026-07-08--006--ai-kancelaria-comparison.md) — porównanie z repo siostrzanym ai-kancelaria: co warto przenieść.
 
 ## Skrót decyzji (z `MVP.md`)
 
