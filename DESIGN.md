@@ -25,6 +25,8 @@ Approach:
 
 ## Visual references
 
+Materiały z refero.design: [`docs/design/README.md`](docs/design/README.md).
+
 ### ChatGPT
 Use for:
 - overall application structure
@@ -34,6 +36,8 @@ Use for:
 - input/composer patterns
 - AI interaction model
 
+Refero: [`docs/design/refero/chatgpt/`](docs/design/refero/chatgpt/) (`DESIGN.md`, `tailwind.css`)
+
 ### Linear
 Use for:
 - clean interface
@@ -41,6 +45,8 @@ Use for:
 - minimalism
 - premium SaaS feeling
 - attention to small details
+
+Refero: [`docs/design/refero/linear/`](docs/design/refero/linear/) (`DESIGN.md`, `tailwind.css`)
 
 ### AuthKit
 Use for:
