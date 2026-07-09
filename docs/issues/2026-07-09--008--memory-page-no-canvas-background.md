@@ -1,8 +1,18 @@
 # Issue 008 — Strona Pamięci — brak tła (canvas)
 
 **Data:** 2026-07-09
-**Status:** `todo`
+**Status:** `done` (2026-07-09)
 **Obszar:** frontend / workspace / design (Faza 1.5)
+
+## Rozwiązanie (2026-07-09)
+
+`WorkspaceMemoryPage.vue`: lista wpisów dostała canvas czatu
+(`rounded-xl border border-hairline bg-surface-canvas` + `divide-hairline`),
+a oba boksy sterujące — `rounded-xl border border-hairline bg-surface-raised`
+(zamiast `bg-muted/20`, które gasło w dark mode). Nagłówek zostaje na `bg-surface`.
+
+Pozostaje otwarte: `WorkspaceModelsSettingsPage.vue` /
+`WorkspaceIntegrationsSettingsPage.vue` renderują gołe karty — do przeglądu osobno.
 
 ## Objaw
 

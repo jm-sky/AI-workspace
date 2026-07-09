@@ -1,8 +1,14 @@
 # Issue 007 — Audyt/Trace (sheet) — brak paddingu treści
 
 **Data:** 2026-07-09
-**Status:** `todo`
+**Status:** `done` (2026-07-09)
 **Obszar:** frontend / workspace / design (Faza 1.5)
+
+## Rozwiązanie (2026-07-09)
+
+Wariant pierwszy z propozycji: padding lokalnie w `AgentAuditSheet.vue` —
+`TabsList` → `mx-4 shrink-0`, każdy `TabsContent` → `px-4 pb-4`, pusty stan → `px-4`.
+`SheetContent` (shared core) nietknięty, więc bez backportu.
 
 ## Objaw
 
