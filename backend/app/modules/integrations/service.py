@@ -1,14 +1,22 @@
 """Abstraction for injecting integration tokens into MCP tool calls."""
 
+from datetime import timedelta
 from typing import Protocol
 
 from app.modules.integrations.exceptions import (
     IntegrationPermissionError,
+    IntegrationRefreshFailedError,
+    IntegrationRefreshNotSupportedError,
     IntegrationTokenExpiredError,
     IntegrationTokenNotFoundError,
 )
+from app.modules.integrations.providers import integration_oauth_registry
+from app.modules.integrations.providers.registry import IntegrationOAuthRegistry
 from app.modules.integrations.repositories import IntegrationTokenRepository
 from app.modules.integrations.types import IntegrationVisibilityScope
+
+# Refresh slightly early so a token cannot expire mid-request.
+REFRESH_SKEW = timedelta(seconds=60)
 
 
 class IntegrationTokenProvider(Protocol):
@@ -29,8 +37,13 @@ class IntegrationTokenProvider(Protocol):
 class IntegrationTokenService:
     """Service for storing and retrieving integration OAuth tokens."""
 
-    def __init__(self, repo: IntegrationTokenRepository):
+    def __init__(
+        self,
+        repo: IntegrationTokenRepository,
+        registry: IntegrationOAuthRegistry | None = None,
+    ):
         self.repo = repo
+        self.registry = registry or integration_oauth_registry
 
     async def store_tokens(
         self,
@@ -70,16 +83,16 @@ class IntegrationTokenService:
         """Resolve token: personal > active team > tenant."""
         personal = await self.repo.find_user_scoped(user_id, provider)
         if personal is not None:
-            return self._require_valid_access_token(personal)
+            return await self._require_valid_access_token(personal)
 
         if team_id:
             team_token = await self.repo.find_team_scoped(team_id, provider)
             if team_token is not None:
-                return self._require_valid_access_token(team_token)
+                return await self._require_valid_access_token(team_token)
 
         tenant_token = await self.repo.find_tenant_scoped(tenant_id, provider)
         if tenant_token is not None:
-            return self._require_valid_access_token(tenant_token)
+            return await self._require_valid_access_token(tenant_token)
 
         raise IntegrationTokenNotFoundError(
             f"No integration token for provider '{provider}'"
@@ -92,19 +105,47 @@ class IntegrationTokenService:
             raise IntegrationTokenNotFoundError(
                 f"No integration token for provider '{provider}'"
             )
-        return self._require_valid_access_token(token)
+        return await self._require_valid_access_token(token)
 
-    def _require_valid_access_token(self, token) -> str:
-        if token.expires_at and token.expires_at <= _utcnow():
-            if token.encrypted_refresh_token:
-                raise IntegrationTokenExpiredError(
-                    f"Token for '{token.provider}' expired — re-authenticate "
-                    "(provider refresh not yet implemented)"
-                )
+    async def _require_valid_access_token(self, token) -> str:
+        if not self._is_expiring(token):
+            return self.repo.decrypt_access_token(token)
+
+        refresh_token = self.repo.decrypt_refresh_token(token)
+        if not refresh_token:
             raise IntegrationTokenExpiredError(
                 f"Token for '{token.provider}' expired and no refresh token available"
             )
-        return self.repo.decrypt_access_token(token)
+        return await self._refresh_access_token(token, refresh_token)
+
+    @staticmethod
+    def _is_expiring(token) -> bool:
+        return bool(token.expires_at) and token.expires_at <= _utcnow() + REFRESH_SKEW
+
+    async def _refresh_access_token(self, token, refresh_token: str) -> str:
+        try:
+            provider = self.registry.get(token.provider)
+            result = await provider.refresh_access_token(refresh_token)
+        except (
+            IntegrationRefreshNotSupportedError,
+            IntegrationRefreshFailedError,
+            ValueError,
+        ) as exc:
+            raise IntegrationTokenExpiredError(
+                f"Token for '{token.provider}' expired and could not be refreshed "
+                f"— re-authenticate ({exc})"
+            ) from exc
+
+        await self.repo.update_tokens(
+            token,
+            access_token=result.access_token,
+            refresh_token=result.refresh_token,
+            token_type=result.token_type,
+            expires_at=result.expires_at,
+            scopes=result.scope,
+            provider_metadata=result.provider_metadata,
+        )
+        return result.access_token
 
     async def delete_connection(self, connection_id: str) -> bool:
         return await self.repo.delete_connection(connection_id)
