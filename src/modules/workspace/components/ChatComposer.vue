@@ -32,20 +32,23 @@ const handleKeydown = (event: KeyboardEvent) => {
 </script>
 
 <template>
-  <div class="sticky bottom-0 shrink-0 border-t bg-background/95 p-3 backdrop-blur sm:p-4">
-    <form class="flex items-end gap-2" @submit.prevent="handleSubmit">
+  <div class="sticky bottom-0 shrink-0 px-3 pb-4 pt-2 sm:px-4">
+    <form
+      class="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-2xl border border-hairline bg-surface-raised/80 p-2 shadow-lg backdrop-blur transition-colors focus-within:border-ring/50"
+      @submit.prevent="handleSubmit"
+    >
       <Textarea
         v-model="input"
         :placeholder="t('workspace.chat.placeholder')"
         :disabled="isLoading"
         rows="2"
-        class="min-w-0 flex-1 resize-none border bg-card shadow-sm"
+        class="min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
         :aria-label="t('workspace.chat.placeholder')"
         @keydown="handleKeydown"
       />
       <Button
         type="submit"
-        class="shrink-0"
+        class="shrink-0 rounded-xl"
         :loading="isStreaming"
         :disabled="isLoading || !input.trim() || !canSubmit"
       >

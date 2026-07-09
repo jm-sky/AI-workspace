@@ -96,33 +96,38 @@ const handleCopyRun = async () => {
           {{ t('workspace.chat.loadingSession') }}
         </div>
 
-        <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto rounded-lg border bg-background p-4">
-          <p
-            v-if="messages.length === 0 && !isLoadingRun"
-            class="m-auto text-center text-sm text-muted-foreground"
-          >
-            {{ t('workspace.chat.empty') }}
-          </p>
+        <div class="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl border border-hairline bg-surface-canvas">
+          <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
+            <p
+              v-if="messages.length === 0 && !isLoadingRun"
+              class="m-auto text-center text-sm text-muted-foreground"
+            >
+              {{ t('workspace.chat.empty') }}
+            </p>
 
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            :class="[
-              'max-w-[95%] rounded-lg p-3',
-              msg.role === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'mr-auto w-full bg-muted',
-            ]"
-          >
-            <AgentMarkdown :content="msg.content" />
-            <AgentRichBlocks
-              v-if="msg.blocks?.length"
-              :blocks="msg.blocks"
+            <div
+              v-for="msg in messages"
+              :key="msg.id"
+              :class="['w-full', msg.role === 'user' ? 'flex justify-end' : '']"
+            >
+              <div
+                :class="msg.role === 'user'
+                  ? 'max-w-[85%] rounded-2xl border border-hairline bg-surface-user px-4 py-2.5 text-foreground'
+                  : 'w-full'"
+              >
+                <AgentMarkdown :content="msg.content" />
+                <AgentRichBlocks
+                  v-if="msg.blocks?.length"
+                  :blocks="msg.blocks"
+                />
+              </div>
+            </div>
+
+            <ChatThinkingIndicator
+              v-if="isStreaming"
+              :steps="steps"
             />
           </div>
-
-          <ChatThinkingIndicator
-            v-if="isStreaming"
-            :steps="steps"
-          />
         </div>
       </div>
 
