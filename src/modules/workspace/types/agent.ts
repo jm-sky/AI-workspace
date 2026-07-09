@@ -1,6 +1,6 @@
 export type AgentRunStatus = 'running' | 'completed' | 'failed'
 
-export type AgentStepType = 'model' | 'tool_call' | 'tool_result' | 'step'
+export type AgentStepType = 'model' | 'tool_call' | 'tool_result' | 'guard' | 'step'
 
 export interface IAgentChatRequest {
   message: string

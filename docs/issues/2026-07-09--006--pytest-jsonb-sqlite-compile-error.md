@@ -1,8 +1,20 @@
 # Issue 006 — pytest: JSONB nie kompiluje się na SQLite (dług test-infra)
 
 **Data:** 2026-07-09
-**Status:** `todo`
+**Status:** `done` (2026-07-09)
 **Obszar:** backend / test infrastructure
+
+## Rozwiązanie (2026-07-09)
+
+W `backend/tests/conftest.py` dodano kompilator `JSONB → JSON` dla SQLite
+(dokładnie propozycja poniżej). Efekt: `pytest tests/test_main.py tests/modules/`
+przechodzi (38 passed; wcześniej `test_main` errorował na `CompileError`). Łącznie
+w pełnym `pytest tests/` liczba passed wzrosła 142 → 150.
+
+**Uwaga:** pozostałe ~123 błędy w `tests/integration/gear/` to **osobny, wcześniej
+istniejący** problem (pytest-asyncio: `*_scoped_runner` fixture / event loop), a
+**nie** JSONB — do potraktowania oddzielnym issue, jeśli te legacy testy mają
+wrócić do CI.
 
 ## Objaw
 

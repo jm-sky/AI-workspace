@@ -85,6 +85,7 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 - **Faza 0 — Fundament (reuse gear-stack):** auth, użytkownicy, model danych Tenant/Zespół/Użytkownik + izolacja, RBAC, kaskada konfiguracji, plumbing per-user OAuth (magazyn tokenów).
 - **Faza 1 — Pionowy plaster (Jira 360° end-to-end):** rdzeń agenta (tool runner SDK Anthropic) + trace/audyt, czat (reuse Vue `ai`) + SSE, jeden agent i 1–2 integracje MCP (Jira + GitLab) → działający widok 360° na wąskim zakresie.
+- **Faza 1.5 — Design pass:** wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na czat i widok 360° + inline tool steps + bogate bloki dopięte do systemu wizualnego. Jeden spójny przebieg na żywym szkielecie Fazy 1 (żeby nie przerabiać UI dwa razy). Szczegóły: `docs/IMPLEMENTATION_KICKOFF.md`.
 - **Faza 2 — Reszta integracji:** własne cienkie serwery MCP dla Gmail i Teams (per-user token injection) → pełny fan-out 360°.
 - **Faza 3 — Konfigurowalność:** edytor agentów (admin), abstrakcja routera (jawny wybór), tools injection, bogate bloki (karty/tabele/wykresy).
 - **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG.

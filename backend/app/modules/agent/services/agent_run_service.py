@@ -19,6 +19,12 @@ from app.modules.agent.schemas import (
     AgentSessionDetail,
     AgentSessionSummary,
 )
+from app.modules.agent.guards import (
+    SourceRoutingWarning,
+    check_source_mismatch,
+    provider_of_tool,
+)
+from app.modules.agent.guards.source_routing import format_warnings
 from app.modules.agent.services.agent_loop import AgentLoopEvent, AgentLoopService
 from app.modules.agent.tools import build_tool_registry
 from app.modules.agent.tools.base import AgentToolRegistry
@@ -158,6 +164,11 @@ class AgentRunService:
                         data={**event.data, "runId": run.id, "sessionId": session_id},
                     )
                 elif event.event == "run_complete":
+                    self._apply_source_guard(
+                        event=event,
+                        user_message=message,
+                        tool_registry=tool_registry,
+                    )
                     for trace_step in event.data.get("stepsTrace", []):
                         await self.run_repo.add_step(
                             run_id=run.id,
@@ -281,6 +292,44 @@ class AgentRunService:
             "connect it in Settings instead of guessing."
         )
 
+    def _apply_source_guard(
+        self,
+        *,
+        event: AgentLoopEvent,
+        user_message: str,
+        tool_registry: AgentToolRegistry,
+    ) -> None:
+        """Append a warning if the user named a source the agent never queried."""
+        steps = event.data.get("stepsTrace", [])
+        tools_used = [
+            step.get("name")
+            for step in steps
+            if step.get("stepType") == "tool_result" and step.get("name")
+        ]
+        warnings = check_source_mismatch(
+            user_message=user_message,
+            tools_used=tools_used,
+            available_providers=_available_providers(tool_registry),
+        )
+        if not warnings:
+            return
+
+        note = format_warnings(warnings)
+        base_msg = event.data.get("message") or ""
+        event.data["message"] = f"{base_msg}\n\n{note}" if base_msg else note
+        steps.append(
+            {
+                "stepIndex": len(steps),
+                "stepType": "guard",
+                "name": "source_routing_guard",
+                "inputData": {"tools_used": tools_used},
+                "outputData": {
+                    "warnings": [_warning_dict(w) for w in warnings],
+                },
+            }
+        )
+        event.data["stepsTrace"] = steps
+
     async def get_run(self, run_id: str, *, user_id: str) -> AgentRunResponse | None:
         run = await self.run_repo.get_run(run_id, user_id=user_id)
         if run is None:
@@ -335,6 +384,25 @@ class AgentRunService:
             run_responses.append(_to_run_response(run, steps))
         summary = _to_session_summary(session)
         return AgentSessionDetail(**summary.model_dump(), runs=run_responses)
+
+
+def _available_providers(tool_registry: AgentToolRegistry) -> set[str]:
+    """Providers reachable via the current tool registry (e.g. {jira, gitlab})."""
+    providers: set[str] = set()
+    for tool in tool_registry.openai_tools():
+        name = tool.get("function", {}).get("name", "")
+        provider = provider_of_tool(name)
+        if provider:
+            providers.add(provider)
+    return providers
+
+
+def _warning_dict(warning: SourceRoutingWarning) -> dict[str, str]:
+    return {
+        "provider": warning.provider,
+        "reason": warning.reason,
+        "message": warning.message,
+    }
 
 
 def _derive_title(message: str) -> str:

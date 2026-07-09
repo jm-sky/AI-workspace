@@ -62,14 +62,25 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 - **Audyt w czacie** z kopiowaniem runu i kroków (z system promptem). ✅
 - **Sesje wieloturowe** (P0 z porównania ai-kancelaria): jedna rozmowa = wiele runów (`chat_sessions`), historia wstrzykiwana do pętli, sidebar sesji + `?session=`. ✅ (2026-07-09)
 - **Kontekst użytkownika + dynamiczny katalog narzędzi** w system prompcie (sekcje `USER CONTEXT` / `AVAILABLE TOOLS` budowane z rejestru i połączonych integracji). ✅ (2026-07-09)
+- **SourceRoutingGuard** — programowa walidacja po turze: gdy użytkownik jawnie wskaże źródło (Jira/GitLab/GitHub/Gmail/Teams), a agent go nie odpytał → ostrzeżenie doklejone do odpowiedzi + krok `guard` w trace. ✅ (2026-07-09)
 
 ### Pozostałe P0 z porównania ai-kancelaria (kolejne kroki)
 
-- Kroki narzędzi widoczne inline w wątku podczas streamingu (nie tylko w panelu audytu).
-- Programowy `SourceRoutingGuard` (walidacja wyboru źródła po turze).
-- Audyt dwuwarstwowy: skrót PII-safe + raw (admin, retencja).
+- Audyt dwuwarstwowy: skrót PII-safe + raw (admin, retencja). *(logika, niezależne od designu)*
+- Kroki narzędzi widoczne inline w wątku podczas streamingu → **przeniesione do Fazy 1.5 (design pass)**, bo to element wizualny.
 
-> **UX/UI:** wygląd czatu i widoku 360° prowadzimy wg `DESIGN.md` (ChatGPT + Linear) — dopracowanie wizualne **na później**, po domknięciu logiki Fazy 1.
+## Faza 1.5 — Design pass (DESIGN.md)
+
+Slot na **nowy wygląd** — wykonać po domknięciu logiki Fazy 1 (audyt dwuwarstwowy),
+jako jeden spójny przebieg wizualny zamiast doraźnych poprawek:
+
+- Wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na widok czatu i **widok 360°**.
+- **Inline tool steps** — kroki narzędzi w wątku podczas streamingu (część UX, projektowana razem z resztą, nie ad hoc).
+- Bogate bloki (karta/tabela) dopięte do systemu wizualnego; wykresy zostają w Fazie 3.
+- Puste stany, stany ładowania/streamingu, sidebar sesji, kolory dark/light.
+
+> **Kiedy:** po `SourceRoutingGuard` + audycie dwuwarstwowym, przed Fazą 2 (Gmail/Teams).
+> Design robimy raz, na żywym szkielecie Fazy 1, żeby nie przerabiać UI dwa razy.
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 
