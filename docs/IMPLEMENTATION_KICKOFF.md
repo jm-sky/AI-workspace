@@ -73,18 +73,23 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 - UI admina dla raw-audytu (endpoint gotowy; widok w „Control Tower" — Faza 5).
 - Job cron `purge_expired_raw` (metoda gotowa; retencja i tak egzekwowana przy odczycie).
 
-## Faza 1.5 — Design pass (DESIGN.md)
+## Faza 1.5 — Design pass (DESIGN.md) — 🔄 w toku
 
-Slot na **nowy wygląd** — logika Fazy 1 domknięta (2026-07-09), więc teraz robimy
-jeden spójny przebieg wizualny zamiast doraźnych poprawek:
+Jeden spójny przebieg wizualny na żywym szkielecie Fazy 1. Decyzje: **sky-500
+restraint**, **tylko Inter**, **light-first / dark równorzędny** (ChatGPT struktura
++ Linear rzemiosło).
 
-- Wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na widok czatu i **widok 360°**.
-- **Inline tool steps** — kroki narzędzi w wątku podczas streamingu (część UX, projektowana razem z resztą, nie ad hoc).
-- Bogate bloki (karta/tabela) dopięte do systemu wizualnego; wykresy zostają w Fazie 3.
-- Puste stany, stany ładowania/streamingu, sidebar sesji, kolory dark/light.
+- **Krok 1 — Fundament** ✅ (2026-07-09): Inter Variable self-host (offline), tokeny powierzchni czatu w obu motywach (`surface-canvas/raised/user`, `hairline`); tokeny shadcn nietknięte.
+- **Krok 2 — Szkielet czatu** ✅ (2026-07-09): kolumna czytania `max-w-3xl` na canvas, achromatyczne bąbelki usera (koniec z pełnym sky), premium composer (floating, hairline, blur).
+- **Krok 3 — AI presence** ✅ (2026-07-09): `ChatToolSteps` — inline kroki narzędzi w wątku podczas streamingu (ikona providera, tool w mono, status na żywo).
+- **Krok 4 — Bogate bloki / 360°** ✅ (2026-07-09): karty/tabele na hairline+surface-raised, mono dla ID/kluczy, pille statusów, linki z ikoną. Wykresy zostają w Fazie 3.
 
-> **Kiedy:** po `SourceRoutingGuard` + audycie dwuwarstwowym, przed Fazą 2 (Gmail/Teams).
-> Design robimy raz, na żywym szkielecie Fazy 1, żeby nie przerabiać UI dwa razy.
+### Do dopracowania w Fazie 1.5 (kolejne)
+
+- Puste stany / welcome, drobne micro-interactions (hover/focus), przegląd wizualny sidebaru sesji i audytu.
+- **Weryfikacja wizualna w dev/prod** (Inter, dark+light, composer, 360°) — do rewizji przez użytkownika.
+
+> Design robimy raz, na żywym szkielecie Fazy 1, żeby nie przerabiać UI dwa razy. Potem Faza 2 (Gmail/Teams).
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 
