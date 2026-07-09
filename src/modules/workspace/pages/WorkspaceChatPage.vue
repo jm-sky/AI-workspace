@@ -10,6 +10,7 @@ import AgentRichBlocks from '@/modules/workspace/components/AgentRichBlocks.vue'
 import ChatComposer from '@/modules/workspace/components/ChatComposer.vue'
 import ChatThinkingIndicator from '@/modules/workspace/components/ChatThinkingIndicator.vue'
 import ChatToolbar from '@/modules/workspace/components/ChatToolbar.vue'
+import ChatToolSteps from '@/modules/workspace/components/ChatToolSteps.vue'
 import { useAgentChat } from '@/modules/workspace/composables/useAgentChat'
 import { useChatSessionNav } from '@/modules/workspace/composables/useChatSessionNav'
 import { useWorkspaceModels } from '@/modules/workspace/composables/useWorkspaceModels'
@@ -122,6 +123,11 @@ const handleCopyRun = async () => {
                 />
               </div>
             </div>
+
+            <ChatToolSteps
+              v-if="isStreaming && steps.length"
+              :steps="steps"
+            />
 
             <ChatThinkingIndicator
               v-if="isStreaming"

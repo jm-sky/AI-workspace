@@ -15,7 +15,7 @@ const { statusLabel } = useThinkingStatus(
 </script>
 
 <template>
-  <div class="mr-auto flex max-w-[95%] items-center gap-3 rounded-lg bg-muted p-3">
+  <div class="mr-auto flex max-w-[85%] items-center gap-3 rounded-xl border border-hairline bg-surface-raised/60 px-3 py-2.5">
     <div class="flex items-center gap-1" aria-hidden="true">
       <span
         class="size-2 rounded-full bg-muted-foreground/70 animate-bounce"
