@@ -719,8 +719,21 @@ class AISettings(BaseSettings):
         ge=0,
         le=20,
     )
+    audit_raw_enabled: bool = Field(
+        default=True,
+        validation_alias="AI_AUDIT_RAW_ENABLED",
+        description="Persist full (raw) tool payloads in a separate audit tier",
+    )
+    audit_raw_retention_days: int = Field(
+        default=30,
+        validation_alias="AI_AUDIT_RAW_RETENTION_DAYS",
+        description="Days to keep raw agent trace payloads before purge/expiry",
+        ge=0,
+    )
 
-    @field_validator("enabled", "cache_enabled", "memory_enabled", mode="before")
+    @field_validator(
+        "enabled", "cache_enabled", "memory_enabled", "audit_raw_enabled", mode="before"
+    )
     @classmethod
     def parse_bool_field(cls, v: str | bool) -> bool:
         """Parse boolean field from string or bool."""

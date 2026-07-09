@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.id_utils import generate_id
@@ -51,6 +51,9 @@ class AgentRunRepository:
         name: str | None = None,
         input_data: dict[str, Any] | None = None,
         output_data: dict[str, Any] | None = None,
+        raw_input_data: dict[str, Any] | None = None,
+        raw_output_data: dict[str, Any] | None = None,
+        raw_expires_at: datetime | None = None,
     ) -> AgentRunStepDB:
         step = AgentRunStepDB(
             id=generate_id(),
@@ -60,6 +63,9 @@ class AgentRunRepository:
             name=name,
             input_data=input_data,
             output_data=output_data,
+            raw_input_data=raw_input_data,
+            raw_output_data=raw_output_data,
+            raw_expires_at=raw_expires_at,
         )
         self.db.add(step)
         await self.db.flush()
@@ -137,6 +143,30 @@ class AgentRunRepository:
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_run_any(self, run_id: str) -> AgentRunDB | None:
+        """Fetch a run without user scoping (admin/raw-audit use only)."""
+        stmt = select(AgentRunDB).where(AgentRunDB.id == run_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def purge_expired_raw(self, *, now: datetime | None = None) -> int:
+        """Null out raw payloads whose retention window has passed."""
+        cutoff = now or datetime.now(UTC)
+        stmt = (
+            update(AgentRunStepDB)
+            .where(
+                AgentRunStepDB.raw_expires_at.is_not(None),
+                AgentRunStepDB.raw_expires_at < cutoff,
+                (
+                    AgentRunStepDB.raw_input_data.is_not(None)
+                    | AgentRunStepDB.raw_output_data.is_not(None)
+                ),
+            )
+            .values(raw_input_data=None, raw_output_data=None, raw_expires_at=None)
+        )
+        result = await self.db.execute(stmt)
+        return result.rowcount or 0
 
     async def list_runs_for_session(self, session_id: str) -> list[AgentRunDB]:
         """All runs in a session, oldest first (conversation order)."""

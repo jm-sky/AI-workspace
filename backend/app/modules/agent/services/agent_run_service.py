@@ -1,10 +1,13 @@
 """High-level agent run orchestration with persistence."""
 
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.modules.agent.audit import redact_payload
 from app.modules.agent.exceptions import (
     AgentNotConfiguredError,
     AgentToolsDisabledError,
@@ -169,14 +172,25 @@ class AgentRunService:
                         user_message=message,
                         tool_registry=tool_registry,
                     )
+                    raw_enabled = settings.ai.audit_raw_enabled
+                    raw_expiry = _raw_expiry()
                     for trace_step in event.data.get("stepsTrace", []):
+                        raw_input = trace_step.get("inputData")
+                        raw_output = trace_step.get("outputData")
                         await self.run_repo.add_step(
                             run_id=run.id,
                             step_index=trace_step.get("stepIndex", step_index),
                             step_type=trace_step.get("stepType", "step"),
                             name=trace_step.get("name"),
-                            input_data=trace_step.get("inputData"),
-                            output_data=trace_step.get("outputData"),
+                            input_data=redact_payload(raw_input)
+                            if raw_input is not None
+                            else None,
+                            output_data=redact_payload(raw_output)
+                            if raw_output is not None
+                            else None,
+                            raw_input_data=raw_input if raw_enabled else None,
+                            raw_output_data=raw_output if raw_enabled else None,
+                            raw_expires_at=raw_expiry if raw_enabled else None,
                         )
                         step_index += 1
 
@@ -337,6 +351,54 @@ class AgentRunService:
         steps = await self.run_repo.get_steps(run_id)
         return _to_run_response(run, steps)
 
+    async def get_run_raw(self, run_id: str) -> dict[str, Any] | None:
+        """Full (raw) trace for admins; expired raw payloads are withheld."""
+        run = await self.run_repo.get_run_any(run_id)
+        if run is None:
+            return None
+        steps = await self.run_repo.get_steps(run_id)
+        now = datetime.now(UTC)
+        step_dicts: list[dict[str, Any]] = []
+        for step in steps:
+            expired = step.raw_expires_at is not None and step.raw_expires_at < now
+            step_dicts.append(
+                {
+                    "id": step.id,
+                    "stepIndex": step.step_index,
+                    "stepType": step.step_type,
+                    "name": step.name,
+                    "inputData": step.input_data,
+                    "outputData": step.output_data,
+                    "rawInputData": None if expired else step.raw_input_data,
+                    "rawOutputData": None if expired else step.raw_output_data,
+                    "rawExpiresAt": step.raw_expires_at.isoformat()
+                    if step.raw_expires_at
+                    else None,
+                    "rawExpired": expired,
+                    "createdAt": step.created_at.isoformat(),
+                }
+            )
+        return {
+            "id": run.id,
+            "sessionId": run.session_id,
+            "agentKey": run.agent_key,
+            "status": run.status,
+            "inputMessage": run.input_message,
+            "outputMessage": run.output_message,
+            "systemPrompt": run.system_prompt,
+            "model": run.model,
+            "tenantId": run.tenant_id,
+            "userId": run.user_id,
+            "steps": step_dicts,
+        }
+
+    async def purge_expired_raw(self) -> int:
+        """Housekeeping: drop raw payloads past their retention window."""
+        purged = await self.run_repo.purge_expired_raw()
+        if purged:
+            await self.db.commit()
+        return purged
+
     async def list_runs(
         self,
         *,
@@ -384,6 +446,14 @@ class AgentRunService:
             run_responses.append(_to_run_response(run, steps))
         summary = _to_session_summary(session)
         return AgentSessionDetail(**summary.model_dump(), runs=run_responses)
+
+
+def _raw_expiry() -> datetime | None:
+    """Retention deadline for raw trace payloads, or None if kept indefinitely."""
+    days = settings.ai.audit_raw_retention_days
+    if days <= 0:
+        return None
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def _available_providers(tool_registry: AgentToolRegistry) -> set[str]:

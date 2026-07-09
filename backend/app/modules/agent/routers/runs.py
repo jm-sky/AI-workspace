@@ -10,7 +10,7 @@ from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.repositories import AgentRunRepository
 from app.modules.agent.schemas import AgentRunResponse, AgentRunsListResponse
 from app.modules.agent.services.agent_run_service import AgentRunService, _to_run_response
-from app.modules.auth.dependencies import CurrentUser
+from app.modules.auth.dependencies import AdminUser, CurrentUser
 from app.modules.integrations.repositories import (
     IntegrationTokenRepository,
     get_integration_token_repository,
@@ -63,10 +63,23 @@ async def export_run(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """Export full run trace for debugging (includes system prompt)."""
+    """Export run trace (summary tier — redacted) for the owner, incl. system prompt."""
     repo = AgentRunRepository(db)
     run = await repo.get_run(run_id, user_id=current_user.id)
     if run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
     steps = await repo.get_steps(run_id)
     return _to_run_response(run, steps).model_dump(mode="json")
+
+
+@router.get("/{run_id}/raw")
+async def export_run_raw(
+    run_id: str,
+    admin_user: AdminUser,
+    service: Annotated[AgentRunService, Depends(_get_agent_service)],
+) -> dict:
+    """Admin-only: full (raw) trace payloads; expired raw is withheld by retention."""
+    raw = await service.get_run_raw(run_id)
+    if raw is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
+    return raw

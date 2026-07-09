@@ -63,16 +63,20 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 - **Sesje wieloturowe** (P0 z porównania ai-kancelaria): jedna rozmowa = wiele runów (`chat_sessions`), historia wstrzykiwana do pętli, sidebar sesji + `?session=`. ✅ (2026-07-09)
 - **Kontekst użytkownika + dynamiczny katalog narzędzi** w system prompcie (sekcje `USER CONTEXT` / `AVAILABLE TOOLS` budowane z rejestru i połączonych integracji). ✅ (2026-07-09)
 - **SourceRoutingGuard** — programowa walidacja po turze: gdy użytkownik jawnie wskaże źródło (Jira/GitLab/GitHub/Gmail/Teams), a agent go nie odpytał → ostrzeżenie doklejone do odpowiedzi + krok `guard` w trace. ✅ (2026-07-09)
+- **Audyt dwuwarstwowy** — warstwa summary (redakcja: maskowanie kluczy-sekretów + obcinanie długich stringów/list) w normalnym widoku audytu; warstwa raw (pełne payloady, `GET /agent/runs/{id}/raw` tylko admin) z retencją `AI_AUDIT_RAW_RETENTION_DAYS` (domyślnie 30) — wygasłe raw wstrzymywane przy odczycie + `purge_expired_raw()`. ✅ (2026-07-09)
 
-### Pozostałe P0 z porównania ai-kancelaria (kolejne kroki)
+**Logika Fazy 1 domknięta** — kolejny krok to Faza 1.5 (design pass).
 
-- Audyt dwuwarstwowy: skrót PII-safe + raw (admin, retencja). *(logika, niezależne od designu)*
+### Odłożone w ramach Fazy 1
+
 - Kroki narzędzi widoczne inline w wątku podczas streamingu → **przeniesione do Fazy 1.5 (design pass)**, bo to element wizualny.
+- UI admina dla raw-audytu (endpoint gotowy; widok w „Control Tower" — Faza 5).
+- Job cron `purge_expired_raw` (metoda gotowa; retencja i tak egzekwowana przy odczycie).
 
 ## Faza 1.5 — Design pass (DESIGN.md)
 
-Slot na **nowy wygląd** — wykonać po domknięciu logiki Fazy 1 (audyt dwuwarstwowy),
-jako jeden spójny przebieg wizualny zamiast doraźnych poprawek:
+Slot na **nowy wygląd** — logika Fazy 1 domknięta (2026-07-09), więc teraz robimy
+jeden spójny przebieg wizualny zamiast doraźnych poprawek:
 
 - Wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na widok czatu i **widok 360°**.
 - **Inline tool steps** — kroki narzędzi w wątku podczas streamingu (część UX, projektowana razem z resztą, nie ad hoc).

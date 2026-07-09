@@ -82,8 +82,15 @@ class AgentRunStepDB(Base):
     step_index: Mapped[int] = mapped_column(Integer, nullable=False)
     step_type: Mapped[str] = mapped_column(String(30), nullable=False)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Summary tier: redacted / truncated, shown in the normal audit view.
     input_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     output_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    # Raw tier: full payloads, admin-only, purged after raw_expires_at.
+    raw_input_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    raw_output_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    raw_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )
