@@ -1,4 +1,7 @@
-import type { IAgentRunSummary } from '@/modules/workspace/types/agent'
+import type {
+  IAgentRunSummary,
+  IAgentSessionSummary,
+} from '@/modules/workspace/types/agent'
 
 export function filterSessionsByQuery(
   runs: IAgentRunSummary[],
@@ -14,6 +17,22 @@ export function filterSessionsByQuery(
       run.agentKey,
       run.id,
     ].join(' ').toLowerCase()
+
+    return haystack.includes(normalized)
+  })
+}
+
+export function filterAgentSessionsByQuery(
+  sessions: IAgentSessionSummary[],
+  query: string,
+): IAgentSessionSummary[] {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return sessions
+
+  return sessions.filter((session) => {
+    const haystack = [session.title ?? '', session.agentKey, session.id]
+      .join(' ')
+      .toLowerCase()
 
     return haystack.includes(normalized)
   })

@@ -63,6 +63,7 @@ async def agent_chat_stream(
                 message=request.message,
                 agent_key=request.agentKey,
                 model=request.model,
+                session_id=request.sessionId,
             ):
                 payload = json.dumps(event.data, default=str)
                 yield f"event: {event.event}\ndata: {payload}\n\n"

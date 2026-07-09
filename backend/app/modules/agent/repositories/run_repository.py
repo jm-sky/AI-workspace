@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.id_utils import generate_id
-from app.modules.agent.db_models import AgentRunDB, AgentRunStepDB
+from app.modules.agent.db_models import AgentRunDB, AgentRunStepDB, AgentSessionDB
 
 
 class AgentRunRepository:
@@ -25,9 +25,11 @@ class AgentRunRepository:
         input_message: str,
         system_prompt: str,
         model: str,
+        session_id: str | None = None,
     ) -> AgentRunDB:
         run = AgentRunDB(
             id=generate_id(),
+            session_id=session_id,
             tenant_id=tenant_id,
             user_id=user_id,
             agent_key=agent_key,
@@ -135,3 +137,89 @@ class AgentRunRepository:
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def list_runs_for_session(self, session_id: str) -> list[AgentRunDB]:
+        """All runs in a session, oldest first (conversation order)."""
+        stmt = (
+            select(AgentRunDB)
+            .where(AgentRunDB.session_id == session_id)
+            .order_by(AgentRunDB.created_at.asc())
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+
+class AgentSessionRepository:
+    """Persistence for multi-turn chat sessions."""
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create_session(
+        self,
+        *,
+        tenant_id: str,
+        user_id: str,
+        agent_key: str,
+        title: str | None = None,
+    ) -> AgentSessionDB:
+        session = AgentSessionDB(
+            id=generate_id(),
+            tenant_id=tenant_id,
+            user_id=user_id,
+            agent_key=agent_key,
+            title=title,
+        )
+        self.db.add(session)
+        await self.db.flush()
+        return session
+
+    async def get_session(
+        self, session_id: str, *, user_id: str
+    ) -> AgentSessionDB | None:
+        stmt = select(AgentSessionDB).where(
+            AgentSessionDB.id == session_id,
+            AgentSessionDB.user_id == user_id,
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def touch_session(
+        self, session: AgentSessionDB, *, title: str | None = None
+    ) -> AgentSessionDB:
+        session.last_message_at = datetime.now(UTC)
+        if title and not session.title:
+            session.title = title
+        await self.db.flush()
+        return session
+
+    async def list_sessions(
+        self,
+        *,
+        user_id: str,
+        tenant_id: str,
+        limit: int = 30,
+        offset: int = 0,
+    ) -> tuple[list[AgentSessionDB], int]:
+        count_stmt = (
+            select(func.count())
+            .select_from(AgentSessionDB)
+            .where(
+                AgentSessionDB.user_id == user_id,
+                AgentSessionDB.tenant_id == tenant_id,
+            )
+        )
+        total = int((await self.db.execute(count_stmt)).scalar_one())
+
+        stmt = (
+            select(AgentSessionDB)
+            .where(
+                AgentSessionDB.user_id == user_id,
+                AgentSessionDB.tenant_id == tenant_id,
+            )
+            .order_by(AgentSessionDB.last_message_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all()), total

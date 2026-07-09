@@ -110,3 +110,43 @@ async def test_agent_loop_executes_tool_then_responds():
     assert result.message == "Done: IT-123"
     assert mock_create.await_count == 2
     assert any(step.get("stepType") == "tool_result" for step in result.steps_trace)
+
+
+@pytest.mark.asyncio
+async def test_agent_loop_injects_conversation_history():
+    registry = AgentToolRegistry()
+    service = AgentLoopService(
+        model="google/gemini-2.0-flash-001",
+        system_prompt="You are helpful.",
+        tool_registry=registry,
+        api_key="test-key",
+        max_steps=3,
+    )
+
+    history = [
+        {"role": "user", "content": "Show IT-123"},
+        {"role": "assistant", "content": "Issue IT-123 is open."},
+    ]
+    completion = _make_completion(content="Its client is Acme.")
+
+    # The loop mutates its ``messages`` list in place, so snapshot at call time.
+    captured: list[list[dict]] = []
+
+    async def _capture(*, messages, **_kwargs):
+        captured.append([dict(m) for m in messages])
+        return completion
+
+    with patch.object(service.client.chat.completions, "create", _capture):
+        result = await service.run("Who is the client?", history=history)
+
+    assert result.message == "Its client is Acme."
+    sent_messages = captured[0]
+    # system prompt + 2 history turns + new user message
+    assert [m["role"] for m in sent_messages] == [
+        "system",
+        "user",
+        "assistant",
+        "user",
+    ]
+    assert sent_messages[-1]["content"] == "Who is the client?"
+    assert sent_messages[2]["content"] == "Issue IT-123 is open."

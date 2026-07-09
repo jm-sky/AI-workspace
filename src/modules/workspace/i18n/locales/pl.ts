@@ -55,6 +55,7 @@ export const workspacePl = {
       empty: 'Brak sesji. Rozpocznij nowy czat.',
       noResults: 'Brak pasujących sesji.',
       loadError: 'Nie udało się załadować sesji',
+      untitled: 'Czat bez tytułu',
     },
     audit: {
       title: 'Trace uruchomienia',

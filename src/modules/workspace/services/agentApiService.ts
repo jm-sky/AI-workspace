@@ -4,6 +4,8 @@ import type {
   IAgentChatRequest,
   IAgentRun,
   IAgentRunsListResponse,
+  IAgentSessionDetail,
+  IAgentSessionsListResponse,
   IAgentStreamCompleteEvent,
   IAgentStreamStepEvent,
 } from '@/modules/workspace/types/agent'
@@ -29,6 +31,7 @@ export async function streamAgentChat(
       message: request.message,
       agentKey: request.agentKey ?? 'github-workspace',
       model: request.model,
+      sessionId: request.sessionId ?? undefined,
     }),
   })
 
@@ -101,6 +104,31 @@ export async function listAgentRuns(params?: {
 
 export async function getAgentRun(runId: string): Promise<IAgentRun> {
   const response = await apiClient.get<IAgentRun>(`/agent/runs/${runId}`)
+  return response.data
+}
+
+export async function listAgentSessions(params?: {
+  limit?: number
+  offset?: number
+}): Promise<IAgentSessionsListResponse> {
+  const response = await apiClient.get<IAgentSessionsListResponse>(
+    '/agent/sessions',
+    {
+      params: {
+        limit: params?.limit ?? 30,
+        offset: params?.offset ?? 0,
+      },
+    },
+  )
+  return response.data
+}
+
+export async function getAgentSession(
+  sessionId: string,
+): Promise<IAgentSessionDetail> {
+  const response = await apiClient.get<IAgentSessionDetail>(
+    `/agent/sessions/${sessionId}`,
+  )
   return response.data
 }
 

@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import {
   copyRunToClipboard,
   getAgentRun,
+  getAgentSession,
   streamAgentChat,
 } from '@/modules/workspace/services/agentApiService'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
@@ -57,6 +58,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
   const error = ref<string | null>(null)
   const activeRunId = ref<string | null>(null)
   const activeRun = ref<IAgentRun | null>(null)
+  const activeSessionId = ref<string | null>(null)
 
   const sendMessage = async (message: string): Promise<string | undefined> => {
     if (!message.trim() || isLoading.value) return undefined
@@ -83,6 +85,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
           message: message.trim(),
           agentKey: 'github-workspace',
           model: getSelectedModel?.(),
+          sessionId: activeSessionId.value,
         },
         {
           onStep: (event) => {
@@ -91,12 +94,18 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
               runId = event.runId
               activeRunId.value = event.runId
             }
+            if (event.sessionId) {
+              activeSessionId.value = event.sessionId
+            }
           },
           onComplete: (event) => {
             assistantContent = event.message
             blocks = event.blocks ?? []
             runId = event.runId
             activeRunId.value = event.runId
+            if (event.sessionId) {
+              activeSessionId.value = event.sessionId
+            }
           },
           onError: (msg) => {
             error.value = msg
@@ -153,6 +162,26 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
       steps.value = run.steps.map(mapPersistedStep)
       activeRunId.value = run.id
       activeRun.value = run
+      activeSessionId.value = run.sessionId ?? null
+    } catch (err) {
+      error.value = getApiErrorMessage(err, 'Failed to load session')
+      throw err
+    } finally {
+      isLoadingRun.value = false
+    }
+  }
+
+  const loadSession = async (sessionId: string) => {
+    isLoadingRun.value = true
+    error.value = null
+    try {
+      const session = await getAgentSession(sessionId)
+      messages.value = session.runs.flatMap(runToMessages)
+      const lastRun = session.runs[session.runs.length - 1]
+      steps.value = lastRun ? lastRun.steps.map(mapPersistedStep) : []
+      activeRunId.value = lastRun?.id ?? null
+      activeRun.value = lastRun ?? null
+      activeSessionId.value = session.id
     } catch (err) {
       error.value = getApiErrorMessage(err, 'Failed to load session')
       throw err
@@ -172,6 +201,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     error.value = null
     activeRunId.value = null
     activeRun.value = null
+    activeSessionId.value = null
   }
 
   return {
@@ -183,8 +213,10 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     error,
     activeRunId,
     activeRun,
+    activeSessionId,
     sendMessage,
     loadRun,
+    loadSession,
     copyActiveRun,
     clearChat,
   }

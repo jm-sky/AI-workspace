@@ -24,11 +24,11 @@ const route = useRoute()
 const { isMobile, setOpenMobile } = useSidebar()
 
 const {
-  runsLoading,
+  sessionsLoading,
   searchQuery,
-  filteredRuns,
-  activeRunId,
-  selectRun,
+  filteredSessions,
+  activeSessionId,
+  selectSession,
   newChat,
 } = useChatSessionNavContext()
 
@@ -38,8 +38,8 @@ const closeMobileIfNeeded = () => {
   }
 }
 
-const handleSelect = async (runId: string) => {
-  await selectRun(runId)
+const handleSelect = async (sessionId: string) => {
+  await selectSession(sessionId)
   closeMobileIfNeeded()
 }
 
@@ -55,9 +55,9 @@ const handleNewChat = async () => {
       <SidebarGroup class="flex min-h-0 flex-1 flex-col p-0">
         <SidebarGroupContent class="flex min-h-0 flex-1 flex-col">
           <SessionHistoryList
-            :runs="filteredRuns"
-            :active-run-id="activeRunId"
-            :is-loading="runsLoading"
+            :sessions="filteredSessions"
+            :active-session-id="activeSessionId"
+            :is-loading="sessionsLoading"
             :search-query="searchQuery"
             @update:search-query="searchQuery = $event"
             @select="handleSelect"

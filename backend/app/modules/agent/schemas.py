@@ -12,6 +12,7 @@ class AgentChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=8000)
     agentKey: str = Field(default="github-workspace", alias="agent_key")
     model: str | None = None
+    sessionId: str | None = Field(default=None, alias="session_id")
 
     model_config = {"populate_by_name": True}
 
@@ -40,6 +41,7 @@ class AgentRunResponse(BaseModel):
     """Completed or in-progress agent run."""
 
     id: str
+    sessionId: str | None = None
     agentKey: str
     status: str
     inputMessage: str
@@ -61,3 +63,26 @@ class AgentRunsListResponse(BaseModel):
 
     runs: list[AgentRunResponse]
     total: int
+
+
+class AgentSessionSummary(BaseModel):
+    """A multi-turn chat session (conversation)."""
+
+    id: str
+    agentKey: str
+    title: str | None = None
+    createdAt: datetime
+    lastMessageAt: datetime
+
+
+class AgentSessionsListResponse(BaseModel):
+    """Paginated list of chat sessions."""
+
+    sessions: list[AgentSessionSummary]
+    total: int
+
+
+class AgentSessionDetail(AgentSessionSummary):
+    """A chat session with its ordered runs (turns)."""
+
+    runs: list[AgentRunResponse] = Field(default_factory=list)

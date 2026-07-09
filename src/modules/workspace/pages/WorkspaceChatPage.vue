@@ -28,16 +28,17 @@ const {
   isLoadingRun,
   activeRunId,
   activeRun,
+  activeSessionId,
   error,
   sendMessage,
-  loadRun,
+  loadSession,
   copyActiveRun,
   clearChat,
 } = useAgentChat(getSelectedModelId)
 
-const { runsError, refreshRuns, setRunQuery } = useChatSessionNav({
-  activeRunId,
-  loadRun,
+const { sessionsError, refreshSessions, setSessionQuery } = useChatSessionNav({
+  activeSessionId,
+  loadSession,
   clearChat,
 })
 
@@ -45,10 +46,10 @@ const handleSubmit = async () => {
   const text = input.value.trim()
   if (!text || !hasValidModel.value) return
   input.value = ''
-  const runId = await sendMessage(text)
-  await refreshRuns()
-  if (runId) {
-    await setRunQuery(runId)
+  await sendMessage(text)
+  await refreshSessions()
+  if (activeSessionId.value) {
+    await setSessionQuery(activeSessionId.value)
   }
 }
 
@@ -74,10 +75,10 @@ const handleCopyRun = async () => {
         />
 
         <p
-          v-if="runsError"
+          v-if="sessionsError"
           class="shrink-0 text-sm text-destructive"
         >
-          {{ runsError }}
+          {{ sessionsError }}
         </p>
 
         <p

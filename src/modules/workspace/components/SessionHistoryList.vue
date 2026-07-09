@@ -5,18 +5,18 @@ import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import type { IAgentRunSummary } from '@/modules/workspace/types/agent'
+import type { IAgentSessionSummary } from '@/modules/workspace/types/agent'
 
 const props = defineProps<{
-  runs: IAgentRunSummary[]
-  activeRunId?: string | null
+  sessions: IAgentSessionSummary[]
+  activeSessionId?: string | null
   isLoading?: boolean
   searchQuery: string
 }>()
 
 const emit = defineEmits<{
   'update:searchQuery': [value: string]
-  select: [runId: string]
+  select: [sessionId: string]
   newChat: []
 }>()
 
@@ -32,15 +32,10 @@ const formatDate = (dateString: string): string => {
   return date.toLocaleString()
 }
 
-const preview = (message: string): string => {
-  if (!message) return t('workspace.sessions.empty')
-  return message.length > 80 ? `${message.substring(0, 80)}…` : message
-}
-
-const statusLabel = (status: string): string => {
-  if (status === 'failed') return t('common.error', 'Error')
-  if (status === 'running') return t('workspace.chat.thinking')
-  return ''
+const title = (session: IAgentSessionSummary): string => {
+  const value = session.title?.trim()
+  if (value) return value
+  return t('workspace.sessions.untitled', 'Untitled chat')
 }
 </script>
 
@@ -75,7 +70,7 @@ const statusLabel = (status: string): string => {
       </div>
 
       <div
-        v-else-if="runs.length === 0"
+        v-else-if="sessions.length === 0"
         class="px-2 py-12 text-center text-sm text-muted-foreground"
       >
         {{ searchQuery ? t('workspace.sessions.noResults') : t('workspace.sessions.empty') }}
@@ -83,26 +78,20 @@ const statusLabel = (status: string): string => {
 
       <div v-else class="space-y-1">
         <button
-          v-for="run in runs"
-          :key="run.id"
+          v-for="session in sessions"
+          :key="session.id"
           type="button"
           :class="cn(
             'w-full rounded-md border px-3 py-2 text-left transition-colors hover:bg-accent',
-            activeRunId === run.id && 'border-primary bg-accent',
+            activeSessionId === session.id && 'border-primary bg-accent',
           )"
-          @click="emit('select', run.id)"
+          @click="emit('select', session.id)"
         >
           <div class="mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{{ formatDate(run.createdAt) }}</span>
-            <span
-              v-if="statusLabel(run.status)"
-              class="truncate"
-            >
-              {{ statusLabel(run.status) }}
-            </span>
+            <span>{{ formatDate(session.lastMessageAt) }}</span>
           </div>
           <div class="line-clamp-2 text-sm">
-            {{ preview(run.inputMessage) }}
+            {{ title(session) }}
           </div>
         </button>
       </div>

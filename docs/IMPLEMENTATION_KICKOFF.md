@@ -55,11 +55,21 @@ Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** z
 
 ## Faza 1 — Pionowy plaster (Jira 360° end-to-end)
 
-- **Moduł agenta** na tool runnerze + **trace/audyt** per uruchomienie.
-- **Dwa cienkie serwery MCP:** Jira + GitLab, z per-user token injection. Narzędzia: Jira `get_issue` (+ odczyt pola „Klient"), GitLab `search` po kluczu Jiry.
+- **Moduł agenta** na tool runnerze + **trace/audyt** per uruchomienie. ✅
+- **Dwa cienkie serwery MCP:** Jira + GitLab, z per-user token injection. Narzędzia: Jira `get_issue` (+ odczyt pola „Klient"), GitLab `search` po kluczu Jiry. ✅
 - **Przepływ:** klucz issue Jiry → pobierz issue → wyciągnij Klienta → szukaj w GitLab → złóż **widok 360°**.
-- **Czat** (reuse modułu `ai`) + **SSE** (streaming kroków i odpowiedzi); render wyniku: Markdown + minimalny rejestr bogatych bloków (karta/tabela; wykresy w Fazie 3).
-- **Audyt w czacie** z kopiowaniem runu i kroków (z system promptem).
+- **Czat** (reuse modułu `ai`) + **SSE** (streaming kroków i odpowiedzi); render wyniku: Markdown + minimalny rejestr bogatych bloków (karta/tabela; wykresy w Fazie 3). ✅
+- **Audyt w czacie** z kopiowaniem runu i kroków (z system promptem). ✅
+- **Sesje wieloturowe** (P0 z porównania ai-kancelaria): jedna rozmowa = wiele runów (`chat_sessions`), historia wstrzykiwana do pętli, sidebar sesji + `?session=`. ✅ (2026-07-09)
+- **Kontekst użytkownika + dynamiczny katalog narzędzi** w system prompcie (sekcje `USER CONTEXT` / `AVAILABLE TOOLS` budowane z rejestru i połączonych integracji). ✅ (2026-07-09)
+
+### Pozostałe P0 z porównania ai-kancelaria (kolejne kroki)
+
+- Kroki narzędzi widoczne inline w wątku podczas streamingu (nie tylko w panelu audytu).
+- Programowy `SourceRoutingGuard` (walidacja wyboru źródła po turze).
+- Audyt dwuwarstwowy: skrót PII-safe + raw (admin, retencja).
+
+> **UX/UI:** wygląd czatu i widoku 360° prowadzimy wg `DESIGN.md` (ChatGPT + Linear) — dopracowanie wizualne **na później**, po domknięciu logiki Fazy 1.
 
 ## Prerekwizyty — dopytaj użytkownika PRZED uruchomieniem
 

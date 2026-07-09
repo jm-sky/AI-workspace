@@ -90,6 +90,10 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 - **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG.
 - **Faza 5 — Rozszerzenia:** auto-router LLM, tool search, onboarding tenantów (multi-tenancy B), więcej bloków.
 
+## Rozstrzygnięcia
+
+- **Sesje vs runy** (2026-07-09) — **jedna sesja = wiele runów**. Model `chat_sessions` (tenant+user, tytuł z pierwszej wiadomości, `last_message_at`); `agent_runs.session_id` FK. Historia poprzednich tur (para user/assistant, bez replay tool-calli) wstrzykiwana do pętli, aby umożliwić dopytywanie w tym samym kontekście (scenariusz 360°). Nawigacja czatu przełączona na `?session=`. Zamyka P0 #1 z `docs/research/2026-07-08--006--ai-kancelaria-comparison.md`.
+
 ## Otwarte punkty (do ustalenia)
 
 - **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/2026-07-06--005--model-selection.md`.

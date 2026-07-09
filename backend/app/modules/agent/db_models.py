@@ -10,12 +10,40 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
+class AgentSessionDB(Base):
+    """A multi-turn chat session grouping several agent runs."""
+
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    agent_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    last_message_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+
+
 class AgentRunDB(Base):
     """A single agent execution (Task/Run) with audit metadata."""
 
     __tablename__ = "agent_runs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    session_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("chat_sessions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
     tenant_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True
     )

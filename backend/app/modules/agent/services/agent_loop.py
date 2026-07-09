@@ -68,10 +68,15 @@ class AgentLoopService:
             base_url=settings.ai.openrouter_base_url,
         )
 
-    async def run(self, user_message: str) -> AgentLoopResult:
+    async def run(
+        self,
+        user_message: str,
+        *,
+        history: list[dict[str, Any]] | None = None,
+    ) -> AgentLoopResult:
         """Execute the loop and return the final result."""
         result: AgentLoopResult | None = None
-        async for event in self.run_stream(user_message):
+        async for event in self.run_stream(user_message, history=history):
             if event.event == "run_complete":
                 payload = event.data
                 result = AgentLoopResult(
@@ -87,10 +92,22 @@ class AgentLoopService:
             raise AgentMaxStepsExceededError("Agent loop ended without a result")
         return result
 
-    async def run_stream(self, user_message: str) -> AsyncIterator[AgentLoopEvent]:
-        """Execute the loop, yielding SSE-friendly events."""
+    async def run_stream(
+        self,
+        user_message: str,
+        *,
+        history: list[dict[str, Any]] | None = None,
+    ) -> AsyncIterator[AgentLoopEvent]:
+        """Execute the loop, yielding SSE-friendly events.
+
+        ``history`` holds prior conversation turns as plain
+        ``{"role": ..., "content": ...}`` messages (no tool-call replay),
+        injected between the system prompt and the new user message so the
+        agent can answer follow-up questions in the same session.
+        """
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": self.system_prompt},
+            *(history or []),
             {"role": "user", "content": user_message},
         ]
         tools = self.tool_registry.openai_tools()

@@ -2,24 +2,24 @@ import { inject, type InjectionKey, onMounted, provide, type Ref, watch } from '
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { useAgentRuns } from '@/modules/workspace/composables/useAgentRuns'
+import { useAgentSessions } from '@/modules/workspace/composables/useAgentSessions'
 
 export interface IChatSessionNavDeps {
-  activeRunId: Ref<string | null | undefined>
-  loadRun: (runId: string) => Promise<void>
+  activeSessionId: Ref<string | null | undefined>
+  loadSession: (sessionId: string) => Promise<void>
   clearChat: () => void
 }
 
 export interface IChatSessionNavContext {
-  runsLoading: Ref<boolean>
-  runsError: Ref<string | null>
+  sessionsLoading: Ref<boolean>
+  sessionsError: Ref<string | null>
   searchQuery: Ref<string>
-  filteredRuns: ReturnType<typeof useAgentRuns>['filteredRuns']
-  activeRunId: Ref<string | null | undefined>
-  selectRun: (runId: string) => Promise<void>
+  filteredSessions: ReturnType<typeof useAgentSessions>['filteredSessions']
+  activeSessionId: Ref<string | null | undefined>
+  selectSession: (sessionId: string) => Promise<void>
   newChat: () => Promise<void>
-  refreshRuns: () => Promise<void>
-  setRunQuery: (runId?: string) => Promise<void>
+  refreshSessions: () => Promise<void>
+  setSessionQuery: (sessionId?: string) => Promise<void>
 }
 
 const CHAT_SESSION_KEY: InjectionKey<IChatSessionNavContext> = Symbol('chatSession')
@@ -30,69 +30,73 @@ export function useChatSessionNav(deps: IChatSessionNavDeps): IChatSessionNavCon
   const router = useRouter()
 
   const {
-    isLoading: runsLoading,
-    error: runsError,
+    isLoading: sessionsLoading,
+    error: sessionsError,
     searchQuery,
-    filteredRuns,
-    loadRuns,
-  } = useAgentRuns()
+    filteredSessions,
+    loadSessions,
+  } = useAgentSessions()
 
-  const setActiveRunQuery = async (runId?: string) => {
+  const setSessionQuery = async (sessionId?: string) => {
     await router.replace({
       path: route.path,
-      query: runId ? { run: runId } : {},
+      query: sessionId ? { session: sessionId } : {},
     })
   }
 
-  const loadRunFromRoute = async (runId: string) => {
+  const loadSessionFromRoute = async (sessionId: string) => {
     try {
-      await deps.loadRun(runId)
+      await deps.loadSession(sessionId)
     } catch {
       toast.error(t('workspace.sessions.loadError'))
     }
   }
 
-  const selectRun = async (runId: string) => {
-    await loadRunFromRoute(runId)
-    await setActiveRunQuery(runId)
+  const selectSession = async (sessionId: string) => {
+    await loadSessionFromRoute(sessionId)
+    await setSessionQuery(sessionId)
   }
 
   const newChat = async () => {
     deps.clearChat()
-    await setActiveRunQuery()
+    await setSessionQuery()
   }
 
-  const refreshRuns = async () => {
-    await loadRuns()
+  const refreshSessions = async () => {
+    await loadSessions()
   }
 
   onMounted(async () => {
-    await loadRuns()
-    const runId = typeof route.query.run === 'string' ? route.query.run : null
-    if (runId) {
-      await loadRunFromRoute(runId)
+    await loadSessions()
+    const sessionId =
+      typeof route.query.session === 'string' ? route.query.session : null
+    if (sessionId) {
+      await loadSessionFromRoute(sessionId)
     }
   })
 
   watch(
-    () => route.query.run,
-    async (runId) => {
-      if (typeof runId === 'string' && runId !== deps.activeRunId.value) {
-        await loadRunFromRoute(runId)
+    () => route.query.session,
+    async (sessionId) => {
+      if (
+        typeof sessionId === 'string' &&
+        sessionId !== deps.activeSessionId.value
+      ) {
+        await loadSessionFromRoute(sessionId)
       }
     },
   )
 
   const context: IChatSessionNavContext = {
-    runsLoading,
-    runsError,
+    sessionsLoading,
+    sessionsError,
     searchQuery,
-    filteredRuns,
-    activeRunId: deps.activeRunId,
-    selectRun,
+    filteredSessions,
+    activeSessionId: deps.activeSessionId,
+    selectSession,
     newChat,
-    refreshRuns,
-    setRunQuery: setActiveRunQuery,
+    refreshSessions,
+    setSessionQuery,
   }
 
   provide(CHAT_SESSION_KEY, context)

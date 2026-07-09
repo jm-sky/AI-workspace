@@ -55,6 +55,7 @@ export const workspaceEn = {
       empty: 'No sessions yet. Start a new chat.',
       noResults: 'No sessions match your search.',
       loadError: 'Failed to load sessions',
+      untitled: 'Untitled chat',
     },
     audit: {
       title: 'Run trace',

@@ -6,6 +6,7 @@ export interface IAgentChatRequest {
   message: string
   agentKey?: string
   model?: string
+  sessionId?: string | null
 }
 
 export interface IRichBlock {
@@ -26,12 +27,30 @@ export interface IAgentRunStep {
 
 export interface IAgentRunSummary {
   id: string
+  sessionId?: string | null
   agentKey: string
   status: AgentRunStatus
   inputMessage: string
   outputMessage?: string | null
   createdAt: string
   completedAt?: string | null
+}
+
+export interface IAgentSessionSummary {
+  id: string
+  agentKey: string
+  title?: string | null
+  createdAt: string
+  lastMessageAt: string
+}
+
+export interface IAgentSessionsListResponse {
+  sessions: IAgentSessionSummary[]
+  total: number
+}
+
+export interface IAgentSessionDetail extends IAgentSessionSummary {
+  runs: IAgentRun[]
 }
 
 export interface IAgentRunsListResponse {
@@ -66,10 +85,12 @@ export interface IAgentStreamStepEvent {
   result?: Record<string, unknown>
   finishReason?: string
   runId?: string
+  sessionId?: string
 }
 
 export interface IAgentStreamCompleteEvent {
   runId: string
+  sessionId?: string
   message: string
   blocks?: IRichBlock[]
   promptTokens?: number
