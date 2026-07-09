@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter'
 import './css/style.css'
 
 import { VueQueryPlugin } from '@tanstack/vue-query'

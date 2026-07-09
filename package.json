@@ -25,6 +25,7 @@
     "find-products": "playwright test scripts/find-militaria-products.ts"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
     "@sentry/vue": "^10.57.0",
     "@simplewebauthn/browser": "^13.3.0",
     "@tailwindcss/vite": "4.2.2",
