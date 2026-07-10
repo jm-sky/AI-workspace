@@ -1,8 +1,10 @@
 # Issue 007 — Audyt/Trace (sheet) — brak paddingu treści
 
-**Data:** 2026-07-09
-**Status:** `done` (2026-07-09)
-**Obszar:** frontend / workspace / design (Faza 1.5)
+**Data:** 2026-07-09  
+**Status:** `done` (2026-07-09)  
+**Commit:** `689cc34` (razem z [#008](./2026-07-09--008--memory-page-no-canvas-background.md))  
+**Obszar:** frontend / workspace / design (Faza 1.5)  
+**Z tego samego promptu:** [#008](./2026-07-09--008--memory-page-no-canvas-background.md), [#020](./2026-07-09--020--chat-attachments-plan.md)
 
 ## Rozwiązanie (2026-07-09)
 

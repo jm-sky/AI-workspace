@@ -1,8 +1,10 @@
 # Issue 008 — Strona Pamięci — brak tła (canvas)
 
-**Data:** 2026-07-09
-**Status:** `done` (2026-07-09)
-**Obszar:** frontend / workspace / design (Faza 1.5)
+**Data:** 2026-07-09  
+**Status:** `done` (2026-07-09)  
+**Commit:** `689cc34`  
+**Obszar:** frontend / workspace / design (Faza 1.5)  
+**Z tego samego promptu:** [#007](./2026-07-09--007--audit-sheet-no-padding.md), [#020](./2026-07-09--020--chat-attachments-plan.md)
 
 ## Rozwiązanie (2026-07-09)
 
