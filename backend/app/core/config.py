@@ -850,7 +850,19 @@ class WorkspaceSettings(BaseSettings):
     model_config = _base_config
 
     default_allowed_models: str | list[str] = Field(
-        default='["qwen/qwen3-30b-a3b-instruct-2507","google/gemini-2.5-flash","google/gemini-2.5-flash-lite","anthropic/claude-sonnet-4.5"]',
+        default_factory=lambda: [
+            "anthropic/claude-opus-4.8",
+            "anthropic/claude-sonnet-5",
+            "anthropic/claude-sonnet-4.5",
+            "anthropic/claude-haiku-4.5",
+            "openai/gpt-5.4",
+            "openai/gpt-4o-mini",
+            "google/gemini-2.5-flash",
+            "google/gemini-2.5-flash-lite",
+            "moonshotai/kimi-k2-thinking",
+            "deepseek/deepseek-v4-flash",
+            "qwen/qwen3-30b-a3b-instruct-2507",
+        ],
         validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
         description="Default allow-list of LLM model IDs",
     )

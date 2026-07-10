@@ -78,10 +78,33 @@ export const workspaceEn = {
     },
     model: {
       selectPlaceholder: 'Select model',
+      searchPlaceholder: 'Search models…',
+      empty: 'No models match your search.',
       current: 'Model: {name}',
       currentLabel: 'Model',
       defaultModel: 'Default model',
       allowedModels: '{count} models allowed in workspace',
+      recommended: 'Recommended',
+      price: '{input} in / {output} out per 1M',
+      context: '{size} context',
+      sortBy: 'Sort',
+      sort: {
+        recommended: 'Recommended',
+        power: 'Power',
+        price: 'Price',
+        context: 'Context',
+        name: 'Name',
+      },
+      tier: {
+        frontier: 'Frontier',
+        balanced: 'Balanced',
+        fast: 'Fast',
+      },
+      feature: {
+        vision: 'Image input',
+        tools: 'Tool calling',
+        reasoning: 'Extended reasoning',
+      },
     },
     settings: {
       subtitle: 'Agent and product integration configuration',

@@ -29,6 +29,10 @@ async def get_models(current_user: CurrentUser) -> AiModelsResponse:
             context_length=model["context_length"],
             cost_per_1m_input=model["cost_per_1m_input"],
             cost_per_1m_output=model["cost_per_1m_output"],
+            tier=model.get("tier", "balanced"),
+            supports_vision=model.get("supports_vision", False),
+            supports_tools=model.get("supports_tools", True),
+            supports_reasoning=model.get("supports_reasoning", False),
             recommended=model.get("recommended", False),
         )
         for model in MODELS

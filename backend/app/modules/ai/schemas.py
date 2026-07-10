@@ -81,6 +81,18 @@ class AiModel(BaseModel):
     cost_per_1m_output: float = Field(
         ..., description="Cost per 1M output tokens in USD"
     )
+    tier: str = Field(
+        default="balanced", description="Capability tier: frontier, balanced or fast"
+    )
+    supports_vision: bool = Field(
+        default=False, description="Whether model accepts image input"
+    )
+    supports_tools: bool = Field(
+        default=True, description="Whether model supports tool calling"
+    )
+    supports_reasoning: bool = Field(
+        default=False, description="Whether model exposes extended reasoning"
+    )
     recommended: bool = Field(default=False, description="Whether model is recommended")
 
 

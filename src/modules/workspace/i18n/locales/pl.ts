@@ -78,10 +78,33 @@ export const workspacePl = {
     },
     model: {
       selectPlaceholder: 'Wybierz model',
+      searchPlaceholder: 'Szukaj modeli…',
+      empty: 'Brak modeli pasujących do wyszukiwania.',
       current: 'Model: {name}',
       currentLabel: 'Model',
       defaultModel: 'Domyślny model',
       allowedModels: '{count} dozwolonych modeli w workspace',
+      recommended: 'Polecany',
+      price: '{input} wej. / {output} wyj. za 1M',
+      context: 'kontekst {size}',
+      sortBy: 'Sortuj',
+      sort: {
+        recommended: 'Polecane',
+        power: 'Moc',
+        price: 'Cena',
+        context: 'Kontekst',
+        name: 'Nazwa',
+      },
+      tier: {
+        frontier: 'Topowy',
+        balanced: 'Zrównoważony',
+        fast: 'Szybki',
+      },
+      feature: {
+        vision: 'Wejście obrazu',
+        tools: 'Wywoływanie narzędzi',
+        reasoning: 'Rozszerzone rozumowanie',
+      },
     },
     settings: {
       subtitle: 'Konfiguracja agenta i integracji produktowych',

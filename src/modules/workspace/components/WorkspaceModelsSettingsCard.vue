@@ -4,13 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import WorkspaceModelComboBox from '@/modules/workspace/components/WorkspaceModelComboBox.vue'
 import { useWorkspaceModels } from '@/modules/workspace/composables/useWorkspaceModels'
 import { WorkspaceRoutePath } from '@/modules/workspace/routes'
 
@@ -55,26 +49,12 @@ const allowedModelIds = computed(() => configQuery.data.value?.allowedModels ?? 
         </CardDescription>
       </CardHeader>
       <CardContent class="space-y-4">
-        <Select
+        <WorkspaceModelComboBox
           v-model="selectedModelId"
-          :disabled="isLoading || isUpdating || allowedModels.length === 0"
-        >
-          <SelectTrigger class="w-full max-w-md">
-            <SelectValue :placeholder="t('workspace.model.selectPlaceholder')" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem
-              v-for="model in allowedModels"
-              :key="model.id"
-              :value="model.id"
-            >
-              <div class="flex flex-col gap-0.5">
-                <span class="font-medium">{{ model.name }}</span>
-                <span class="text-xs text-muted-foreground">{{ model.provider }}</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+          :models="allowedModels"
+          :disabled="isLoading || isUpdating"
+          class="w-full max-w-md cursor-pointer"
+        />
 
         <p v-if="selectedModel?.description" class="text-sm text-muted-foreground">
           {{ selectedModel.description }}

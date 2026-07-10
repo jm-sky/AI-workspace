@@ -6,6 +6,7 @@ from cryptography.fernet import Fernet
 from app.modules.ai.utils.encryption import decrypt_token, encrypt_token
 from app.modules.ai.utils.models_config import (
     MODELS,
+    TIERS,
     calculate_cost,
     get_model_by_id,
     get_recommended_models,
@@ -57,7 +58,6 @@ class TestModelsConfig:
     def test_models_list_not_empty(self):
         """Test that MODELS list is not empty."""
         assert len(MODELS) > 0
-        assert len(MODELS) == 10  # Should have 10 configured models
 
     def test_all_models_have_required_fields(self):
         """Test that all models have required fields."""
@@ -68,11 +68,20 @@ class TestModelsConfig:
             "context_length",
             "cost_per_1m_input",
             "cost_per_1m_output",
+            "tier",
+            "supports_vision",
+            "supports_tools",
+            "supports_reasoning",
         ]
 
         for model in MODELS:
             for field in required_fields:
                 assert field in model, f"Model {model.get('id')} missing field: {field}"
+
+    def test_tiers_are_known(self):
+        """Test that every model declares a tier the picker can render."""
+        for model in MODELS:
+            assert model["tier"] in TIERS, f"Model {model['id']} has unknown tier"
 
     def test_get_model_by_id_existing(self):
         """Test getting existing model by ID."""
