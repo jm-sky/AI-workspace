@@ -59,7 +59,13 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 600,
       sourcemap: true, // Generate source maps to satisfy Lighthouse performance audit
       cssCodeSplit: true, // Split CSS into separate chunks for better caching
-    
+      rollupOptions: {
+        // @vueuse/core@14.3.0 — misplaced /* #__PURE__ */ in dist (vueuse/vueuse#5387)
+        onwarn(warning, warn) {
+          if (warning.code === 'INVALID_ANNOTATION') return
+          warn(warning)
+        },
+      },
     },
   }
 })
