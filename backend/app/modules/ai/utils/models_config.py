@@ -1,13 +1,23 @@
 """AI models configuration for OpenRouter.
 
-This module defines the AI models available in the application.
+This module defines the curated AI models available in the application.
 Costs are per 1 million tokens; `tier` describes raw capability, not price.
+
+`MODELS` is the curated fallback catalog. At runtime the live OpenRouter
+catalog is fetched by `app.modules.ai.services.model_catalog_service` and
+published here via `set_catalog_snapshot`, so that the synchronous readers
+below (`get_model_by_id`, `calculate_cost`) can price models that are not in
+the curated list without becoming async.
 """
 
 from typing import Any
 
 # Capability tiers, strongest first. Used for sorting and badges in the picker.
 TIERS: tuple[str, ...] = ("frontier", "balanced", "fast")
+
+# Live catalog, keyed by model id. Empty until the first successful fetch, in
+# which case every lookup falls back to the curated MODELS list below.
+_SNAPSHOT: dict[str, dict[str, Any]] = {}
 
 MODELS: list[dict[str, Any]] = [
     # Anthropic Models
@@ -227,6 +237,30 @@ MODELS: list[dict[str, Any]] = [
 ]
 
 
+def set_catalog_snapshot(models: list[dict[str, Any]]) -> None:
+    """Publish the live catalog for synchronous readers.
+
+    Args:
+        models: Mapped model dicts, each carrying the same keys as `MODELS`
+    """
+    _SNAPSHOT.clear()
+    _SNAPSHOT.update({model["id"]: model for model in models})
+
+
+def clear_catalog_snapshot() -> None:
+    """Drop the live catalog, restoring the curated `MODELS` as the only source."""
+    _SNAPSHOT.clear()
+
+
+def has_live_catalog() -> bool:
+    """Whether the live catalog has been loaded in this process.
+
+    When it has not, `get_model_by_id` only knows the curated models, so callers
+    must not treat a miss as proof that a model does not exist.
+    """
+    return bool(_SNAPSHOT)
+
+
 def get_model_by_id(model_id: str) -> dict[str, Any] | None:
     """Get model configuration by ID.
 
@@ -236,6 +270,9 @@ def get_model_by_id(model_id: str) -> dict[str, Any] | None:
     Returns:
         Model configuration dict or None if not found
     """
+    snapshot_model = _SNAPSHOT.get(model_id)
+    if snapshot_model is not None:
+        return snapshot_model
     return next((model for model in MODELS if model["id"] == model_id), None)
 
 

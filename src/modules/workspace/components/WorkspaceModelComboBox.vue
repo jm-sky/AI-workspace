@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import {
-  BrainIcon,
-  CheckIcon,
-  ChevronsUpDownIcon,
-  EyeIcon,
-  SparklesIcon,
-  WrenchIcon,
-} from 'lucide-vue-next'
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Badge } from '@/components/ui/badge'
+import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -21,14 +14,20 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import WorkspaceModelCard from '@/modules/workspace/components/WorkspaceModelCard.vue'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
+import { SORT_KEYS, sortModels } from '@/modules/workspace/utils/aiModelFormat'
 import type { HTMLAttributes } from 'vue'
-import type { AiModelTier, IAiModel } from '@/modules/workspace/types/workspaceConfig'
+import type { IAiModel } from '@/modules/workspace/types/workspaceConfig'
+import type { SortKey } from '@/modules/workspace/utils/aiModelFormat'
 
-type SortKey = 'recommended' | 'power' | 'price' | 'context' | 'name'
+/** The whole catalog is too long to scroll; the browse page exists for that. */
+const RENDER_LIMIT = 50
 
 const props = defineProps<{
   models: IAiModel[]
   disabled?: boolean
+  showBrowseAll?: boolean
   triggerSize?: 'sm' | 'default'
   class?: HTMLAttributes['class']
 }>()
@@ -39,55 +38,23 @@ const { t } = useI18n()
 
 const open = ref(false)
 const sortKey = ref<SortKey>('recommended')
-
-const SORT_KEYS: SortKey[] = ['recommended', 'power', 'price', 'context', 'name']
-
-// Strongest first, so tier can drive descending "power" order directly.
-const TIER_RANK: Record<AiModelTier, number> = { frontier: 0, balanced: 1, fast: 2 }
-
-const TIER_VARIANT: Record<AiModelTier, 'premium' | 'secondary' | 'outline'> = {
-  frontier: 'premium',
-  balanced: 'secondary',
-  fast: 'outline',
-}
+const search = ref('')
 
 const selected = computed(() => props.models.find((m) => m.id === modelId.value))
 
-/** Blended per-1M price: outputs are the minority of tokens, so weight inputs higher. */
-const blendedPrice = (model: IAiModel) => model.cost_per_1m_input * 0.75 + model.cost_per_1m_output * 0.25
+const sortedModels = computed(() => sortModels(props.models, sortKey.value))
 
-const sortedModels = computed(() => {
-  const models = [...props.models]
-  switch (sortKey.value) {
-    case 'context':
-      return models.sort((a, b) => b.context_length - a.context_length)
-    case 'name':
-      return models.sort((a, b) => a.name.localeCompare(b.name))
-    case 'power':
-      return models.sort(
-        (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || blendedPrice(b) - blendedPrice(a),
-      )
-    case 'price':
-      return models.sort((a, b) => blendedPrice(a) - blendedPrice(b))
-    default:
-      return models.sort(
-        (a, b) =>
-          Number(b.recommended) - Number(a.recommended) ||
-          TIER_RANK[a.tier] - TIER_RANK[b.tier] ||
-          blendedPrice(a) - blendedPrice(b),
-      )
-  }
-})
+// Command matches against each item's rendered text, so an item we slice off is
+// one it can never find. While a search is active every model has to be mounted.
+const visibleModels = computed(() =>
+  search.value ? sortedModels.value : sortedModels.value.slice(0, RENDER_LIMIT),
+)
 
-const formatContext = (tokens: number) => {
-  if (tokens >= 1_000_000) return `${Math.round(tokens / 100_000) / 10}M`
-  return `${Math.round(tokens / 1000)}K`
-}
-
-const formatPrice = (usd: number) => (usd < 0.1 ? `$${usd.toFixed(3)}` : `$${usd.toFixed(2)}`)
+const isTruncated = computed(() => visibleModels.value.length < sortedModels.value.length)
 
 const onSelect = (model: IAiModel) => {
   modelId.value = model.id
+  search.value = ''
   open.value = false
 }
 </script>
@@ -119,7 +86,10 @@ const onSelect = (model: IAiModel) => {
       class="w-[min(28rem,calc(100vw-2rem))] p-0"
     >
       <Command>
-        <CommandInput :placeholder="t('workspace.model.searchPlaceholder')" />
+        <CommandInput
+          :placeholder="t('workspace.model.searchPlaceholder')"
+          @input="search = ($event.target as HTMLInputElement).value"
+        />
 
         <div class="flex flex-wrap items-center gap-1 border-b px-2 py-1.5">
           <span class="mr-1 text-xs text-muted-foreground">{{ t('workspace.model.sortBy') }}</span>
@@ -144,7 +114,7 @@ const onSelect = (model: IAiModel) => {
           <CommandEmpty>{{ t('workspace.model.empty') }}</CommandEmpty>
           <CommandGroup class="p-2">
             <CommandItem
-              v-for="model in sortedModels"
+              v-for="model in visibleModels"
               :key="model.id"
               :value="model.id"
               class="mb-1 cursor-pointer items-start gap-3 rounded-lg border border-hairline bg-surface-raised p-3 last:mb-0 data-[highlighted]:border-primary/40"
@@ -153,58 +123,36 @@ const onSelect = (model: IAiModel) => {
               <CheckIcon
                 :class="cn('mt-0.5 size-4 shrink-0', modelId === model.id ? 'opacity-100' : 'opacity-0')"
               />
-              <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                <div class="flex items-center gap-2">
-                  <span class="truncate text-sm font-medium">{{ model.name }}</span>
-                  <Badge :variant="TIER_VARIANT[model.tier]" class="shrink-0 text-[10px]">
-                    {{ t(`workspace.model.tier.${model.tier}`) }}
-                  </Badge>
-                  <SparklesIcon
-                    v-if="model.recommended"
-                    class="size-3.5 shrink-0 text-primary"
-                    :aria-label="t('workspace.model.recommended')"
-                  />
-                  <span class="ml-auto shrink-0 text-[10px] uppercase text-muted-foreground">
-                    {{ model.provider }}
-                  </span>
-                </div>
-
-                <p v-if="model.description" class="line-clamp-2 text-xs text-muted-foreground">
-                  {{ model.description }}
-                </p>
-
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                  <span class="font-mono">
-                    {{ t('workspace.model.price', {
-                      input: formatPrice(model.cost_per_1m_input),
-                      output: formatPrice(model.cost_per_1m_output),
-                    }) }}
-                  </span>
-                  <span class="font-mono">
-                    {{ t('workspace.model.context', { size: formatContext(model.context_length) }) }}
-                  </span>
-                  <span class="flex items-center gap-2">
-                    <EyeIcon
-                      v-if="model.supports_vision"
-                      class="size-3.5"
-                      :aria-label="t('workspace.model.feature.vision')"
-                    />
-                    <WrenchIcon
-                      v-if="model.supports_tools"
-                      class="size-3.5"
-                      :aria-label="t('workspace.model.feature.tools')"
-                    />
-                    <BrainIcon
-                      v-if="model.supports_reasoning"
-                      class="size-3.5"
-                      :aria-label="t('workspace.model.feature.reasoning')"
-                    />
-                  </span>
-                </div>
-              </div>
+              <WorkspaceModelCard :model="model" />
             </CommandItem>
           </CommandGroup>
         </CommandList>
+
+        <div
+          v-if="showBrowseAll"
+          class="flex items-center justify-between gap-2 border-t px-3 py-2"
+        >
+          <span v-if="isTruncated" class="text-xs text-muted-foreground">
+            {{ t('workspace.model.showingOf', {
+              shown: visibleModels.length,
+              total: sortedModels.length,
+            }) }}
+          </span>
+          <span v-else class="text-xs text-muted-foreground">
+            {{ t('workspace.model.results', { count: sortedModels.length }) }}
+          </span>
+          <Button
+            as-child
+            variant="ghost"
+            size="sm"
+            class="h-auto shrink-0 px-2 py-1 text-xs"
+            @click="open = false"
+          >
+            <RouterLink :to="WorkspaceRoutePath.SettingsModels">
+              {{ t('workspace.model.browseAll') }}
+            </RouterLink>
+          </Button>
+        </div>
       </Command>
     </PopoverContent>
   </Popover>

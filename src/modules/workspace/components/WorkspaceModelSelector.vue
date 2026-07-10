@@ -18,6 +18,7 @@ const selectedModelId = computed({
     v-model="selectedModelId"
     :models="allowedModels"
     :disabled="isLoading || isUpdating"
+    :show-browse-all="true"
     trigger-size="sm"
     class="w-full max-w-xs cursor-pointer"
   />
