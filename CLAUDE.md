@@ -53,14 +53,15 @@ Frontend dev: `pnpm dev` (port 5176, proxy `/api` → `localhost:8003`).
 |------|--------|--------|
 | Krok 0 | Bootstrap z gear-stack | ✅ |
 | Faza 0 | Tenants, teams, kaskada config, tokeny OAuth integracji | ✅ |
-| Faza 1 | Agent loop + trace, MCP Jira/GitLab, czat SSE, widok 360° | ✅ |
+| Faza 1 | Agent loop + trace, czat SSE (pierwotnie Jira/GitLab 360°, odłożone — patrz niżej) | ✅ |
 | **Faza 1.5** | Design pass (`DESIGN.md`: ChatGPT + Linear) na czacie i widoku 360° | 🔄 w toku |
-| Faza 2 | Gmail + Teams MCP | — |
+| Faza 2 | Gmail MCP (Teams odłożony — brak dostępu) | — |
 | Faza 3 | Edytor agentów, router, bogate bloki | — |
-| Faza 4 | Pamięć + RAG (pgvector) | — |
+| Faza 4 | Pamięć + RAG (pgvector) — embeddingi + memory_search/save już częściowo gotowe z Fazy 1 | 🔄 częściowo |
 | Faza 5 | Auto-router, tool search, onboarding tenantów | — |
+| Faza 6 (kandydat) | Zdalne agenty wykonawcze (np. Claude Code na własnych serwerach) — patrz `MVP.md` Otwarte punkty | — |
 
-Scenariusz MVP: issue Jira → pole Klient → fan-out GitLab → widok 360°.
+Scenariusz MVP (od 2026-07-11): otwarty multi-tool workspace (ChatGPT/Claude-like) z pamięcią i zakresami tenant/team — bez sztywnego pipeline'u. Pierwsza instancja: **GitHub Developer Workspace**. Jira/GitLab/Teams odłożone (brak dostępu), Gmail zostaje jako cel Fazy 2. Szczegóły i historia: `docs/MVP.md`.
 
 ## Moduły backendu (AI Workspace)
 

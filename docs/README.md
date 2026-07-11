@@ -51,7 +51,7 @@ Indeks: [`research/README.md`](research/README.md). Skrót:
 | 16 | Repo i stack | **Monorepo**, layout jak gear-stack (frontend w roocie + `backend/`); kopia gear-stack → własne życie; Postgres/Docker |
 | 17 | Baza wektorowa | **pgvector** (reuse Postgresa, permissions-aware filter w SQL); swap na Qdrant za interfejsem |
 
-Scenariusz MVP: agent buduje **widok 360°** wokół **issue z Jiry** (Jira → Klient → fan-out do GitLab/Gmail/Teams).
+Scenariusz MVP (od 2026-07-11): **otwarty multi-tool workspace** (ChatGPT/Claude-like) z pamięcią i zakresami tenant/team, bez sztywnego pipeline'u. Pierwsza instancja: **GitHub Developer Workspace**. Jira/GitLab/Teams odłożone (brak dostępu); Gmail zostaje jako cel Fazy 2. Pierwotny scenariusz „Jira → Klient → fan-out GitLab/Gmail/Teams" — zapis historyczny w `MVP.md`.
 
 ## Zasady dla dokumentacji
 - Konwencja plików w `issues/`, `reviews/`, `research/`, `plans/`: `YYYY-MM-DD--NNN--slug.md` (`NNN` — trzycyfrowy numer w obrębie katalogu).

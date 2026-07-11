@@ -5,10 +5,32 @@
 
 ## North Star / kontekst
 
-- **Odbiorca MVP:** dział IT w firmie (kancelaria podatkowa z wieloma oddziałami/departamentami jako potencjalny showcase). Docelowo platforma ma być **generyczna i konfigurowalna**, ale MVP dowozi jeden konkretny scenariusz na generycznym rdzeniu.
-- **Scenariusz „wow":** agent buduje jeden spójny **widok 360°** na temat wybranego podmiotu, sięgając do wielu systemów naraz.
+- **Odbiorca MVP:** dział IT w firmie (kancelaria podatkowa z wieloma oddziałami/departamentami jako potencjalny showcase) **+ pojedynczy developer** (dogfooding — właściciel projektu jako pierwszy użytkownik). Docelowo platforma ma być **generyczna i konfigurowalna**; multi-tenant i single-user to dwa punkty na tej samej osi, nie dwa różne produkty.
+- **Kierunek (od 2026-07-11):** nie jeden „wow"-scenariusz z ustalonym przepływem, tylko **otwarty workspace w stylu ChatGPT/Claude z wieloma narzędziami**, pamięcią i zakresami tenant/team — użytkownik rozmawia, agent sięga po dostępne narzędzia i pamięć wedle potrzeby, bez sztywnego pipeline'u kroków.
+- **Pierwsza konkretna instancja:** **GitHub Developer Workspace** — agent pomaga developerowi (na start: właścicielowi projektu) eksplorować repozytoria, issues, PR-y, z pamięcią międzysesyjną. Już częściowo zaimplementowany (`github-workspace` agent, Faza 1).
 
-## Scenariusz MVP (przepływ)
+> **Historia:** pierwotny scenariusz MVP („widok 360° wokół issue z Jiry") napędzał Fazę 0–1 i został tam w pełni zrealizowany (patrz sekcja niżej, zachowana jako zapis). **Porzucony 2026-07-11** — brak dostępu do instancji Jiry. Ogólny cel platformy (AI-owy workspace bogaty w narzędzia) się nie zmienił, zmienił się tylko konkretny scenariusz-nośnik.
+
+## Scenariusz MVP (aktualny)
+
+Bez sztywnego przepływu krok-po-kroku jak w Jira 360° — agent ma dostęp do zestawu narzędzi i pamięci, użytkownik prowadzi rozmowę swobodnie. Punkt ciężkości MVP:
+
+- **GitHub** — przeglądanie repo/issues/PR (już zaimplementowane, `github-workspace`).
+- **Pamięć** — fakty/preferencje między sesjami (już zaimplementowane, pgvector — patrz Faza 4).
+- **Gmail** — kolejny aktywny cel integracji (Faza 2), bez wymuszonego fan-outu z innego systemu.
+- **Tenant/team scopes** — te same zakresy co wcześniej (dec. #8, #15), teraz też z sensownym trybem dla pojedynczego developera (jeden tenant „ja").
+
+## Systemy
+
+| System | Status |
+|---|---|
+| GitHub | ✅ aktywny — narzędzia + OAuth zaimplementowane |
+| Gmail | 🎯 aktywny cel — Faza 2 |
+| Jira | ⏸️ odłożone — brak dostępu do instancji |
+| GitLab | ⏸️ odłożone — narzędzie istnieje (`GitLabSearchByJiraKeyTool`), ale zależy od klucza Jiry; do przeprojektowania jeśli wraca do zakresu |
+| Microsoft Teams | ⏸️ odłożone — brak dostępu |
+
+## Scenariusz MVP (pierwotny, zrealizowany w Fazie 0–1 — zapis historyczny)
 
 - **Podmiot zapytania:** Issue z Jiry.
 - **Wejście:** klucz issue (np. `IT-123`).
@@ -20,11 +42,6 @@
      - **Gmail** → po adresie e-mail Klienta.
      - **Teams** → po nazwie Klienta w rozmowach.
   4. Złóż wszystko w jeden widok 360°.
-
-## Systemy (MVP)
-
-Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publicznym API.
-(Powiązania w scenariuszu głównie: GitLab / Gmail / Teams.)
 
 ## Decyzje architektoniczne
 
@@ -50,7 +67,7 @@ Gmail, Microsoft Teams, Jira, GitHub, GitLab — wszystkie ze standardowym, publ
 
 ## Zakres platformy (rozszerzenie MVP)
 
-MVP to nie pojedynczy agent, lecz **konfigurowalna platforma agentowa**; scenariusz Jira 360° jest **pierwszym agentem** na tej platformie. Wymagane zdolności:
+MVP to nie pojedynczy agent, lecz **konfigurowalna platforma agentowa**; **GitHub Developer Workspace** jest **pierwszym agentem** na tej platformie (scenariusz Jira 360° był pierwszym, odłożony — patrz North Star). Wymagane zdolności:
 
 - **Chat** (chat-first).
 - **Routing agentów** — kierowanie zapytania do właściwego agenta.
@@ -84,22 +101,24 @@ Zgodnie z README research jest pierwszym kamieniem milowym — nie kod produkcyj
 Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem generalizacja na żywym szkielecie.
 
 - **Faza 0 — Fundament (reuse gear-stack):** auth, użytkownicy, model danych Tenant/Zespół/Użytkownik + izolacja, RBAC, kaskada konfiguracji, plumbing per-user OAuth (magazyn tokenów).
-- **Faza 1 — Pionowy plaster (Jira 360° end-to-end):** rdzeń agenta (tool runner SDK Anthropic) + trace/audyt, czat (reuse Vue `ai`) + SSE, jeden agent i 1–2 integracje MCP (Jira + GitLab) → działający widok 360° na wąskim zakresie.
+- **Faza 1 — Pionowy plaster:** rdzeń agenta + trace/audyt, czat (reuse Vue `ai`) + SSE, pierwsze integracje MCP → działający agent na wąskim zakresie. Zrealizowane pierwotnie jako **Jira 360° end-to-end** (Jira + GitLab); scenariusz-nośnik odłożony 2026-07-11 (brak dostępu do Jiry), zastąpiony przez **GitHub Developer Workspace** (agent `github-workspace` — GitHub + memory), zbudowany przy tej samej okazji.
 - **Faza 1.5 — Design pass:** wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na czat i widok 360° + inline tool steps + bogate bloki dopięte do systemu wizualnego. Jeden spójny przebieg na żywym szkielecie Fazy 1 (żeby nie przerabiać UI dwa razy). Szczegóły: `docs/IMPLEMENTATION_KICKOFF.md`.
-- **Faza 2 — Reszta integracji:** własne cienkie serwery MCP dla Gmail i Teams (per-user token injection) → pełny fan-out 360°.
+- **Faza 2 — Gmail:** własny cienki serwer MCP dla Gmail (per-user token injection). Teams odłożony (brak dostępu). GitHub już gotowy z Fazy 1.
 - **Faza 3 — Konfigurowalność:** edytor agentów (admin), abstrakcja routera (jawny wybór), tools injection, bogate bloki (karty/tabele/wykresy).
-- **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG.
+- **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG. Pamięć (embeddingi + `memory_search`/`memory_save`) już częściowo zaimplementowana przy okazji Fazy 1 — patrz `docs/reviews/2026-07-11--001--docs-consistency-check.md` pkt B.
 - **Faza 5 — Rozszerzenia:** auto-router LLM, tool search, onboarding tenantów (multi-tenancy B), więcej bloków.
+- **Faza 6 (kandydat, nierozplanowana) — Zdalne agenty wykonawcze:** orkiestracja agentów kodujących na własnych serwerach użytkownika (np. Claude Code na VPS, wiele projektów) — planowanie/dispatch pracy z poziomu Workspace + tracking statusu. Rozszerza ideę „Control Tower" (patrz Otwarte punkty) o realną egzekucję, nie tylko audyt. Wymaga osobnego researchu/decyzji przed wejściem do sekwencji faz.
 
 ## Rozstrzygnięcia
 
+- **Zmiana scenariusza MVP** (2026-07-11) — Jira 360° odłożony (brak dostępu do Jiry); nowy kierunek: otwarty multi-tool workspace (ChatGPT/Claude-like) z pamięcią i zakresami tenant/team, pierwsza instancja = GitHub Developer Workspace. GitLab i Teams odłożone razem z Jirą (GitLab-owe narzędzie było zależne od klucza Jiry). Gmail zostaje jako aktywny cel Fazy 2. Szczegóły: sekcja „North Star / kontekst" wyżej.
 - **Sesje vs runy** (2026-07-09) — **jedna sesja = wiele runów**. Model `chat_sessions` (tenant+user, tytuł z pierwszej wiadomości, `last_message_at`); `agent_runs.session_id` FK. Historia poprzednich tur (para user/assistant, bez replay tool-calli) wstrzykiwana do pętli, aby umożliwić dopytywanie w tym samym kontekście (scenariusz 360°). Nawigacja czatu przełączona na `?session=`. Zamyka P0 #1 z `docs/research/2026-07-08--006--ai-kancelaria-comparison.md`.
 
 ## Otwarte punkty (do ustalenia)
 
 - **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/2026-07-06--005--model-selection.md`.
 - **Model embeddingów + reranker** (do pgvectora) — wybór technologii (Faza 4 / research).
-- **Źródło e-maila Klienta** do przeszukania Gmaila: pole w Jirze czy mapowanie z nazwy Klienta.
+- **Zdalne agenty wykonawcze** (2026-07-11, nowy pomysł) — Workspace jako panel do planowania/dispatchowania pracy dla agentów kodujących uruchomionych na własnej infrastrukturze użytkownika (np. Claude Code na serwerze OVH, wiele projektów), z trackingiem statusu. Nie doprecyzowane: model integracji (nowy typ „toola"/konektora vs osobna warstwa orkiestracji), auth do zdalnych środowisk, relacja do audytu Task/Run (dec. #13) i do przyszłego „Control Tower" (patrz niżej). Kandyduje na Fazę 6 — wymaga osobnego researchu przed wejściem do sekwencji.
 
 ### Z researchu (patrz `docs/research/2026-07-04--000--implications.md`)
 

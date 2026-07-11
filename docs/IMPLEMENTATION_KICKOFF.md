@@ -3,6 +3,8 @@
 > Wklej poniższą treść jako pierwszy prompt w sesji Claude Code (Opus 4.8) na serwerze/maszynie dev.
 > Źródło prawdy o planie: `docs/MVP.md`, `docs/README.md`, `docs/research/`.
 
+> **Zapis historyczny (Krok 0 / Faza 0–1 już wykonane).** Scenariusz „Jira 360°" opisany niżej napędzał bootstrap i Fazę 1, ale został odłożony 2026-07-11 (brak dostępu do Jiry) — aktualny kierunek to otwarty multi-tool workspace z GitHub Developer Workspace jako pierwszą instancją. Zasady nienaruszalne (rdzeń agenta, backend, auth, konfiguracja, audyt) nadal obowiązują; szczegóły aktualnego scenariusza: `docs/MVP.md` → „North Star / kontekst".
+
 ---
 
 Jesteś Claude Code (Opus 4.8) i zaczynasz implementację MVP **AI Workspace** zgodnie z gotowym planem w tym repo.
