@@ -30,6 +30,10 @@ export function useWorkspaceModels() {
     staleTime: 30 * 60 * 1000,
   })
 
+  /**
+   * The models the user may actually pick. An empty allow-list means the
+   * workspace sets no ceiling, so the whole catalog is fair game.
+   */
   const allowedModels = computed<IAiModel[]>(() => {
     const allowed = configQuery.data.value?.allowedModels ?? []
     const catalog = catalogQuery.data.value?.models ?? []

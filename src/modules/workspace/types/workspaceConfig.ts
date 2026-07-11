@@ -6,6 +6,8 @@ export interface IEffectiveWorkspaceConfig {
   toolsEnabled: boolean
 }
 
+export type AiModelTier = 'frontier' | 'balanced' | 'fast'
+
 export interface IAiModel {
   id: string
   name: string
@@ -14,6 +16,10 @@ export interface IAiModel {
   context_length: number
   cost_per_1m_input: number
   cost_per_1m_output: number
+  tier: AiModelTier
+  supports_vision: boolean
+  supports_tools: boolean
+  supports_reasoning: boolean
   recommended: boolean
 }
 

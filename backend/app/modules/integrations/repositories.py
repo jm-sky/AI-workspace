@@ -170,6 +170,32 @@ class IntegrationTokenRepository:
         await self.db.refresh(token)
         return token
 
+    async def update_tokens(
+        self,
+        token: IntegrationOAuthTokenDB,
+        *,
+        access_token: str,
+        refresh_token: str | None = None,
+        token_type: str = "Bearer",
+        expires_at: datetime | None = None,
+        scopes: str | None = None,
+        provider_metadata: dict[str, Any] | None = None,
+    ) -> IntegrationOAuthTokenDB:
+        """Rotate tokens in place, preserving fields the provider did not return."""
+        token.encrypted_access_token = encrypt_integration_token(access_token)
+        if refresh_token:
+            token.encrypted_refresh_token = encrypt_integration_token(refresh_token)
+        token.token_type = token_type
+        token.expires_at = expires_at
+        if scopes is not None:
+            token.scopes = scopes
+        if provider_metadata is not None:
+            token.provider_metadata = provider_metadata
+        token.updated_at = datetime.now(UTC)
+        await self.db.commit()
+        await self.db.refresh(token)
+        return token
+
     async def _find_existing(
         self,
         *,

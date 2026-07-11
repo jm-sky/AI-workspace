@@ -23,6 +23,23 @@ def _config_entry(key: str, value):
     return entry
 
 
+def _patch_workspace_defaults(
+    monkeypatch,
+    *,
+    allowed_models: list[str],
+    default_model: str = "",
+    max_tokens: int | None = 32000,
+    rag_enabled: bool = False,
+    tools_enabled: bool = True,
+):
+    prefix = "app.modules.workspace_config.resolver.settings.workspace"
+    monkeypatch.setattr(f"{prefix}.default_allowed_models", allowed_models)
+    monkeypatch.setattr(f"{prefix}.default_model", default_model)
+    monkeypatch.setattr(f"{prefix}.default_max_tokens", max_tokens)
+    monkeypatch.setattr(f"{prefix}.default_rag_enabled", rag_enabled)
+    monkeypatch.setattr(f"{prefix}.default_tools_enabled", tools_enabled)
+
+
 class TestWorkspaceConfigResolver:
     """Cascade resolver unit tests."""
 
@@ -69,6 +86,44 @@ class TestWorkspaceConfigResolver:
         assert result.maxTokens == 32000
         assert result.ragEnabled is True
         assert result.toolsEnabled is True
+
+    @pytest.mark.asyncio
+    async def test_empty_app_allow_list_means_no_ceiling(self, monkeypatch):
+        """An empty app-level list must not clamp the tenant's choice to nothing."""
+        _patch_workspace_defaults(monkeypatch, allowed_models=[], default_model="model-z")
+
+        repo = AsyncMock()
+        repo.get_entries_for_scope.side_effect = [[], [], [], []]
+
+        result = await WorkspaceConfigResolver(repo).resolve(
+            user_id="user-1",
+            tenant_id="tenant-1",
+        )
+
+        assert result.allowedModels == []
+        # The default survives instead of being clamped away to None.
+        assert result.defaultModel == "model-z"
+
+    @pytest.mark.asyncio
+    async def test_tenant_defines_the_set_when_app_sets_no_ceiling(self, monkeypatch):
+        _patch_workspace_defaults(monkeypatch, allowed_models=[], default_model="model-a")
+
+        repo = AsyncMock()
+        # No team_id below, so only app / tenant / user scopes are queried.
+        repo.get_entries_for_scope.side_effect = [
+            [],
+            [_config_entry(ConfigKey.ALLOWED_MODELS.value, ["model-a", "model-b"])],
+            [_config_entry(ConfigKey.ALLOWED_MODELS.value, ["model-b"])],
+        ]
+
+        result = await WorkspaceConfigResolver(repo).resolve(
+            user_id="user-1",
+            tenant_id="tenant-1",
+        )
+
+        # Tenant defines the set, user narrows it further.
+        assert result.allowedModels == ["model-b"]
+        assert result.defaultModel == "model-b"
 
     @pytest.mark.asyncio
     async def test_tools_disabled_when_team_turns_off(self, monkeypatch):

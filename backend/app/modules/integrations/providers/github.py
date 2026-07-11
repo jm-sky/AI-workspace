@@ -7,6 +7,10 @@ from urllib.parse import urlencode
 import httpx
 
 from app.core.config import settings
+from app.modules.integrations.exceptions import (
+    IntegrationRefreshFailedError,
+    IntegrationRefreshNotSupportedError,
+)
 from app.modules.integrations.providers.base import (
     IntegrationOAuthProvider,
     IntegrationOAuthTokenResult,
@@ -47,6 +51,17 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
             headers["Authorization"] = f"Bearer {access_token}"
         return headers
 
+    def _token_headers(self) -> dict[str, str]:
+        """Headers for the OAuth token endpoint.
+
+        github.com/login/oauth/access_token only emits JSON for
+        ``Accept: application/json``; the REST API vendor type yields text/plain.
+        """
+        return {
+            "Accept": "application/json",
+            "User-Agent": f"{settings.app.name}-integrations",
+        }
+
     def is_configured(self) -> bool:
         return bool(self._client_id() and self._client_secret() and self._redirect_uri())
 
@@ -81,7 +96,7 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
                     "code": code,
                     "redirect_uri": self._redirect_uri(),
                 },
-                headers=self._api_headers(),
+                headers=self._token_headers(),
                 timeout=15.0,
             )
             response.raise_for_status()
@@ -111,6 +126,60 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
                 access_token=access_token,
                 token_type=data.get("token_type", "Bearer"),
                 scope=granted_scope,
+                refresh_token=data.get("refresh_token"),
+                expires_at=expires_at,
+                provider_metadata=metadata,
+            )
+
+    async def refresh_access_token(
+        self, refresh_token: str
+    ) -> IntegrationOAuthTokenResult:
+        if not self.is_configured():
+            raise ValueError("GitHub integration is not configured")
+
+        # Refresh tokens only exist when the App opts into expiring user tokens.
+        if not self._is_github_app():
+            raise IntegrationRefreshNotSupportedError(
+                "GitHub OAuth App tokens do not expire and cannot be refreshed"
+            )
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    self.TOKEN_URL,
+                    data={
+                        "client_id": self._client_id(),
+                        "client_secret": self._client_secret(),
+                        "grant_type": "refresh_token",
+                        "refresh_token": refresh_token,
+                    },
+                    headers=self._token_headers(),
+                    timeout=15.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+            except httpx.HTTPError as exc:
+                raise IntegrationRefreshFailedError(
+                    f"GitHub refresh request failed: {exc}"
+                ) from exc
+
+            if "error" in data:
+                raise IntegrationRefreshFailedError(
+                    data.get("error_description") or data["error"]
+                )
+
+            access_token = data["access_token"]
+            metadata = await self._fetch_user_metadata(client, access_token)
+            metadata["githubAppId"] = settings.integrations.github_app_id
+
+            expires_at = None
+            if data.get("expires_in"):
+                expires_at = datetime.now(UTC) + timedelta(seconds=int(data["expires_in"]))
+
+            return IntegrationOAuthTokenResult(
+                access_token=access_token,
+                token_type=data.get("token_type", "Bearer"),
+                scope=data.get("scope") or "github-app",
                 refresh_token=data.get("refresh_token"),
                 expires_at=expires_at,
                 provider_metadata=metadata,

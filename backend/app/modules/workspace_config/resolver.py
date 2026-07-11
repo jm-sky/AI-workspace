@@ -15,9 +15,18 @@ def _entries_to_map(entries: list) -> dict[str, Any]:
     return {entry.config_key: entry.config_value for entry in entries}
 
 
-def _intersect_models(base: list[str], override: list[str] | None) -> list[str]:
+def _intersect_models(
+    base: list[str] | None, override: list[str] | None
+) -> list[str] | None:
+    """Narrow an allow-list by one cascade level.
+
+    `None` means "no ceiling at this level yet" — the first level that declares
+    an allow-list defines the set; every level below can only narrow it.
+    """
     if override is None:
         return base
+    if base is None:
+        return list(override)
     override_set = set(override)
     return [model for model in base if model in override_set]
 
@@ -83,7 +92,9 @@ class WorkspaceConfigResolver:
 
         base = self._app_defaults()
 
-        allowed = base.allowedModels
+        # An empty app-level allow-list means "no ceiling": the whole catalog is
+        # available unless a tenant/team/user narrows it.
+        allowed: list[str] | None = base.allowedModels or None
         allowed = _intersect_models(
             allowed, tenant_map.get(ConfigKey.ALLOWED_MODELS.value)
         )
@@ -101,7 +112,7 @@ class WorkspaceConfigResolver:
             or app_map.get(ConfigKey.DEFAULT_MODEL.value)
             or base.defaultModel
         )
-        if default_model and default_model not in allowed:
+        if allowed is not None and default_model and default_model not in allowed:
             default_model = allowed[0] if allowed else None
 
         max_tokens = base.maxTokens
@@ -130,7 +141,7 @@ class WorkspaceConfigResolver:
         )
 
         return EffectiveWorkspaceConfig(
-            allowedModels=allowed,
+            allowedModels=allowed or [],
             defaultModel=default_model,
             maxTokens=max_tokens,
             ragEnabled=rag_enabled,

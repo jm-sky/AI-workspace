@@ -17,6 +17,14 @@ class IntegrationTokenExpiredError(IntegrationError):
     """Token expired and could not be refreshed."""
 
 
+class IntegrationRefreshNotSupportedError(IntegrationError):
+    """Provider cannot exchange a refresh token for a new access token."""
+
+
+class IntegrationRefreshFailedError(IntegrationError):
+    """Provider rejected the refresh token or was unreachable."""
+
+
 class IntegrationOAuthStateError(IntegrationError):
     """Invalid or expired OAuth state."""
 
