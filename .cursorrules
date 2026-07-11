@@ -50,7 +50,7 @@ docker exec ai-workspace-app python -m pytest tests/ -v
 
 **Target direction (see MVP):** chat-first AI Workspace, OpenRouter + own tool-calling loop, MCP integrations, multi-tenancy, SSE streaming.
 
-**Modules (inherited from gear-stack, to evolve):** auth, user, settings, admin, ai, gear (legacy), stats.
+**Frontend modules (`src/modules/`):** admin, auth, billing, settings, tenants, user, workspace (chat/360°, Faza 1–1.5 — see `DESIGN.md`).
 
 ## Question vs. Action Protocol
 

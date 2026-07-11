@@ -69,9 +69,19 @@ Scenariusz MVP: issue Jira → pole Klient → fan-out GitLab → widok 360°.
 | `auth`, `users`, `two_factor` | JWT, WebAuthn, OAuth logowania |
 | `tenants`, `teams` | Multi-tenancy M:N, aktywny workspace w JWT |
 | `workspace_config` | Kaskada App→Tenant→Team→User |
-| `integrations` | Szyfrowany magazyn tokenów OAuth (Jira, GitLab, …) |
-| `agent` | Pętla agenta, Task/Run + trace, SSE |
+| `integrations` | Szyfrowany magazyn tokenów OAuth (Jira, GitLab, GitHub, …) |
+| `agent` | Pętla agenta, Task/Run + trace, SSE, narzędzia (jira/gitlab/github/memory) |
+| `memory` | Pamięć semantyczna — pgvector, embeddingi, memory_search/save (Faza 4, częściowo gotowe) |
+| `mcp` | Cienkie klienty MCP-style per provider (obecnie GitHub) |
+| `admin` | Panel/API admina (docelowo „Control Tower") |
+| `settings` | Preferencje użytkownika |
+| `logs` | Logowanie zdarzeń/audytu aplikacji |
+| `stats` | Statystyki/metryki |
 | `ai` | Legacy gear-stack (chat OpenRouter) — do ewolucji / oddzielenia |
+| `gear` | Legacy gear-stack — **do usunięcia** |
+| `gear_settings` | Legacy gear-stack — **do usunięcia** |
+| `billing` | Legacy gear-stack (Stripe) — **do aktualizacji i reuse** |
+| `feature_limits` | Legacy gear-stack (limity per plan) — **do aktualizacji i reuse** |
 
 ## Konwencje
 
