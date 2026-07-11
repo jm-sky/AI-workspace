@@ -31,5 +31,6 @@ Błędy, usprawnienia i dług techniczny — elementy do naprawy.
 | 019 | [2026-07-09--019--design-faza-1-5-rich-blocks.md](2026-07-09--019--design-faza-1-5-rich-blocks.md) | Faza 1.5 krok 4 — rich blocks | `done` |
 | 020 | [2026-07-09--020--chat-attachments-plan.md](2026-07-09--020--chat-attachments-plan.md) | Plan załączników w czacie (attachments) | `planned` |
 | 021 | [2026-07-08--021--backport-2fa-shared-core.md](2026-07-08--021--backport-2fa-shared-core.md) | Backport 2FA i shared-core UX z gear-stack | `done` |
+| 022 | [2026-07-11--022--chat-tool-memory-step-disappears.md](2026-07-11--022--chat-tool-memory-step-disappears.md) | Chat — krok narzędzia (memory) znika po zakończeniu runu | `todo` |
 
 When adding a new issue: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.
