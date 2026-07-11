@@ -1,6 +1,6 @@
 # Dokumentacja AI Workspace — indeks
 
-Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, research (runda 1) zrobiony. **Krok 0 (bootstrap) — ✅** (2026-07-05). **Faza 0 (fundament) — ✅** (2026-07-07). **Faza 1 (Jira 360° end-to-end) — 🔄 w toku.** Caddy + DNS na `ai-workspace.dev-made.it` — ✅ wdrożone na VPS.
+Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, research (runda 1) zrobiony. **Krok 0 (bootstrap) — ✅** (2026-07-05). **Faza 0 (fundament) — ✅** (2026-07-07). **Faza 1 (Jira 360° end-to-end) — ✅** (2026-07-09). **Faza 1.5 (design pass) — 🔄 w toku.** Caddy + DNS na `ai-workspace.dev-made.it` — ✅ wdrożone na VPS.
 
 ## Nawigacja
 

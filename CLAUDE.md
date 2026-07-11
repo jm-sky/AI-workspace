@@ -53,7 +53,8 @@ Frontend dev: `pnpm dev` (port 5176, proxy `/api` → `localhost:8003`).
 |------|--------|--------|
 | Krok 0 | Bootstrap z gear-stack | ✅ |
 | Faza 0 | Tenants, teams, kaskada config, tokeny OAuth integracji | ✅ |
-| **Faza 1** | Agent loop + trace, MCP Jira/GitLab, czat SSE, widok 360° | 🔄 w toku |
+| Faza 1 | Agent loop + trace, MCP Jira/GitLab, czat SSE, widok 360° | ✅ |
+| **Faza 1.5** | Design pass (`DESIGN.md`: ChatGPT + Linear) na czacie i widoku 360° | 🔄 w toku |
 | Faza 2 | Gmail + Teams MCP | — |
 | Faza 3 | Edytor agentów, router, bogate bloki | — |
 | Faza 4 | Pamięć + RAG (pgvector) | — |
