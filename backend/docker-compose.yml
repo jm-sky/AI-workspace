@@ -137,8 +137,11 @@ networks:
 
 volumes:
   ai_workspace_postgres_data:
-    driver: local
+    external: true
+    name: ai_workspace_postgres_data
   ai_workspace_redis_data:
-    driver: local
+    external: true
+    name: ai_workspace_redis_data
   ai_workspace_uploads:
-    driver: local
+    external: true
+    name: ai_workspace_uploads

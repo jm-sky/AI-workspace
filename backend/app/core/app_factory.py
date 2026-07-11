@@ -145,6 +145,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Fail fast on insecure production configuration (no-op outside production).
     settings.validate_production()
 
+    # Warm the model catalog so the synchronous cost helpers can price models
+    # outside the curated list from the first agent run onwards.
+    try:
+        from app.core.redis import get_redis_client
+        from app.modules.ai.services.model_catalog_service import get_catalog
+
+        models = await get_catalog(await get_redis_client())
+        logger.info(f"Model catalog ready: {len(models)} models")
+    except Exception as e:
+        logger.warning(f"Model catalog warm-up failed: {e}")
+
     yield
 
     # Shutdown

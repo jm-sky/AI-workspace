@@ -14,6 +14,7 @@ from app.modules.agent.exceptions import (
 )
 from app.modules.agent.prompts.github_workspace import GITHUB_WORKSPACE_SYSTEM_PROMPT
 from app.modules.agent.prompts.jira_360 import JIRA_360_SYSTEM_PROMPT
+from app.modules.ai.utils.models_config import get_model_by_id, has_live_catalog
 from app.modules.memory.services.memory_service import MemoryService
 from app.modules.agent.repositories import AgentRunRepository, AgentSessionRepository
 from app.modules.agent.schemas import (
@@ -73,11 +74,21 @@ class AgentRunService:
             raise AgentToolsDisabledError("Agent tools are disabled for this workspace")
 
         model = requested_model or effective.defaultModel
+
+        # An empty allow-list means the workspace sets no ceiling: any model the
+        # catalog knows about is fair game. Without a live catalog we cannot tell
+        # a typo from a legitimate model, so we pass it through to OpenRouter
+        # rather than fail every non-curated model.
+        if not effective.allowedModels:
+            if not model:
+                raise AgentNotConfiguredError("No model configured for workspace")
+            if has_live_catalog() and not get_model_by_id(model):
+                raise AgentNotConfiguredError(f"Unknown model for workspace: {model}")
+            return model
+
         if model and model in effective.allowedModels:
             return model
-        if effective.allowedModels:
-            return effective.allowedModels[0]
-        raise AgentNotConfiguredError("No allowed model configured for workspace")
+        return effective.allowedModels[0]
 
     def _system_prompt(self, agent_key: str) -> str:
         prompt = AGENT_PROMPTS.get(agent_key)

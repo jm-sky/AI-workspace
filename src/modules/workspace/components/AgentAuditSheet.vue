@@ -47,12 +47,12 @@ const formatCost = (cost?: number | null): string => {
         </SheetDescription>
       </SheetHeader>
 
-      <div v-if="!hasAuditData" class="py-8 text-center text-sm text-muted-foreground">
+      <div v-if="!hasAuditData" class="px-4 py-8 text-center text-sm text-muted-foreground">
         {{ t('workspace.audit.noRun') }}
       </div>
 
       <Tabs v-else default-value="trace" class="flex min-h-0 flex-1 flex-col">
-        <TabsList class="shrink-0">
+        <TabsList class="mx-4 shrink-0">
           <TabsTrigger value="trace">
             {{ t('workspace.audit.trace') }}
           </TabsTrigger>
@@ -64,7 +64,7 @@ const formatCost = (cost?: number | null): string => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="trace" class="min-h-0 flex-1 overflow-y-auto pt-4">
+        <TabsContent value="trace" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4">
           <AgentRunAudit
             :steps="steps"
             :run-id="runId"
@@ -74,7 +74,7 @@ const formatCost = (cost?: number | null): string => {
           />
         </TabsContent>
 
-        <TabsContent value="systemPrompt" class="min-h-0 flex-1 overflow-y-auto pt-4">
+        <TabsContent value="systemPrompt" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4">
           <pre
             v-if="activeRun?.systemPrompt"
             class="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/40 p-3 text-xs"
@@ -84,7 +84,7 @@ const formatCost = (cost?: number | null): string => {
           </p>
         </TabsContent>
 
-        <TabsContent value="session" class="min-h-0 flex-1 overflow-y-auto pt-4">
+        <TabsContent value="session" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4">
           <dl v-if="activeRun" class="space-y-3 text-sm">
             <div>
               <dt class="text-muted-foreground">

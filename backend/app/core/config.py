@@ -683,6 +683,18 @@ class AISettings(BaseSettings):
         validation_alias="AI_CACHE_TTL_EMBED",
         description="Cache TTL for embeddings (days)",
     )
+    catalog_cache_ttl: int = Field(
+        default=21600,
+        validation_alias="AI_CATALOG_CACHE_TTL",
+        description="Redis TTL for the OpenRouter model catalog (seconds)",
+        gt=0,
+    )
+    catalog_fetch_timeout: float = Field(
+        default=10.0,
+        validation_alias="AI_CATALOG_FETCH_TIMEOUT",
+        description="Timeout for fetching the OpenRouter model catalog (seconds)",
+        gt=0,
+    )
     agent_max_steps: int = Field(
         default=10,
         validation_alias="AGENT_MAX_STEPS",
@@ -850,9 +862,12 @@ class WorkspaceSettings(BaseSettings):
     model_config = _base_config
 
     default_allowed_models: str | list[str] = Field(
-        default='["qwen/qwen3.7-plus","google/gemini-2.5-flash","google/gemini-2.5-flash-lite","anthropic/claude-sonnet-4.5"]',
+        default_factory=list,
         validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
-        description="Default allow-list of LLM model IDs",
+        description=(
+            "App-level allow-list of LLM model IDs. Empty means no ceiling: the "
+            "whole catalog is available and only tenant/team/user narrow it."
+        ),
     )
     default_model: str = Field(
         default="qwen/qwen3.7-plus",

@@ -87,7 +87,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
         </div>
       </div>
 
-      <div class="grid shrink-0 gap-3 rounded-lg border bg-muted/20 p-4 md:grid-cols-2">
+      <div class="grid shrink-0 gap-3 rounded-xl border border-hairline bg-surface-raised p-4 md:grid-cols-2">
         <div class="space-y-2">
           <Label for="memory-search">{{ t('workspace.memory.search') }}</Label>
           <div class="flex gap-2">
@@ -131,7 +131,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
         </div>
       </div>
 
-      <div class="shrink-0 space-y-2 rounded-lg border p-4">
+      <div class="shrink-0 space-y-2 rounded-xl border border-hairline bg-surface-raised p-4">
         <Label for="memory-new">{{ t('workspace.memory.add') }}</Label>
         <Textarea
           id="memory-new"
@@ -166,7 +166,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
         {{ error }}
       </p>
 
-      <div class="min-h-0 flex-1 overflow-y-auto rounded-lg border">
+      <div class="min-h-0 flex-1 overflow-y-auto rounded-xl border border-hairline bg-surface-canvas">
         <p
           v-if="isLoading"
           class="p-4 text-sm text-muted-foreground"
@@ -179,7 +179,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
         >
           {{ t('workspace.memory.empty') }}
         </p>
-        <ul v-else class="divide-y">
+        <ul v-else class="divide-y divide-hairline">
           <li
             v-for="entry in displayedEntries"
             :key="entry.id"

@@ -23,6 +23,8 @@ class ConfigKey(StrEnum):
 class EffectiveWorkspaceConfig(BaseModel):
     """Resolved configuration after applying cascade rules."""
 
+    # An empty list means "unrestricted" (the whole model catalog), not "no
+    # models". Every consumer must treat it that way.
     allowedModels: list[str] = Field(default_factory=list)
     defaultModel: str | None = None
     maxTokens: int | None = None

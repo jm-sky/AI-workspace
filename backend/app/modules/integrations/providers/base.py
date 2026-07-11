@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.integrations.exceptions import IntegrationRefreshNotSupportedError
+
 
 @dataclass(frozen=True)
 class IntegrationOAuthTokenResult:
@@ -29,3 +31,11 @@ class IntegrationOAuthProvider(ABC):
         self, code: str, *, scopes: list[str]
     ) -> IntegrationOAuthTokenResult:
         """Exchange authorization code for tokens."""
+
+    async def refresh_access_token(
+        self, refresh_token: str
+    ) -> IntegrationOAuthTokenResult:
+        """Exchange a refresh token for a fresh access token."""
+        raise IntegrationRefreshNotSupportedError(
+            f"{type(self).__name__} does not support token refresh"
+        )
