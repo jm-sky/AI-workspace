@@ -36,6 +36,10 @@ Czołówka tool-callingu jest wyrównana, a **Gemini Flash siedzi tuż przy szcz
 - Potwierdzić, że wybrany Flash wspiera **parallel/multi tool calls** w formacie OpenAI (nasza pętla może wołać kilka narzędzi naraz w fan-oucie 360°).
 - Zmierzyć realny koszt jednego „widoku 360°" (tokeny wejścia z issue+wyników narzędzi) na 2–3 kandydatach.
 
+## Aktualizacja (2026-07-11)
+
+Finalny wybór odbiegł od rekomendacji: **`qwen/qwen3.7-plus`** został ustawiony jako domyślny model (`WORKSPACE_DEFAULT_MODEL`), nie Gemini Flash. Decyzja nie przeszła formalnego A/B opisanego wyżej — zapisana wprost w `docs/MVP.md` → „Rozstrzygnięcia". Ta rekomendacja (Gemini Flash) pozostaje w dokumencie jako punkt odniesienia/alternatywa w allow-liście.
+
 ## Źródła
 - Function Calling / BFCL leaderboards: https://llm-stats.com/leaderboards/best-ai-for-tool-calling , https://benchlm.ai/llm-agent-benchmarks , https://www.spheron.network/blog/tool-calling-benchmarks-bfcl-tau-bench-latency-optimization/
 - OpenRouter modele/ceny: https://openrouter.ai/models , https://openrouter.ai/pricing

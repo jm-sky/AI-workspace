@@ -11,6 +11,10 @@ Punkt wejścia do planu MVP i wyników researchu. Plan MVP jest ustalony, resear
 - [`MVP.md`](MVP.md) — **główny dokument planu**: 17 decyzji architektonicznych, schemat agenta, sekwencja budowy (fazy) i otwarte punkty. Zacznij tutaj.
 - [`IMPLEMENTATION_KICKOFF.md`](IMPLEMENTATION_KICKOFF.md) — **prompt startowy** dla sesji Claude Code (Opus) rozpoczynającej implementację (bootstrap + Faza 0/1).
 
+### Design
+- [`../DESIGN.md`](../DESIGN.md) — **brief wizualny** (ChatGPT + Linear jako referencje), zasady implementacji, aktualny dla Fazy 1.5 (design pass, 🔄 w toku).
+- [`design/README.md`](design/README.md) — zebrane materiały refero.design (`chatgpt/`, `linear/`: `DESIGN.md` + `tailwind.css`).
+
 ### Katalogi robocze
 - [`issues/README.md`](issues/README.md) — błędy, usprawnienia, dług techniczny
 - [`reviews/README.md`](reviews/README.md) — przeglądy (security, jakość kodu, UX, performance)
@@ -32,6 +36,7 @@ Indeks: [`research/README.md`](research/README.md). Skrót:
 - [`research/2026-07-04--004--knowledge-sources.md`](research/2026-07-04--004--knowledge-sources.md) — kuratorowana baza źródeł / „best of AI".
 - [`research/2026-07-06--005--model-selection.md`](research/2026-07-06--005--model-selection.md) — wybór domyślnego modelu na OpenRouter (Gemini Flash).
 - [`research/2026-07-08--006--ai-kancelaria-comparison.md`](research/2026-07-08--006--ai-kancelaria-comparison.md) — porównanie z repo siostrzanym ai-kancelaria: co warto przenieść.
+- [`research/2026-07-10--007--chatgpt-settings-reference.md`](research/2026-07-10--007--chatgpt-settings-reference.md) — referencja UX ustawień aplikacji AI (ChatGPT) + architektura pamięci wielopoziomowej.
 
 ## Skrót decyzji (z `MVP.md`)
 

@@ -111,12 +111,11 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 
 ## Rozstrzygnięcia
 
+- **Domyślny model (OpenRouter)** (2026-07-11) — **`qwen/qwen3.7-plus`** (allow-lista: + `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite`, `anthropic/claude-sonnet-4.5`). Odbiega od pierwotnej rekomendacji „Gemini Flash" z `docs/research/2026-07-06--005--model-selection.md` — decyzja świadoma, nie A/B; zamyka poprzedni otwarty punkt. Skonfigurowane w `backend/app/core/config.py` / `.env.example`.
 - **Zmiana scenariusza MVP** (2026-07-11) — Jira 360° odłożony (brak dostępu do Jiry); nowy kierunek: otwarty multi-tool workspace (ChatGPT/Claude-like) z pamięcią i zakresami tenant/team, pierwsza instancja = GitHub Developer Workspace. GitLab i Teams odłożone razem z Jirą (GitLab-owe narzędzie było zależne od klucza Jiry). Gmail zostaje jako aktywny cel Fazy 2. Szczegóły: sekcja „North Star / kontekst" wyżej.
 - **Sesje vs runy** (2026-07-09) — **jedna sesja = wiele runów**. Model `chat_sessions` (tenant+user, tytuł z pierwszej wiadomości, `last_message_at`); `agent_runs.session_id` FK. Historia poprzednich tur (para user/assistant, bez replay tool-calli) wstrzykiwana do pętli, aby umożliwić dopytywanie w tym samym kontekście (scenariusz 360°). Nawigacja czatu przełączona na `?session=`. Zamyka P0 #1 z `docs/research/2026-07-08--006--ai-kancelaria-comparison.md`.
 
 ## Otwarte punkty (do ustalenia)
-
-- **Domyślny model (OpenRouter)** — rekomendacja: **Gemini Flash** (tani + blisko czołówki tool-callingu), allow-lista + per-agent override; do potwierdzenia po A/B na zadaniu 360°. Szczegóły: `docs/research/2026-07-06--005--model-selection.md`.
 - **Model embeddingów + reranker** (do pgvectora) — wybór technologii (Faza 4 / research).
 - **Zdalne agenty wykonawcze** (2026-07-11, nowy pomysł) — Workspace jako panel do planowania/dispatchowania pracy dla agentów kodujących uruchomionych na własnej infrastrukturze użytkownika (np. Claude Code na serwerze OVH, wiele projektów), z trackingiem statusu. Nie doprecyzowane: model integracji (nowy typ „toola"/konektora vs osobna warstwa orkiestracji), auth do zdalnych środowisk, relacja do audytu Task/Run (dec. #13) i do przyszłego „Control Tower" (patrz niżej). Kandyduje na Fazę 6 — wymaga osobnego researchu przed wejściem do sekwencji.
 

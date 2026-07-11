@@ -48,13 +48,7 @@ Use for:
 
 Refero: [`docs/design/refero/linear/`](docs/design/refero/linear/) (`DESIGN.md`, `tailwind.css`)
 
-### AuthKit
-Use for:
-- modern component styling
-- subtle lighting effects
-- blur / glass effects
-- elegant cards
-- contemporary AI product feeling
+> **AuthKit porzucony jako referencja** (2026-07-11) — nigdy nie zebrano dla niego materiału w `docs/design/refero/`. Interesujące elementy (subtelne efekty świetlne / glow) są już objęte przez ChatGPT + § „Overall visual style" niżej.
 
 ## Reference-driven implementation process
 

@@ -1,6 +1,11 @@
-# Referencja UX — Ustawienia aplikacji AI (na podstawie ChatGPT + najlepszych praktyk)
+# Research: Referencja UX — Ustawienia aplikacji AI (na podstawie ChatGPT + najlepszych praktyk)
 
-> Dokument referencyjny do projektowania ustawień aplikacji AI.
+**Data:** 2026-07-10
+**Status:** `done` (materiał referencyjny — bez decyzji wdrożeniowej)
+**Źródło:** obserwacje ChatGPT + dobre praktyki UX ustawień aplikacji AI.
+**Powiązane:** [`MVP.md`](../MVP.md) (dec. #8 kaskada konfiguracji, dec. #12 pamięć) · [`README.md`](README.md)
+
+> Dokument referencyjny do projektowania ustawień aplikacji AI — nie jest jeszcze zmapowany na konkretną fazę. Ustawienia AI/personalizacja pasują do **Fazy 3** (edytor agentów, custom instructions), wielopoziomowa pamięć (fakty/profile/projekt/sesja) pasuje do **Fazy 4** (pamięć + RAG). Do rozstrzygnięcia przy planowaniu tych faz.
 
 # Ustawienia
 

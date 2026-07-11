@@ -17,5 +17,6 @@ Analizy, spike'i, porównania i notatki przed decyzją.
 | 004 | [2026-07-04--004--knowledge-sources.md](2026-07-04--004--knowledge-sources.md) | Kuratorowana baza źródeł / „best of AI" | `done` |
 | 005 | [2026-07-06--005--model-selection.md](2026-07-06--005--model-selection.md) | Wybór domyślnego modelu na OpenRouter (Gemini Flash) | `done` |
 | 006 | [2026-07-08--006--ai-kancelaria-comparison.md](2026-07-08--006--ai-kancelaria-comparison.md) | Porównanie z ai-kancelaria: co wdrożyć w AI Workspace | `done` |
+| 007 | [2026-07-10--007--chatgpt-settings-reference.md](2026-07-10--007--chatgpt-settings-reference.md) | Referencja UX: ustawienia aplikacji AI (ChatGPT) + architektura pamięci wielopoziomowej | `done` |
 
 When adding a new entry: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.
