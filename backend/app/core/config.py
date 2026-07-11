@@ -870,7 +870,7 @@ class WorkspaceSettings(BaseSettings):
         ),
     )
     default_model: str = Field(
-        default="qwen/qwen3-30b-a3b-instruct-2507",
+        default="google/gemini-2.5-flash-lite",
         validation_alias="WORKSPACE_DEFAULT_MODEL",
         description="Default LLM model ID",
     )
