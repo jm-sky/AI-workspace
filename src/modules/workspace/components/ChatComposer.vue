@@ -32,23 +32,24 @@ const handleKeydown = (event: KeyboardEvent) => {
 </script>
 
 <template>
-  <div class="sticky bottom-0 shrink-0 bg-gradient-to-t from-surface-canvas via-surface-canvas/95 to-transparent px-3 pb-4 pt-3 sm:px-4">
+  <div class="sticky bottom-0 shrink-0 bg-linear-to-t from-surface-canvas via-surface-canvas/95 to-transparent px-3 pb-4 pt-3 sm:px-4">
     <form
       class="shadow-composer mx-auto flex w-full max-w-3xl items-end gap-2 rounded-3xl border border-hairline bg-surface-raised/90 p-2 backdrop-blur-md transition-[box-shadow,border-color] focus-within:border-ring/40"
       @submit.prevent="handleSubmit"
     >
       <Textarea
+        id="chat-composer-input"
         v-model="input"
         :placeholder="t('workspace.chat.placeholder')"
         :disabled="isLoading"
         rows="2"
-        class="min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+        class="rounded-full min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
         :aria-label="t('workspace.chat.placeholder')"
         @keydown="handleKeydown"
       />
       <Button
         type="submit"
-        class="shrink-0 rounded-xl"
+        class="shrink-0 rounded-xl aspect-square p-2"
         :loading="isStreaming"
         :disabled="isLoading || !input.trim() || !canSubmit"
       >

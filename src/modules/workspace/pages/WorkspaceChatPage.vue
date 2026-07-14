@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import ChatLayout from '@/layouts/ChatLayout.vue'
 import AgentAuditSheet from '@/modules/workspace/components/AgentAuditSheet.vue'
@@ -12,14 +13,17 @@ import ChatThinkingIndicator from '@/modules/workspace/components/ChatThinkingIn
 import ChatToolbar from '@/modules/workspace/components/ChatToolbar.vue'
 import ChatToolSteps from '@/modules/workspace/components/ChatToolSteps.vue'
 import { useAgentChat } from '@/modules/workspace/composables/useAgentChat'
-import { useChatSessionNav } from '@/modules/workspace/composables/useChatSessionNav'
+import { useAgentSessions } from '@/modules/workspace/composables/useAgentSessions'
 import { useWorkspaceModels } from '@/modules/workspace/composables/useWorkspaceModels'
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const input = ref('')
 const auditOpen = ref(false)
 
 const { getSelectedModelId, hasValidModel } = useWorkspaceModels()
+const { error: sessionsError, loadSessions } = useAgentSessions()
 
 const {
   messages,
@@ -37,18 +41,44 @@ const {
   clearChat,
 } = useAgentChat(getSelectedModelId)
 
-const { sessionsError, refreshSessions, setSessionQuery } = useChatSessionNav({
-  activeSessionId,
-  loadSession,
-  clearChat,
-})
+const setSessionQuery = async (sessionId?: string) => {
+  await router.replace({
+    path: route.path,
+    query: sessionId ? { session: sessionId } : {},
+  })
+}
+
+const syncSessionFromRoute = async (sessionId: string | null) => {
+  if (sessionId) {
+    if (sessionId === activeSessionId.value) return
+    try {
+      await loadSession(sessionId)
+    } catch {
+      toast.error(t('workspace.sessions.loadError'))
+    }
+    return
+  }
+
+  if (activeSessionId.value || messages.value.length > 0) {
+    clearChat()
+  }
+}
+
+watch(
+  () => route.query.session,
+  async (sessionId) => {
+    const id = typeof sessionId === 'string' ? sessionId : null
+    await syncSessionFromRoute(id)
+  },
+  { immediate: true },
+)
 
 const handleSubmit = async () => {
   const text = input.value.trim()
   if (!text || !hasValidModel.value) return
   input.value = ''
   await sendMessage(text)
-  await refreshSessions()
+  await loadSessions()
   if (activeSessionId.value) {
     await setSessionQuery(activeSessionId.value)
   }

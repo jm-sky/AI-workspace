@@ -93,7 +93,7 @@ const resetFilters = () => {
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
-      <div class="relative min-w-0 flex-1">
+      <div class="relative min-w-12 flex-1">
         <SearchIcon
           class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         />
@@ -142,7 +142,7 @@ const resetFilters = () => {
           </div>
         </section>
 
-        <section class="space-y-3">
+        <section class="space-y-3 max-w-64 md:max-w-full">
           <div class="flex items-baseline justify-between">
             <h3 class="text-xs font-medium uppercase text-muted-foreground">
               {{ t('workspace.model.filters.maxOutputCost') }}
@@ -158,7 +158,7 @@ const resetFilters = () => {
           />
         </section>
 
-        <section class="space-y-3">
+        <section class="space-y-3 max-w-64 md:max-w-full">
           <div class="flex items-baseline justify-between">
             <h3 class="text-xs font-medium uppercase text-muted-foreground">
               {{ t('workspace.model.filters.minContext') }}

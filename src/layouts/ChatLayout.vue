@@ -1,7 +1,35 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ChatHeader from '@/components/layout/ChatHeader.vue'
 import ChatSidebar from '@/components/layout/ChatSidebar.vue'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { useChatSessionNav } from '@/modules/workspace/composables/useChatSessionNav'
+import { WorkspaceRoutePath } from '@/modules/workspace/routes'
+
+const route = useRoute()
+const router = useRouter()
+
+const activeSessionId = computed(() =>
+  typeof route.query.session === 'string' ? route.query.session : null,
+)
+
+const loadSession = async (sessionId: string) => {
+  await router.push({
+    path: WorkspaceRoutePath.Chat,
+    query: { session: sessionId },
+  })
+}
+
+const clearChat = () => {
+  void router.push({ path: WorkspaceRoutePath.Chat, query: {} })
+}
+
+useChatSessionNav({
+  activeSessionId,
+  loadSession,
+  clearChat,
+})
 </script>
 
 <template>

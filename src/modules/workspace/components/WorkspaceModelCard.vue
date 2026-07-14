@@ -11,7 +11,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+  <div class="flex min-w-0 max-w-64 md:max-w-full flex-1 flex-col gap-1.5">
     <div class="flex items-center gap-2">
       <span class="truncate text-sm font-medium">{{ model.name }}</span>
       <Badge :variant="TIER_VARIANT[model.tier]" class="shrink-0 text-[10px]">
