@@ -21,8 +21,10 @@
   --color-surface-raised: var(--surface-raised);
   --color-surface-user: var(--surface-user);
   --color-hairline: var(--hairline);
+  --color-sidebar-mist: var(--sidebar-mist);
+  --color-hover-veil: var(--hover-veil);
 
-  --color-surface: var(--color-slate-300);
+  --color-surface: var(--surface-canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -101,6 +103,13 @@
   --surface-raised: oklch(0.985 0 0);
   --surface-user: oklch(0.968 0 0);
   --hairline: oklch(0 0 0 / 8%);
+  --sidebar-mist: oklch(0.985 0 0);
+  --hover-veil: oklch(0 0 0 / 5%);
+
+  /* Elevation — soft shadows (modern layer on flat ChatGPT base). */
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 4%), 0 4px 16px oklch(0 0 0 / 4%);
+  --shadow-composer: 0 0 0 1px oklch(0 0 0 / 5%), 0 4px 24px oklch(0 0 0 / 8%);
+  --shadow-sidebar: 1px 0 0 oklch(0 0 0 / 5%), 4px 0 24px oklch(0 0 0 / 4%);
 }
 
 .dark {
@@ -129,7 +138,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.13 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.746 0.16 232.661);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -143,6 +152,12 @@
   --surface-raised: oklch(0.205 0 0);
   --surface-user: oklch(1 0 0 / 6%);
   --hairline: oklch(1 0 0 / 8%);
+  --sidebar-mist: oklch(0.13 0 0);
+  --hover-veil: oklch(1 0 0 / 6%);
+
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 20%), 0 4px 16px oklch(0 0 0 / 24%);
+  --shadow-composer: 0 0 0 1px oklch(1 0 0 / 8%), 0 8px 32px oklch(0 0 0 / 36%);
+  --shadow-sidebar: 1px 0 0 oklch(1 0 0 / 6%), 4px 0 24px oklch(0 0 0 / 28%);
 }
 
 @layer base {
@@ -172,6 +187,26 @@
 @layer components {
   .v-popper--theme-tooltip {
     @apply text-sm;
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-composer {
+    box-shadow: var(--shadow-composer);
+  }
+
+  .shadow-sidebar {
+    box-shadow: var(--shadow-sidebar);
+  }
+
+  .hover-veil {
+    @apply transition-colors;
+  }
+
+  .hover-veil:hover {
+    background-color: var(--hover-veil);
   }
 }
 

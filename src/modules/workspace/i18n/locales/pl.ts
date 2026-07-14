@@ -11,6 +11,7 @@ export const workspacePl = {
       title: 'Czat',
       subtitle: 'Workspace GitHub — pytaj o repozytoria, issue i PR',
       empty: 'Zapytaj o repozytoria GitHub, issue lub pull requesty.',
+      welcomeTitle: 'W czym mogę Ci dzisiaj pomóc?',
       thinking: 'Myślę…',
       analyzing: 'Analizuje…',
       preparing: 'Przygotowuję odpowiedź…',

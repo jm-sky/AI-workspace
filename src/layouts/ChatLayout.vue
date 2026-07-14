@@ -6,8 +6,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 <template>
   <SidebarProvider>
-    <ChatSidebar class="mt-(--header-height) shadow-[0_0_.6rem_#0002]" />
-    <SidebarInset class="flex h-dvh flex-col overflow-hidden bg-surface pt-14">
+    <ChatSidebar class="mt-(--header-height) shadow-sidebar" />
+    <SidebarInset class="flex h-dvh flex-col overflow-hidden bg-surface-canvas pt-14">
       <ChatHeader />
       <main class="flex min-h-0 flex-1 flex-col overflow-hidden">
         <slot />

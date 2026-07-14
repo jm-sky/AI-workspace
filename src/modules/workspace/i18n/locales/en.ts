@@ -11,6 +11,7 @@ export const workspaceEn = {
       title: 'Chat',
       subtitle: 'GitHub workspace — ask about repos, issues, and PRs',
       empty: 'Ask about your GitHub repositories, issues, or pull requests.',
+      welcomeTitle: 'How can I help you today?',
       thinking: 'Thinking…',
       analyzing: 'Analyzing…',
       preparing: 'Preparing response…',

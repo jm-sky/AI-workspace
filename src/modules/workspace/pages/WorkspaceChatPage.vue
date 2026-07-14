@@ -67,44 +67,51 @@ const handleCopyRun = async () => {
 <template>
   <ChatLayout>
     <div class="flex min-h-0 flex-1 flex-col">
-      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 py-3 sm:px-6">
-        <ChatToolbar
-          :active-run="activeRun"
-          :step-count="steps.length"
-          :audit-open="auditOpen"
-          @open-audit="auditOpen = true"
-        />
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div class="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-2 px-3 py-3 sm:px-4">
+          <ChatToolbar
+            :active-run="activeRun"
+            :step-count="steps.length"
+            :audit-open="auditOpen"
+            @open-audit="auditOpen = true"
+          />
 
-        <p
-          v-if="sessionsError"
-          class="shrink-0 text-sm text-destructive"
-        >
-          {{ sessionsError }}
-        </p>
+          <p
+            v-if="sessionsError"
+            class="shrink-0 text-sm text-destructive"
+          >
+            {{ sessionsError }}
+          </p>
 
-        <p
-          v-if="error"
-          class="shrink-0 text-sm text-destructive"
-        >
-          {{ error }}
-        </p>
+          <p
+            v-if="error"
+            class="shrink-0 text-sm text-destructive"
+          >
+            {{ error }}
+          </p>
 
-        <div
-          v-if="isLoadingRun"
-          class="flex items-center gap-2 text-sm text-muted-foreground"
-        >
-          <Loader2 class="size-4 animate-spin" />
-          {{ t('workspace.chat.loadingSession') }}
+          <div
+            v-if="isLoadingRun"
+            class="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <Loader2 class="size-4 animate-spin" />
+            {{ t('workspace.chat.loadingSession') }}
+          </div>
         </div>
 
-        <div class="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl border border-hairline bg-surface-canvas">
-          <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
-            <p
+        <div class="min-h-0 flex-1 overflow-y-auto">
+          <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-3 pb-4 sm:px-4">
+            <div
               v-if="messages.length === 0 && !isLoadingRun"
-              class="m-auto text-center text-sm text-muted-foreground"
+              class="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center"
             >
-              {{ t('workspace.chat.empty') }}
-            </p>
+              <h1 class="text-2xl font-semibold tracking-tight text-foreground">
+                {{ t('workspace.chat.welcomeTitle') }}
+              </h1>
+              <p class="max-w-md text-sm text-muted-foreground">
+                {{ t('workspace.chat.empty') }}
+              </p>
+            </div>
 
             <div
               v-for="msg in messages"
@@ -113,7 +120,7 @@ const handleCopyRun = async () => {
             >
               <div
                 :class="msg.role === 'user'
-                  ? 'max-w-[85%] rounded-2xl border border-hairline bg-surface-user px-4 py-2.5 text-foreground'
+                  ? 'max-w-[85%] rounded-2xl border border-hairline bg-surface-user px-4 py-2.5 text-foreground shadow-soft'
                   : 'w-full'"
               >
                 <AgentMarkdown :content="msg.content" />
