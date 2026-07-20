@@ -3,6 +3,7 @@ import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -14,14 +15,20 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import WorkspaceModelCard from '@/modules/workspace/components/WorkspaceModelCard.vue'
 import { WorkspaceRoutePath } from '@/modules/workspace/routes'
-import { SORT_KEYS, sortModels } from '@/modules/workspace/utils/aiModelFormat'
+import {
+  createDefaultFilters,
+  filterModels,
+  formatPrice,
+  SORT_KEYS,
+  sortModels,
+  TIER_VARIANT,
+} from '@/modules/workspace/utils/aiModelFormat'
 import type { HTMLAttributes } from 'vue'
 import type { IAiModel } from '@/modules/workspace/types/workspaceConfig'
 import type { SortKey } from '@/modules/workspace/utils/aiModelFormat'
 
-/** The whole catalog is too long to scroll; the browse page exists for that. */
+/** Cap mounted rows; full catalog lives on the browse page. */
 const RENDER_LIMIT = 50
 
 const props = defineProps<{
@@ -44,13 +51,16 @@ const selected = computed(() => props.models.find((m) => m.id === modelId.value)
 
 const sortedModels = computed(() => sortModels(props.models, sortKey.value))
 
-// Command matches against each item's rendered text, so an item we slice off is
-// one it can never find. While a search is active every model has to be mounted.
-const visibleModels = computed(() =>
-  search.value ? sortedModels.value : sortedModels.value.slice(0, RENDER_LIMIT),
+const matchedModels = computed(() =>
+  filterModels(sortedModels.value, {
+    ...createDefaultFilters(),
+    search: search.value,
+  }),
 )
 
-const isTruncated = computed(() => visibleModels.value.length < sortedModels.value.length)
+const visibleModels = computed(() => matchedModels.value.slice(0, RENDER_LIMIT))
+
+const isTruncated = computed(() => visibleModels.value.length < matchedModels.value.length)
 
 const onSelect = (model: IAiModel) => {
   modelId.value = model.id
@@ -112,18 +122,31 @@ const onSelect = (model: IAiModel) => {
 
         <CommandList class="max-h-[22rem]">
           <CommandEmpty>{{ t('workspace.model.empty') }}</CommandEmpty>
-          <CommandGroup class="p-2">
+          <CommandGroup class="p-1">
             <CommandItem
               v-for="model in visibleModels"
               :key="model.id"
               :value="model.id"
-              class="mb-1 cursor-pointer items-start gap-3 rounded-lg border border-hairline bg-surface-raised p-3 last:mb-0 data-[highlighted]:border-primary/40"
+              class="mb-0.5 cursor-pointer gap-2 rounded-md px-2 py-1.5 last:mb-0"
               @select="onSelect(model)"
             >
               <CheckIcon
-                :class="cn('mt-0.5 size-4 shrink-0', modelId === model.id ? 'opacity-100' : 'opacity-0')"
+                :class="cn('size-4 shrink-0', modelId === model.id ? 'opacity-100' : 'opacity-0')"
               />
-              <WorkspaceModelCard :model="model" />
+              <span class="sr-only">{{ model.id }}</span>
+              <span class="min-w-0 flex-1 truncate font-medium">{{ model.name }}</span>
+              <Badge
+                :variant="TIER_VARIANT[model.tier]"
+                class="shrink-0 text-[10px]"
+              >
+                {{ t(`workspace.model.tier.${model.tier}`) }}
+              </Badge>
+              <span class="shrink-0 font-mono text-[11px] text-muted-foreground">
+                {{ formatPrice(model.cost_per_1m_output) }}
+              </span>
+              <span class="shrink-0 text-[10px] uppercase text-muted-foreground">
+                {{ model.provider }}
+              </span>
             </CommandItem>
           </CommandGroup>
         </CommandList>
@@ -135,11 +158,11 @@ const onSelect = (model: IAiModel) => {
           <span v-if="isTruncated" class="text-xs text-muted-foreground">
             {{ t('workspace.model.showingOf', {
               shown: visibleModels.length,
-              total: sortedModels.length,
+              total: matchedModels.length,
             }) }}
           </span>
           <span v-else class="text-xs text-muted-foreground">
-            {{ t('workspace.model.results', { count: sortedModels.length }) }}
+            {{ t('workspace.model.results', { count: matchedModels.length }) }}
           </span>
           <Button
             as-child
