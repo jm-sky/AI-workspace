@@ -9,14 +9,6 @@ from app.common.pagination import PaginatedResponse
 from .validators import validate_avatar_url
 
 
-class UserCreate(BaseModel):
-    """User creation request schema with camelCase."""
-
-    email: EmailStr
-    name: str = Field(..., min_length=1, max_length=100)
-    role: str = Field(default="user", pattern="^(user|admin|moderator)$")
-
-
 class UserUpdate(BaseModel):
     """User update request schema with camelCase."""
 

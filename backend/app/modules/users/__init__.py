@@ -2,7 +2,7 @@
 
 from .router import router
 from .models import User
-from .schemas import UserCreate, UserUpdate, UserResponse
+from .schemas import UserUpdate, UserResponse
 from .repositories import UserRepository, get_user_repository
 
 __all__ = [
@@ -10,7 +10,6 @@ __all__ = [
     "User",
     "UserRepository",
     "get_user_repository",
-    "UserCreate",
     "UserUpdate",
     "UserResponse",
 ]

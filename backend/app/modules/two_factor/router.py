@@ -8,11 +8,14 @@ from app.core.limiter import rate_limit
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.auth.repositories import get_user_repository
 from app.modules.auth.types.repository import UserRepositoryInterface
+from .auth_utils import verify_two_factor_token
 from .repositories import get_two_factor_repository
 from .schemas import (
     BackupCodesResponse,
+    CompletePasskeyAuthenticationRequest,
     CompletePasskeyRegistrationRequest,
     DisableTotpRequest,
+    InitiatePasskeyAuthenticationRequest,
     InitiatePasskeyRegistrationRequest,
     InitiateTotpRequest,
     PasskeyRegistrationInitiateResponse,
@@ -339,36 +342,48 @@ async def delete_passkey(
 @rate_limit("5/minute")
 async def initiate_passkey_authentication(
     request: Request,
-    current_user: CurrentUser,
+    body: InitiatePasskeyAuthenticationRequest,
     service: TwoFactorService = Depends(get_service),
 ) -> dict[str, Any]:
-    """Initiate passkey authentication for the current user."""
+    """Initiate passkey authentication during login.
+
+    Public endpoint (no CurrentUser): the caller only holds a 2FA-pending
+    token at this point, not a full session — CurrentUser would 401 here.
+    """
     _ = request  # required by slowapi rate limiting
     try:
-        return await service.initiate_passkey_authentication(user_id=current_user.id)
+        payload = verify_two_factor_token(body.twoFactorToken)
+        return await service.initiate_passkey_authentication(user_id=payload["sub"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
 
 @router.post("/webauthn/authenticate/complete", response_model=TwoFactorVerifyResponse)
 @rate_limit("5/minute")
 async def complete_passkey_authentication(
     request: Request,
-    body: dict[str, Any],  # CompletePasskeyAuthenticationRequest
-    current_user: CurrentUser,
+    body: CompletePasskeyAuthenticationRequest,
     service: TwoFactorService = Depends(get_service),
 ) -> TwoFactorVerifyResponse:
-    """Complete passkey authentication."""
+    """Complete passkey authentication during login and return JWT tokens.
+
+    Public endpoint (no CurrentUser), mirroring /totp/verify-login.
+    """
     _ = request  # required by slowapi rate limiting
     try:
+        payload = verify_two_factor_token(body.twoFactorToken)
         result = await service.complete_passkey_authentication(
-            challenge_token=body.get("challengeToken", ""),
-            credential_json=body.get("credential", {}),
-            challenge_data=body.get("_challenge_data"),
+            challenge_token=body.challengeToken,
+            credential_json=body.credential,
+            expected_user_id=payload["sub"],
         )
         return TwoFactorVerifyResponse(**result)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
 
 @router.patch("/preferred-method")

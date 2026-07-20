@@ -70,19 +70,6 @@ class UserRepository:
             updatedAt=auth_user.createdAt,  # users model requires this
         )
 
-    async def create_user(self, email: str, name: str, role: str = "user") -> User:
-        """Create a new user in database.
-
-        Note:
-            This method is not implemented because user creation requires
-            password handling which should only be done through auth endpoints.
-            Admin users can create users through the auth module's endpoints.
-        """
-        raise NotImplementedError(
-            "User creation with password must be done through auth module endpoints. "
-            "Use POST /auth/register for new user registration."
-        )
-
     async def get_user_by_email(self, email: str) -> User | None:
         """Get user by email from database."""
         auth_user = await self._auth_repo.get_user_by_email(email)

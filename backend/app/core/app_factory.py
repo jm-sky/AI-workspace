@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.limiter import setup_limiter
 from app.core.middleware import setup_middleware
 
 logger = logging.getLogger(__name__)
@@ -190,6 +191,9 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc" if settings.is_development() else None,
         openapi_url="/api/openapi.json" if settings.is_development() else None,
     )
+
+    # Setup rate limiting (must run before middleware/routers rely on app.state.limiter)
+    setup_limiter(app)
 
     # Setup middleware
     setup_middleware(app)
