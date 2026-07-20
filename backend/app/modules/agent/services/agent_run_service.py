@@ -468,9 +468,13 @@ def _raw_expiry() -> datetime | None:
 
 
 def _available_providers(tool_registry: AgentToolRegistry) -> set[str]:
-    """Providers reachable via the current tool registry (e.g. {jira, gitlab})."""
+    """Providers reachable via the current tool registry (e.g. {jira, gitlab}).
+
+    Uses the full catalog (including deferred tools) so source-routing guards
+    stay accurate when tool search has not yet activated provider tools.
+    """
     providers: set[str] = set()
-    for tool in tool_registry.openai_tools():
+    for tool in tool_registry.all_openai_tools():
         name = tool.get("function", {}).get("name", "")
         provider = provider_of_tool(name)
         if provider:
@@ -495,9 +499,9 @@ def _derive_title(message: str) -> str:
 
 
 def _build_tool_catalog(tool_registry: AgentToolRegistry) -> str:
-    """Render the live tool registry into the system prompt so names never drift."""
+    """Render active tools into the system prompt so names never drift."""
     tools = tool_registry.openai_tools()
-    if not tools:
+    if not tools and not tool_registry.has_deferred():
         return ""
     lines = ["## AVAILABLE TOOLS"]
     for tool in tools:
@@ -505,6 +509,10 @@ def _build_tool_catalog(tool_registry: AgentToolRegistry) -> str:
         name = fn.get("name", "")
         description = (fn.get("description") or "").strip().split("\n")[0]
         lines.append(f"- `{name}` — {description}")
+    if tool_registry.has_deferred():
+        lines.append(
+            "- Call `tool_search` with a query to discover and load more tools."
+        )
     return "\n".join(lines)
 
 

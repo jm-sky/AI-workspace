@@ -110,7 +110,6 @@ class AgentLoopService:
             *(history or []),
             {"role": "user", "content": user_message},
         ]
-        tools = self.tool_registry.openai_tools()
 
         prompt_tokens = 0
         completion_tokens = 0
@@ -118,6 +117,8 @@ class AgentLoopService:
         step_index = 0
 
         for iteration in range(self.max_steps):
+            # Refresh each turn so tool_search activations appear in schemas.
+            tools = self.tool_registry.openai_tools()
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,  # type: ignore[arg-type]

@@ -701,6 +701,23 @@ class AISettings(BaseSettings):
         description="Maximum tool-calling loop iterations per agent run",
         gt=0,
     )
+    tool_search_enabled: bool = Field(
+        default=True,
+        validation_alias="TOOL_SEARCH_ENABLED",
+        description="Enable dynamic tool search when the catalog exceeds the threshold",
+    )
+    tool_search_threshold: int = Field(
+        default=15,
+        validation_alias="TOOL_SEARCH_THRESHOLD",
+        description="Above this tool count, only core tools + tool_search are loaded initially",
+        gt=0,
+    )
+    tool_search_top_k: int = Field(
+        default=5,
+        validation_alias="TOOL_SEARCH_TOP_K",
+        description="Max tools activated per tool_search call",
+        gt=0,
+    )
     memory_enabled: bool = Field(
         default=True,
         validation_alias="AI_MEMORY_ENABLED",
@@ -744,7 +761,12 @@ class AISettings(BaseSettings):
     )
 
     @field_validator(
-        "enabled", "cache_enabled", "memory_enabled", "audit_raw_enabled", mode="before"
+        "enabled",
+        "cache_enabled",
+        "memory_enabled",
+        "audit_raw_enabled",
+        "tool_search_enabled",
+        mode="before",
     )
     @classmethod
     def parse_bool_field(cls, v: str | bool) -> bool:
