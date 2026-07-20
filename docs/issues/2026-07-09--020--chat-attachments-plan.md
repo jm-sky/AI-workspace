@@ -1,7 +1,7 @@
 # Issue 020 — Plan załączników w czacie (attachments picker)
 
 **Data:** 2026-07-09  
-**Status:** `planned`  
+**Status:** `done` (plan) — implementacja: [#024](./2026-07-20--024--chat-attachments-vision.md)  
 **Commit (dokumentacja):** `9ff6641`  
 **Plan:** [2026-07-09--002--chat-attachments.md](../plans/2026-07-09--002--chat-attachments.md)  
 **Z tego samego promptu:** [#007](./2026-07-09--007--audit-sheet-no-padding.md), [#008](./2026-07-09--008--memory-page-no-canvas-background.md)
