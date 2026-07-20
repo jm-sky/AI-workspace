@@ -948,6 +948,18 @@ class IntegrationSettings(BaseSettings):
     )
 
 
+class HealthSettings(BaseSettings):
+    """Health/monitoring configuration (Ops Monitor integration)."""
+
+    model_config = _base_config
+
+    details_token: str = Field(
+        default="",
+        validation_alias="HEALTH_DETAILS_TOKEN",
+        description="Bearer token required to access GET /api/health/details (Ops Monitor)",
+    )
+
+
 class Settings(BaseSettings):
     """
     Main application settings composed of nested configuration classes.
@@ -974,6 +986,7 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     webauthn: WebAuthnSettings = Field(default_factory=WebAuthnSettings)
     stripe: StripeSettings = Field(default_factory=StripeSettings)
+    health: HealthSettings = Field(default_factory=HealthSettings)
     workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
     integrations: IntegrationSettings = Field(default_factory=IntegrationSettings)
 
