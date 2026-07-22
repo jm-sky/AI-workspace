@@ -11,8 +11,8 @@ from app.modules.teams.schemas import (
     TeamResponse,
 )
 from app.modules.tenants.dependencies import CurrentTenantContext
-from app.modules.tenants.service import TenantContext
 from app.modules.tenants.repositories import TenantRepository, get_tenant_repository
+from app.modules.tenants.service import TenantContext
 
 router = APIRouter(prefix="/tenants/{tenant_id}/teams", tags=["Teams"])
 

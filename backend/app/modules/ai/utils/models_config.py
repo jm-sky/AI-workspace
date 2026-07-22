@@ -161,7 +161,7 @@ MODELS: list[dict[str, Any]] = [
         "supports_vision": True,
         "supports_tools": True,
         "supports_reasoning": True,
-        "recommended": False,
+        "recommended": True,
     },
     # Open-weight Models
     {
@@ -204,7 +204,7 @@ MODELS: list[dict[str, Any]] = [
         "supports_vision": False,
         "supports_tools": True,
         "supports_reasoning": False,
-        "recommended": True,
+        "recommended": False,
     },
     {
         "id": "meta-llama/llama-3.1-70b-instruct",

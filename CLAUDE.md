@@ -21,7 +21,7 @@ Chat-first platforma agentowa: OpenRouter + własna pętla tool-calling, integra
 
 - **Frontend:** Vue 3, shadcn-vue, Pinia, TanStack Query — katalog `src/` (root monorepo)
 - **Backend:** FastAPI — `backend/`
-- **Baza:** PostgreSQL + Docker Compose (`backend/docker-compose.dev.yml`)
+- **Baza:** PostgreSQL + Docker Compose (`docker-compose.dev.yml` w root repo)
 - **AI:** OpenRouter (OpenAI SDK), własna pętla tool-calling; narzędzia w stylu MCP → format OpenAI tools
 - **Streaming:** SSE (serwer → klient)
 
@@ -39,7 +39,6 @@ Chat-first platforma agentowa: OpenRouter + własna pętla tool-calling, integra
 **CRITICAL:** NIGDY nie uruchamiaj Dockera w katalogu z prefiksem `_` (np. `_ai-workspace-dev`).
 
 ```bash
-cd backend
 docker compose -f docker-compose.dev.yml up -d
 docker exec ai-workspace-app python -m cli db migrate
 docker exec ai-workspace-app python -m pytest tests/ -v

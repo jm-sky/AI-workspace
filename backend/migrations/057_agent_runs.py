@@ -12,20 +12,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -36,9 +35,7 @@ async def upgrade() -> None:
 
     async with engine.begin() as conn:
         if not await table_exists(conn, "agent_runs"):
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE agent_runs (
                         id VARCHAR(36) PRIMARY KEY,
                         tenant_id VARCHAR(36) NOT NULL
@@ -60,27 +57,15 @@ async def upgrade() -> None:
                         created_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
                         completed_at TIMESTAMPTZ
                     )
-                """
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_agent_runs_tenant_user ON agent_runs(tenant_id, user_id)"
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_agent_runs_created_at ON agent_runs(created_at DESC)"
-                )
-            )
+                """))
+            await conn.execute(text("CREATE INDEX idx_agent_runs_tenant_user ON agent_runs(tenant_id, user_id)"))
+            await conn.execute(text("CREATE INDEX idx_agent_runs_created_at ON agent_runs(created_at DESC)"))
             print("✓ Created agent_runs table")
         else:
             print("✓ agent_runs table already exists")
 
         if not await table_exists(conn, "agent_run_steps"):
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE agent_run_steps (
                         id VARCHAR(36) PRIMARY KEY,
                         run_id VARCHAR(36) NOT NULL
@@ -92,14 +77,8 @@ async def upgrade() -> None:
                         output_data JSONB,
                         created_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
                     )
-                """
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_agent_run_steps_run_id ON agent_run_steps(run_id, step_index)"
-                )
-            )
+                """))
+            await conn.execute(text("CREATE INDEX idx_agent_run_steps_run_id ON agent_run_steps(run_id, step_index)"))
             print("✓ Created agent_run_steps table")
         else:
             print("✓ agent_run_steps table already exists")

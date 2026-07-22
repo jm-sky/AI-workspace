@@ -4,13 +4,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.config import settings
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.integrations.exceptions import (
     IntegrationEncryptionError,
     IntegrationOAuthStateError,
     IntegrationPermissionError,
 )
-from app.core.config import settings
 from app.modules.integrations.oauth_state import (
     create_integration_oauth_state,
     verify_integration_oauth_state,
@@ -25,8 +25,8 @@ from app.modules.integrations.schemas import (
     IntegrationAuthUrlRequest,
     IntegrationAuthUrlResponse,
     IntegrationConnectionResponse,
-    IntegrationConnectionUpdateRequest,
     IntegrationConnectionsListResponse,
+    IntegrationConnectionUpdateRequest,
     IntegrationOAuthCallbackRequest,
     IntegrationProviderSetupResponse,
     IntegrationScopeOptionResponse,
@@ -77,9 +77,7 @@ async def get_integration_setup(
                     descriptionKey=str(scope["descriptionKey"]),
                     required=bool(scope.get("required", False)),
                 )
-                for scope in INTEGRATION_PROVIDER_SCOPES.get(
-                    IntegrationProvider.GITHUB.value, []
-                )
+                for scope in INTEGRATION_PROVIDER_SCOPES.get(IntegrationProvider.GITHUB.value, [])
             ],
         )
     ]
@@ -202,10 +200,8 @@ async def oauth_callback(
             owner_user_id=current_user.id,
             provider=provider,
             visibility_scope=visibility_scope,
-            tenant_id=tenant_ctx.tenant_id
-            if visibility_scope != IntegrationVisibilityScope.USER.value
-            else None,
-            team_id=team_id if visibility_scope == IntegrationVisibilityScope.TEAM.value else None,
+            tenant_id=(tenant_ctx.tenant_id if visibility_scope != IntegrationVisibilityScope.USER.value else None),
+            team_id=(team_id if visibility_scope == IntegrationVisibilityScope.TEAM.value else None),
             access_token=token_result.access_token,
             refresh_token=token_result.refresh_token,
             expires_at=token_result.expires_at,
@@ -267,16 +263,8 @@ async def update_connection(
             )
 
     connection.visibility_scope = payload.visibilityScope.value
-    connection.tenant_id = (
-        tenant_ctx.tenant_id
-        if payload.visibilityScope != IntegrationVisibilityScope.USER
-        else None
-    )
-    connection.team_id = (
-        payload.teamId
-        if payload.visibilityScope == IntegrationVisibilityScope.TEAM
-        else None
-    )
+    connection.tenant_id = tenant_ctx.tenant_id if payload.visibilityScope != IntegrationVisibilityScope.USER else None
+    connection.team_id = payload.teamId if payload.visibilityScope == IntegrationVisibilityScope.TEAM else None
     await repo.db.commit()
     await repo.db.refresh(connection)
 

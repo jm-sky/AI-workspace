@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -30,15 +31,13 @@ async def table_exists(conn, table_name: str) -> bool:
         True if table exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -56,8 +55,7 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
         True if column exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.columns
@@ -65,8 +63,7 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -82,22 +79,16 @@ async def upgrade() -> None:
 
         if not items_exist:
             print("gear_items table does not exist, skipping migration...")
-            print(
-                "Note: Table will be created with shelf_life field when created from models"
-            )
+            print("Note: Table will be created with shelf_life field when created from models")
             return
 
         # Add shelf_life column to gear_items if it doesn't exist
         if not await column_exists(conn, "gear_items", "shelf_life"):
             print("Adding shelf_life column to gear_items table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE gear_items
                     ADD COLUMN shelf_life JSONB;
-                """
-                )
-            )
+                """))
             print("✓ Added shelf_life column to gear_items table")
         else:
             print("shelf_life column already exists, skipping...")
@@ -113,14 +104,10 @@ async def downgrade() -> None:
         # Remove shelf_life column from gear_items
         if await column_exists(conn, "gear_items", "shelf_life"):
             print("Removing shelf_life column from gear_items table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE gear_items
                     DROP COLUMN IF EXISTS shelf_life;
-                """
-                )
-            )
+                """))
             print("✓ Removed shelf_life column from gear_items table")
         else:
             print("shelf_life column does not exist, skipping...")
@@ -132,9 +119,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add shelf_life to gear_items migration"
-    )
+    parser = argparse.ArgumentParser(description="Add shelf_life to gear_items migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

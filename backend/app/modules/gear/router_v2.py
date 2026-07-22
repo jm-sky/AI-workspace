@@ -24,7 +24,6 @@ from .schemas_v2 import (
 )
 from .service_v2 import GearServiceV2
 
-
 router = APIRouter(prefix="/gear/v2", tags=["gear-v2"])
 
 logger = logging.getLogger(__name__)
@@ -62,9 +61,7 @@ GearServiceV2Dep = Annotated[GearServiceV2, Depends(get_gear_service_v2)]
 # ===== Create Operations =====
 
 
-@router.post(
-    "/items", response_model=GearItemResponseV2, status_code=status.HTTP_201_CREATED
-)
+@router.post("/items", response_model=GearItemResponseV2, status_code=status.HTTP_201_CREATED)
 async def create_item(
     data: GearItemCreateV2,
     current_user: CurrentUser,
@@ -99,7 +96,7 @@ async def create_item(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 # ===== Read Operations =====
@@ -109,19 +106,11 @@ async def create_item(
 async def get_items(
     current_user: CurrentUser,
     service: GearServiceV2Dep,
-    item_type: Literal["container", "item", "all"] = Query(
-        "all", alias="itemType", description="Filter by item type"
-    ),
-    parent_item_id: str | None = Query(
-        None, alias="parentItemId", description="Filter by parent item ID"
-    ),
-    is_public: bool | None = Query(
-        None, alias="isPublic", description="Filter by public visibility"
-    ),
+    item_type: Literal["container", "item", "all"] = Query("all", alias="itemType", description="Filter by item type"),
+    parent_item_id: str | None = Query(None, alias="parentItemId", description="Filter by parent item ID"),
+    is_public: bool | None = Query(None, alias="isPublic", description="Filter by public visibility"),
     favorite: bool | None = Query(None, description="Filter by favorite status"),
-    include_children: bool = Query(
-        False, alias="includeChildren", description="Eagerly load children"
-    ),
+    include_children: bool = Query(False, alias="includeChildren", description="Eagerly load children"),
 ) -> list[GearItemResponseV2]:
     """Get gear items with optional filters.
 
@@ -153,14 +142,17 @@ async def get_items(
     filter_for_null_parent = parent_item_id in ("null", "")
     if filter_for_null_parent:
         parent_item_id = None
-    
+
     if include_children:
-        items = await service.get_items_with_children(
-            current_user.id, item_type, parent_item_id, filter_for_null_parent
-        )
+        items = await service.get_items_with_children(current_user.id, item_type, parent_item_id, filter_for_null_parent)
     else:
         items = await service.get_items(
-            current_user.id, item_type, parent_item_id, is_public, favorite, filter_for_null_parent
+            current_user.id,
+            item_type,
+            parent_item_id,
+            is_public,
+            favorite,
+            filter_for_null_parent,
         )
     return [GearItemResponseV2.model_validate(item) for item in items]
 
@@ -244,7 +236,7 @@ async def update_item(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.patch("/items/batch/order", response_model=list[GearItemResponseV2])
@@ -310,7 +302,7 @@ async def move_item(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 # ===== Delete Operations =====

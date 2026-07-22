@@ -15,11 +15,15 @@ def main() -> None:
     if not token or not base_url:
         raise SystemExit("Set MCP_USER_ACCESS_TOKEN and GITLAB_BASE_URL")
 
-    print(json.dumps({
-        "server": "gitlab-mcp",
-        "tools": ["gitlab_search_by_jira_key"],
-        "note": "Use agent module in-process tools for production",
-    }))
+    print(
+        json.dumps(
+            {
+                "server": "gitlab-mcp",
+                "tools": ["gitlab_search_by_jira_key"],
+                "note": "Use agent module in-process tools for production",
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

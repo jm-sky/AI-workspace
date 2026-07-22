@@ -81,7 +81,10 @@ class TestMapOpenrouterModel:
         assert mapped["supports_reasoning"] is True
 
         text_only = catalog.map_openrouter_model(
-            _raw(architecture={"input_modalities": ["text"]}, supported_parameters=["temperature"])
+            _raw(
+                architecture={"input_modalities": ["text"]},
+                supported_parameters=["temperature"],
+            )
         )
         assert text_only["supports_vision"] is False
         assert text_only["supports_tools"] is False
@@ -93,9 +96,7 @@ class TestMapOpenrouterModel:
         assert mapped["name"] == "Mistral Medium 3.5"
 
     def test_alias_author_prefix_stripped(self):
-        mapped = catalog.map_openrouter_model(
-            _raw(id="~x-ai/grok-latest", name="xAI: Grok Latest")
-        )
+        mapped = catalog.map_openrouter_model(_raw(id="~x-ai/grok-latest", name="xAI: Grok Latest"))
         assert mapped["provider"] == "xAI"
         assert mapped["name"] == "Grok Latest"
 
@@ -235,7 +236,10 @@ class TestSnapshotBackedPricing:
 
     def test_snapshot_overrides_curated_pricing(self):
         repriced = catalog.map_openrouter_model(
-            _raw(id="openai/gpt-4o-mini", pricing={"prompt": "0.000001", "completion": "0.000002"})
+            _raw(
+                id="openai/gpt-4o-mini",
+                pricing={"prompt": "0.000001", "completion": "0.000002"},
+            )
         )
         set_catalog_snapshot([repriced])
 

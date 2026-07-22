@@ -5,9 +5,9 @@ where containers are items with item_type='container'.
 """
 
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,7 +16,6 @@ from app.common.search import SearchMixin
 
 from .db_models_v2 import GearItemDBV2
 from .schemas_v2 import GearItemCreateV2, GearItemUpdateV2
-
 
 logger = logging.getLogger(__name__)
 
@@ -74,23 +73,23 @@ class GearRepositoryV2(SearchMixin):
             max_weight=data.maxWeight if is_container else None,
             max_weight_unit=data.maxWeightUnit if is_container else None,
             hide_when_nested=data.hideWhenNested if is_container else None,
-            is_public=(data.isPublic if data.isPublic is not None else False) if is_container else None,
-            is_hidden_by_reports=(data.isHiddenByReports if data.isHiddenByReports is not None else False) if is_container else None,
-            favorite=(data.favorite if data.favorite is not None else False) if is_container else None,
-            show_item_images=(data.showItemImages if data.showItemImages is not None else False) if is_container else None,
+            is_public=((data.isPublic if data.isPublic is not None else False) if is_container else None),
+            is_hidden_by_reports=((data.isHiddenByReports if data.isHiddenByReports is not None else False) if is_container else None),
+            favorite=((data.favorite if data.favorite is not None else False) if is_container else None),
+            show_item_images=((data.showItemImages if data.showItemImages is not None else False) if is_container else None),
             # Item-specific — must be NULL for containers (check_container_fields constraint)
             category=data.category if not is_container else None,
-            quantity=(data.quantity if data.quantity is not None else 1) if not is_container else None,
-            status=(data.status if data.status is not None else "owned") if not is_container else None,
-            priority=(data.priority if data.priority is not None else "medium") if not is_container else None,
+            quantity=((data.quantity if data.quantity is not None else 1) if not is_container else None),
+            status=((data.status if data.status is not None else "owned") if not is_container else None),
+            priority=((data.priority if data.priority is not None else "medium") if not is_container else None),
             expiration_date=data.expirationDate if not is_container else None,
             shelf_life=data.shelfLife if not is_container else None,
             quality=data.quality if not is_container else None,
-            wearable=(data.wearable if data.wearable is not None else False) if not is_container else None,
-            consumable=(data.consumable if data.consumable is not None else False) if not is_container else None,
+            wearable=((data.wearable if data.wearable is not None else False) if not is_container else None),
+            consumable=((data.consumable if data.consumable is not None else False) if not is_container else None),
             order_index=data.orderIndex if not is_container else None,
-            show_on_container=(data.showOnContainer if data.showOnContainer is not None else False) if not is_container else None,
-            promote_count=(data.promoteCount if data.promoteCount is not None else 0) if not is_container else None,
+            show_on_container=((data.showOnContainer if data.showOnContainer is not None else False) if not is_container else None),
+            promote_count=((data.promoteCount if data.promoteCount is not None else 0) if not is_container else None),
             # Linking
             linked_item_id=data.linkedItemId,
             catalogue_item_id=data.catalogueItemId,
@@ -193,17 +192,11 @@ class GearRepositoryV2(SearchMixin):
             # Explicitly filter for items with no parent (root items)
             conditions.append(GearItemDBV2.parent_item_id.is_(None))
 
-        stmt = (
-            select(GearItemDBV2)
-            .where(and_(*conditions))
-            .options(selectinload(GearItemDBV2.children))
-        )
+        stmt = select(GearItemDBV2).where(and_(*conditions)).options(selectinload(GearItemDBV2.children))
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_children(
-        self, parent_item_id: str, user_id: str
-    ) -> Sequence[GearItemDBV2]:
+    async def get_children(self, parent_item_id: str, user_id: str) -> Sequence[GearItemDBV2]:
         """Get all children of a parent item.
 
         Args:
@@ -224,9 +217,7 @@ class GearRepositoryV2(SearchMixin):
 
     # Update operations
 
-    async def update_item(
-        self, item_id: str, user_id: str, data: GearItemUpdateV2
-    ) -> GearItemDBV2 | None:
+    async def update_item(self, item_id: str, user_id: str, data: GearItemUpdateV2) -> GearItemDBV2 | None:
         """Update a gear item.
 
         Args:
@@ -253,9 +244,7 @@ class GearRepositoryV2(SearchMixin):
         await self.db.refresh(item)
         return item
 
-    async def batch_update_order(
-        self, items: list[dict], user_id: str
-    ) -> Sequence[GearItemDBV2]:
+    async def batch_update_order(self, items: list[dict], user_id: str) -> Sequence[GearItemDBV2]:
         """Batch update order_index for multiple items.
 
         Args:
@@ -300,9 +289,7 @@ class GearRepositoryV2(SearchMixin):
 
     # Move operation
 
-    async def move_item(
-        self, item_id: str, user_id: str, target_parent_id: str | None
-    ) -> GearItemDBV2 | None:
+    async def move_item(self, item_id: str, user_id: str, target_parent_id: str | None) -> GearItemDBV2 | None:
         """Move an item to a different parent.
 
         Args:
@@ -333,9 +320,7 @@ class GearRepositoryV2(SearchMixin):
 
     # Public containers operations
 
-    async def get_public_containers(
-        self, user_id: str | None = None, exclude_hidden: bool = True
-    ) -> Sequence[GearItemDBV2]:
+    async def get_public_containers(self, user_id: str | None = None, exclude_hidden: bool = True) -> Sequence[GearItemDBV2]:
         """Get public containers, optionally excluding hidden ones.
 
         Args:

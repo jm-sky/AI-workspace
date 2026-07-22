@@ -1,8 +1,9 @@
 """Abstraction for injecting integration tokens into MCP tool calls."""
 
-from datetime import timedelta
-from typing import Protocol
+from datetime import UTC, datetime, timedelta
+from typing import Any, Protocol
 
+from app.modules.integrations.db_models import IntegrationOAuthTokenDB
 from app.modules.integrations.exceptions import (
     IntegrationPermissionError,
     IntegrationRefreshFailedError,
@@ -55,10 +56,10 @@ class IntegrationTokenService:
         tenant_id: str | None = None,
         team_id: str | None = None,
         refresh_token: str | None = None,
-        expires_at=None,
+        expires_at: datetime | None = None,
         scopes: str | None = None,
         provider_metadata: dict | None = None,
-    ):
+    ) -> IntegrationOAuthTokenDB:
         return await self.repo.upsert_connection(
             owner_user_id=owner_user_id,
             provider=provider,
@@ -94,35 +95,30 @@ class IntegrationTokenService:
         if tenant_token is not None:
             return await self._require_valid_access_token(tenant_token)
 
-        raise IntegrationTokenNotFoundError(
-            f"No integration token for provider '{provider}'"
-        )
+        raise IntegrationTokenNotFoundError(f"No integration token for provider '{provider}'")
 
     async def get_access_token(self, user_id: str, provider: str) -> str:
         """Backward-compatible lookup for personal token only."""
         token = await self.repo.find_user_scoped(user_id, provider)
         if token is None:
-            raise IntegrationTokenNotFoundError(
-                f"No integration token for provider '{provider}'"
-            )
+            raise IntegrationTokenNotFoundError(f"No integration token for provider '{provider}'")
         return await self._require_valid_access_token(token)
 
-    async def _require_valid_access_token(self, token) -> str:
+    async def _require_valid_access_token(self, token: IntegrationOAuthTokenDB) -> str:
         if not self._is_expiring(token):
             return self.repo.decrypt_access_token(token)
 
         refresh_token = self.repo.decrypt_refresh_token(token)
         if not refresh_token:
-            raise IntegrationTokenExpiredError(
-                f"Token for '{token.provider}' expired and no refresh token available"
-            )
+            raise IntegrationTokenExpiredError(f"Token for '{token.provider}' expired and no refresh token available")
         return await self._refresh_access_token(token, refresh_token)
 
     @staticmethod
-    def _is_expiring(token) -> bool:
-        return bool(token.expires_at) and token.expires_at <= _utcnow() + REFRESH_SKEW
+    def _is_expiring(token: IntegrationOAuthTokenDB) -> bool:
+        expires_at = token.expires_at
+        return expires_at is not None and expires_at <= _utcnow() + REFRESH_SKEW
 
-    async def _refresh_access_token(self, token, refresh_token: str) -> str:
+    async def _refresh_access_token(self, token: IntegrationOAuthTokenDB, refresh_token: str) -> str:
         try:
             provider = self.registry.get(token.provider)
             result = await provider.refresh_access_token(refresh_token)
@@ -131,10 +127,7 @@ class IntegrationTokenService:
             IntegrationRefreshFailedError,
             ValueError,
         ) as exc:
-            raise IntegrationTokenExpiredError(
-                f"Token for '{token.provider}' expired and could not be refreshed "
-                f"— re-authenticate ({exc})"
-            ) from exc
+            raise IntegrationTokenExpiredError(f"Token for '{token.provider}' expired and could not be refreshed " f"— re-authenticate ({exc})") from exc
 
         await self.repo.update_tokens(
             token,
@@ -178,12 +171,12 @@ class IntegrationTokenService:
 
     def _connection_dict(
         self,
-        token,
+        token: IntegrationOAuthTokenDB,
         *,
         user_id: str,
         can_manage_shared: bool,
         team_name: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         is_owner = token.owner_user_id == user_id
         shared = token.visibility_scope in (
             IntegrationVisibilityScope.TEAM.value,
@@ -216,14 +209,10 @@ class IntegrationTokenService:
         if visibility_scope == IntegrationVisibilityScope.USER.value:
             return
         if tenant_role not in ("owner", "admin"):
-            raise IntegrationPermissionError(
-                "Only tenant owner or admin can create shared integration connections"
-            )
+            raise IntegrationPermissionError("Only tenant owner or admin can create shared integration connections")
         if visibility_scope == IntegrationVisibilityScope.TEAM.value and not team_id:
             raise IntegrationPermissionError("teamId is required for team visibility")
 
 
-def _utcnow():
-    from datetime import UTC, datetime
-
+def _utcnow() -> datetime:
     return datetime.now(UTC)

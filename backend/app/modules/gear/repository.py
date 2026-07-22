@@ -5,27 +5,25 @@ using SQLAlchemy 2.0+.
 """
 
 import logging
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
-
-from sqlalchemy import select, and_, or_, func, true
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
-
 from typing import TypedDict
+
+from sqlalchemy import and_, func, or_, select, true
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.common.id_utils import generate_id
 from app.common.search import SearchMixin
-from app.modules.auth.db_models import UserDB
 
 from .db_models import (
+    ContainerRatingDB,
+    ContainerShareTokenDB,
+    ContentReportDB,
     GearContainerDB,
     GearItemDB,
-    ContainerShareTokenDB,
-    ContainerRatingDB,
     GlobalCatalogueItemDB,
     ItemPromotionDB,
-    ContentReportDB,
 )
 from .schemas import (
     BatchOrderUpdateRequest,
@@ -36,7 +34,6 @@ from .schemas import (
     ItemCreate,
     ItemUpdate,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +57,7 @@ class GearRepository(SearchMixin):
         self._case_sensitive = False
 
     # Container operations
-    async def create_container(
-        self, user_id: str, data: ContainerCreate
-    ) -> GearContainerDB:
+    async def create_container(self, user_id: str, data: ContainerCreate) -> GearContainerDB:
         """Create a new gear container.
 
         Args:
@@ -73,9 +68,7 @@ class GearRepository(SearchMixin):
             Created container
         """
         container = GearContainerDB(
-            id=(
-                data.id if data.id else generate_id()
-            ),  # Use provided UUID if available, otherwise generate new one
+            id=(data.id if data.id else generate_id()),  # Use provided UUID if available, otherwise generate new one
             user_id=user_id,
             name=data.name,
             description=data.description,
@@ -92,9 +85,7 @@ class GearRepository(SearchMixin):
             url=data.url,
             is_public=data.isPublic if data.isPublic is not None else False,
             favorite=data.favorite if data.favorite is not None else False,
-            show_item_images=(
-                data.showItemImages if data.showItemImages is not None else False
-            ),
+            show_item_images=(data.showItemImages if data.showItemImages is not None else False),
         )
         self.db.add(container)
         await self.db.commit()
@@ -106,9 +97,7 @@ class GearRepository(SearchMixin):
         container = result.scalar_one()
         return container
 
-    async def get_container(
-        self, container_id: str, user_id: str
-    ) -> GearContainerDB | None:
+    async def get_container(self, container_id: str, user_id: str) -> GearContainerDB | None:
         """Get a container by ID for a specific user.
 
         Args:
@@ -131,9 +120,7 @@ class GearRepository(SearchMixin):
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_containers(
-        self, user_id: str, skip: int = 0, limit: int = 100
-    ) -> Sequence[GearContainerDB]:
+    async def get_containers(self, user_id: str, skip: int = 0, limit: int = 100) -> Sequence[GearContainerDB]:
         """Get all containers for a user.
 
         Args:
@@ -159,9 +146,7 @@ class GearRepository(SearchMixin):
         Returns:
             Number of containers
         """
-        stmt = select(func.count(GearContainerDB.id)).where(
-            GearContainerDB.user_id == user_id
-        )
+        stmt = select(func.count(GearContainerDB.id)).where(GearContainerDB.user_id == user_id)
         result = await self.db.execute(stmt)
         return result.scalar_one() or 0
 
@@ -174,17 +159,11 @@ class GearRepository(SearchMixin):
         Returns:
             Number of items
         """
-        stmt = (
-            select(func.count(GearItemDB.id))
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .where(GearContainerDB.user_id == user_id)
-        )
+        stmt = select(func.count(GearItemDB.id)).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).where(GearContainerDB.user_id == user_id)
         result = await self.db.execute(stmt)
         return result.scalar_one() or 0
 
-    async def get_public_containers(
-        self, skip: int = 0, limit: int = 100
-    ) -> Sequence[GearContainerDB]:
+    async def get_public_containers(self, skip: int = 0, limit: int = 100) -> Sequence[GearContainerDB]:
         """Get all public containers from all users.
 
         Args:
@@ -239,9 +218,7 @@ class GearRepository(SearchMixin):
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def get_public_container_for_reporting(
-        self, container_id: str
-    ) -> GearContainerDB | None:
+    async def get_public_container_for_reporting(self, container_id: str) -> GearContainerDB | None:
         """Get a public container by ID for reporting purposes.
 
         This method does NOT filter by is_hidden_by_reports, allowing reports
@@ -269,9 +246,7 @@ class GearRepository(SearchMixin):
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def update_container(
-        self, container_id: str, user_id: str, data: ContainerUpdate
-    ) -> GearContainerDB | None:
+    async def update_container(self, container_id: str, user_id: str, data: ContainerUpdate) -> GearContainerDB | None:
         """Update a container.
 
         Args:
@@ -350,9 +325,7 @@ class GearRepository(SearchMixin):
         return len(containers)
 
     # Item operations
-    async def create_item(
-        self, container_id: str, user_id: str, data: ItemCreate
-    ) -> GearItemDB | None:
+    async def create_item(self, container_id: str, user_id: str, data: ItemCreate) -> GearItemDB | None:
         """Create a new gear item in a container.
 
         Args:
@@ -372,17 +345,13 @@ class GearRepository(SearchMixin):
         order = data.order
         if order is None:
             # Get max order in container
-            stmt = select(func.max(GearItemDB.order)).where(
-                GearItemDB.container_id == container_id
-            )
+            stmt = select(func.max(GearItemDB.order)).where(GearItemDB.container_id == container_id)
             result = await self.db.execute(stmt)
             max_order = result.scalar()
             order = (max_order + 1) if max_order is not None else 0
 
         item = GearItemDB(
-            id=(
-                data.id if data.id else generate_id()
-            ),  # Use provided UUID if available, otherwise generate new one
+            id=(data.id if data.id else generate_id()),  # Use provided UUID if available, otherwise generate new one
             container_id=container_id,
             name=data.name,
             category=data.category,
@@ -412,11 +381,7 @@ class GearRepository(SearchMixin):
         await self.db.commit()
         await self.db.refresh(item)
         # Reload container relationship after refresh
-        reload_stmt = (
-            select(GearItemDB)
-            .where(GearItemDB.id == item.id)
-            .options(joinedload(GearItemDB.container))
-        )
+        reload_stmt = select(GearItemDB).where(GearItemDB.id == item.id).options(joinedload(GearItemDB.container))
         reload_result = await self.db.execute(reload_stmt)
         return reload_result.unique().scalar_one()
 
@@ -430,18 +395,11 @@ class GearRepository(SearchMixin):
         Returns:
             Item if found, None otherwise (with container relationship loaded)
         """
-        stmt = (
-            select(GearItemDB)
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .where(and_(GearItemDB.id == item_id, GearContainerDB.user_id == user_id))
-            .options(joinedload(GearItemDB.container))
-        )
+        stmt = select(GearItemDB).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).where(and_(GearItemDB.id == item_id, GearContainerDB.user_id == user_id)).options(joinedload(GearItemDB.container))
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def get_items(
-        self, container_id: str, user_id: str, skip: int = 0, limit: int = 100
-    ) -> Sequence[GearItemDB]:
+    async def get_items(self, container_id: str, user_id: str, skip: int = 0, limit: int = 100) -> Sequence[GearItemDB]:
         """Get all items in a container.
 
         Args:
@@ -460,20 +418,11 @@ class GearRepository(SearchMixin):
 
         # Sort by order (nulls last), then by created_at
         # Load container relationship for each item
-        stmt = (
-            select(GearItemDB)
-            .where(GearItemDB.container_id == container_id)
-            .options(joinedload(GearItemDB.container))
-            .offset(skip)
-            .limit(limit)
-            .order_by(GearItemDB.order.asc().nulls_last(), GearItemDB.created_at.desc())
-        )
+        stmt = select(GearItemDB).where(GearItemDB.container_id == container_id).options(joinedload(GearItemDB.container)).offset(skip).limit(limit).order_by(GearItemDB.order.asc().nulls_last(), GearItemDB.created_at.desc())
         result = await self.db.execute(stmt)
         return result.unique().scalars().all()
 
-    async def get_all_items(
-        self, user_id: str, skip: int = 0, limit: int = 100
-    ) -> Sequence[GearItemDB]:
+    async def get_all_items(self, user_id: str, skip: int = 0, limit: int = 100) -> Sequence[GearItemDB]:
         """Get all items for a user across all containers.
 
         Args:
@@ -498,9 +447,7 @@ class GearRepository(SearchMixin):
         result = await self.db.execute(stmt)
         return result.unique().scalars().all()
 
-    async def update_item(
-        self, item_id: str, user_id: str, data: ItemUpdate
-    ) -> GearItemDB | None:
+    async def update_item(self, item_id: str, user_id: str, data: ItemUpdate) -> GearItemDB | None:
         """Update a gear item and propagate changes to all linked items.
 
         When updating an item, if it's part of a linked group (via linked_item_id),
@@ -574,18 +521,12 @@ class GearRepository(SearchMixin):
         if updated_item:
             await self.db.refresh(updated_item)
             # Reload container relationship after refresh
-            reload_stmt = (
-                select(GearItemDB)
-                .where(GearItemDB.id == updated_item.id)
-                .options(joinedload(GearItemDB.container))
-            )
+            reload_stmt = select(GearItemDB).where(GearItemDB.id == updated_item.id).options(joinedload(GearItemDB.container))
             reload_result = await self.db.execute(reload_stmt)
             updated_item = reload_result.unique().scalar_one()
         return updated_item
 
-    async def move_item(
-        self, item_id: str, user_id: str, target_container_id: str
-    ) -> GearItemDB | None:
+    async def move_item(self, item_id: str, user_id: str, target_container_id: str) -> GearItemDB | None:
         """Move a gear item to a different container.
 
         Only moves the single specified item, not linked items.
@@ -619,11 +560,7 @@ class GearRepository(SearchMixin):
         await self.db.refresh(item)
 
         # Reload with container relationship
-        reload_stmt = (
-            select(GearItemDB)
-            .where(GearItemDB.id == item.id)
-            .options(joinedload(GearItemDB.container))
-        )
+        reload_stmt = select(GearItemDB).where(GearItemDB.id == item.id).options(joinedload(GearItemDB.container))
         reload_result = await self.db.execute(reload_stmt)
         updated_item = reload_result.unique().scalar_one()
 
@@ -647,9 +584,7 @@ class GearRepository(SearchMixin):
         await self.db.commit()
         return True
 
-    async def batch_update_item_order(
-        self, user_id: str, data: BatchOrderUpdateRequest
-    ) -> list[GearItemDB]:
+    async def batch_update_item_order(self, user_id: str, data: BatchOrderUpdateRequest) -> list[GearItemDB]:
         """Batch update items' order values.
 
         Args:
@@ -701,9 +636,7 @@ class GearRepository(SearchMixin):
         return list(items)
 
     # Item promotion operations
-    async def get_promotion_by_item_and_user(
-        self, item_id: str, user_id: str
-    ) -> ItemPromotionDB | None:
+    async def get_promotion_by_item_and_user(self, item_id: str, user_id: str) -> ItemPromotionDB | None:
         """Get promotion record by item and user.
 
         Args:
@@ -751,11 +684,7 @@ class GearRepository(SearchMixin):
         Returns:
             List of promotion records
         """
-        stmt = (
-            select(ItemPromotionDB)
-            .where(ItemPromotionDB.item_id == item_id)
-            .order_by(ItemPromotionDB.created_at.desc())
-        )
+        stmt = select(ItemPromotionDB).where(ItemPromotionDB.item_id == item_id).order_by(ItemPromotionDB.created_at.desc())
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -827,9 +756,7 @@ class GearRepository(SearchMixin):
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def get_share_tokens_by_container(
-        self, container_id: str, user_id: str
-    ) -> Sequence[ContainerShareTokenDB]:
+    async def get_share_tokens_by_container(self, container_id: str, user_id: str) -> Sequence[ContainerShareTokenDB]:
         """Get all share tokens for a container (only for owner).
 
         Args:
@@ -844,11 +771,7 @@ class GearRepository(SearchMixin):
         if not container:
             return []
 
-        stmt = (
-            select(ContainerShareTokenDB)
-            .where(ContainerShareTokenDB.container_id == container_id)
-            .order_by(ContainerShareTokenDB.created_at.desc())
-        )
+        stmt = select(ContainerShareTokenDB).where(ContainerShareTokenDB.container_id == container_id).order_by(ContainerShareTokenDB.created_at.desc())
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -862,9 +785,7 @@ class GearRepository(SearchMixin):
         Returns:
             True if token was revoked, False otherwise
         """
-        token_stmt = select(ContainerShareTokenDB).where(
-            ContainerShareTokenDB.token == token
-        )
+        token_stmt = select(ContainerShareTokenDB).where(ContainerShareTokenDB.token == token)
         token_result = await self.db.execute(token_stmt)
         share_token = token_result.scalar_one_or_none()
 
@@ -876,9 +797,7 @@ class GearRepository(SearchMixin):
         return True
 
     # Rating operations
-    async def get_container_rating(
-        self, container_id: str, user_id: str, rating_type: str = "user"
-    ) -> ContainerRatingDB | None:
+    async def get_container_rating(self, container_id: str, user_id: str, rating_type: str = "user") -> ContainerRatingDB | None:
         """Get user's rating for a container by type.
 
         Args:
@@ -889,17 +808,10 @@ class GearRepository(SearchMixin):
         Returns:
             Rating if found, None otherwise
         """
-        result = await self.db.execute(
-            select(ContainerRatingDB)
-            .where(ContainerRatingDB.container_id == container_id)
-            .where(ContainerRatingDB.user_id == user_id)
-            .where(ContainerRatingDB.rating_type == rating_type)
-        )
+        result = await self.db.execute(select(ContainerRatingDB).where(ContainerRatingDB.container_id == container_id).where(ContainerRatingDB.user_id == user_id).where(ContainerRatingDB.rating_type == rating_type))
         return result.scalar_one_or_none()
 
-    async def upsert_container_rating(
-        self, container_id: str, user_id: str, rating: int, rating_type: str = "user"
-    ) -> ContainerRatingDB:
+    async def upsert_container_rating(self, container_id: str, user_id: str, rating: int, rating_type: str = "user") -> ContainerRatingDB:
         """Create or update user's rating for a container.
 
         Args:
@@ -930,9 +842,7 @@ class GearRepository(SearchMixin):
         await self.db.flush()
         return new_rating
 
-    async def delete_container_rating(
-        self, container_id: str, user_id: str, rating_type: str = "user"
-    ) -> bool:
+    async def delete_container_rating(self, container_id: str, user_id: str, rating_type: str = "user") -> bool:
         """Delete user's rating for a container.
 
         Args:
@@ -950,9 +860,7 @@ class GearRepository(SearchMixin):
             return True
         return False
 
-    async def get_container_average_user_rating(
-        self, container_id: str
-    ) -> float | None:
+    async def get_container_average_user_rating(self, container_id: str) -> float | None:
         """Calculate average user rating for a container (excluding owner ratings).
 
         Args:
@@ -961,11 +869,7 @@ class GearRepository(SearchMixin):
         Returns:
             Average rating or None if no ratings
         """
-        result = await self.db.execute(
-            select(func.avg(ContainerRatingDB.rating))
-            .where(ContainerRatingDB.container_id == container_id)
-            .where(ContainerRatingDB.rating_type == "user")
-        )
+        result = await self.db.execute(select(func.avg(ContainerRatingDB.rating)).where(ContainerRatingDB.container_id == container_id).where(ContainerRatingDB.rating_type == "user"))
         avg = result.scalar()
         return float(avg) if avg is not None else None
 
@@ -978,11 +882,7 @@ class GearRepository(SearchMixin):
         Returns:
             Number of user ratings
         """
-        result = await self.db.execute(
-            select(func.count(ContainerRatingDB.id))
-            .where(ContainerRatingDB.container_id == container_id)
-            .where(ContainerRatingDB.rating_type == "user")
-        )
+        result = await self.db.execute(select(func.count(ContainerRatingDB.id)).where(ContainerRatingDB.container_id == container_id).where(ContainerRatingDB.rating_type == "user"))
         return result.scalar() or 0
 
     async def get_container_owner_rating(self, container_id: str) -> int | None:
@@ -994,12 +894,7 @@ class GearRepository(SearchMixin):
         Returns:
             Owner rating (1-5) or None if not set
         """
-        result = await self.db.execute(
-            select(ContainerRatingDB.rating)
-            .where(ContainerRatingDB.container_id == container_id)
-            .where(ContainerRatingDB.rating_type == "owner")
-            .limit(1)
-        )
+        result = await self.db.execute(select(ContainerRatingDB.rating).where(ContainerRatingDB.container_id == container_id).where(ContainerRatingDB.rating_type == "owner").limit(1))
         rating = result.scalar_one_or_none()
         return rating if rating else None
 
@@ -1033,9 +928,7 @@ class GearRepository(SearchMixin):
         # Load user rating (only if not owner and user_id provided)
         user_rating = None
         if requesting_user_id and not is_owner:
-            user_rating_obj = await self.get_container_rating(
-                container_id, requesting_user_id, rating_type="user"
-            )
+            user_rating_obj = await self.get_container_rating(container_id, requesting_user_id, rating_type="user")
             user_rating = user_rating_obj.rating if user_rating_obj else None
 
         # Calculate average user rating and count
@@ -1097,31 +990,16 @@ class GearRepository(SearchMixin):
 
             # Escape special characters in query for tsquery
             # Replace spaces with & (AND operator) and escape special characters
-            query_escaped = (
-                query.replace("'", "''")
-                .replace("&", " ")
-                .replace("|", " ")
-                .replace("!", " ")
-                .replace("(", " ")
-                .replace(")", " ")
-            )
+            query_escaped = query.replace("'", "''").replace("&", " ").replace("|", " ").replace("!", " ").replace("(", " ").replace(")", " ")
             # Split by spaces and join with & (AND) operator
-            query_terms = " & ".join(
-                [term.strip() for term in query_escaped.split() if term.strip()]
-            )
+            query_terms = " & ".join([term.strip() for term in query_escaped.split() if term.strip()])
 
             # Build tsvector from multiple columns (name, description, brand, model)
             # Use 'simple' dictionary for better matching (no language-specific stemming)
             # Concatenate columns with space separator using || operator
             tsvector_expr = func.to_tsvector(
                 "simple",
-                func.coalesce(GlobalCatalogueItemDB.name, "")
-                + " "
-                + func.coalesce(GlobalCatalogueItemDB.description, "")
-                + " "
-                + func.coalesce(GlobalCatalogueItemDB.brand, "")
-                + " "
-                + func.coalesce(GlobalCatalogueItemDB.model, ""),
+                func.coalesce(GlobalCatalogueItemDB.name, "") + " " + func.coalesce(GlobalCatalogueItemDB.description, "") + " " + func.coalesce(GlobalCatalogueItemDB.brand, "") + " " + func.coalesce(GlobalCatalogueItemDB.model, ""),
             )
             tsquery_expr = func.to_tsquery("simple", query_terms)
 
@@ -1166,11 +1044,7 @@ class GearRepository(SearchMixin):
         Returns:
             Catalogue item if found, None otherwise (with creator relationship loaded)
         """
-        stmt = (
-            select(GlobalCatalogueItemDB)
-            .where(GlobalCatalogueItemDB.id == item_id)
-            .options(joinedload(GlobalCatalogueItemDB.creator))
-        )
+        stmt = select(GlobalCatalogueItemDB).where(GlobalCatalogueItemDB.id == item_id).options(joinedload(GlobalCatalogueItemDB.creator))
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
@@ -1246,11 +1120,11 @@ class GearRepository(SearchMixin):
         for key, value in update_dict.items():
             # Handle camelCase to snake_case conversion
             if key == "weightUnit":
-                setattr(item, "weight_unit", value)
+                item.weight_unit = value
             elif key == "priceTier":
-                setattr(item, "price_tier", value)
+                item.price_tier = value
             elif key == "isActive":
-                setattr(item, "is_active", value)
+                item.is_active = value
             else:
                 setattr(item, key, value)
 
@@ -1342,9 +1216,7 @@ class GearRepository(SearchMixin):
 
         return report_with_relations
 
-    async def get_reports_for_container(
-        self, container_id: str
-    ) -> Sequence[ContentReportDB]:
+    async def get_reports_for_container(self, container_id: str) -> Sequence[ContentReportDB]:
         """Get all reports for a container.
 
         Args:
@@ -1353,11 +1225,7 @@ class GearRepository(SearchMixin):
         Returns:
             List of reports for the container
         """
-        stmt = (
-            select(ContentReportDB)
-            .where(ContentReportDB.container_id == container_id)
-            .order_by(ContentReportDB.created_at.desc())
-        )
+        stmt = select(ContentReportDB).where(ContentReportDB.container_id == container_id).order_by(ContentReportDB.created_at.desc())
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -1474,9 +1342,7 @@ class GearRepository(SearchMixin):
         await self.db.refresh(report)
         return report
 
-    async def set_container_hidden_by_reports(
-        self, container_id: str, is_hidden: bool
-    ) -> GearContainerDB | None:
+    async def set_container_hidden_by_reports(self, container_id: str, is_hidden: bool) -> GearContainerDB | None:
         """Set is_hidden_by_reports flag for a container.
 
         Args:

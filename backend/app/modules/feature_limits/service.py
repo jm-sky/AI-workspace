@@ -1,6 +1,5 @@
 """Service for feature limits operations."""
 
-from app.modules.feature_limits.db_models import FeatureLimitDB
 from app.modules.feature_limits.repository import FeatureLimitRepository
 from app.modules.feature_limits.schemas import (
     FeatureLimitCreate,

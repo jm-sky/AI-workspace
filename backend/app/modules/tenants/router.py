@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.modules.auth.auth_utils import verify_token
 from app.modules.auth.dependencies import CurrentUser, get_current_token
+from app.modules.tenants.db_models import TenantDB, TenantMembershipDB
 from app.modules.tenants.repositories import TenantRepository, get_tenant_repository
 from app.modules.tenants.schemas import (
     SwitchTenantRequest,
@@ -25,8 +26,8 @@ router = APIRouter(prefix="/tenants", tags=["Tenants"])
 def _switch_response(
     *,
     tokens: dict[str, str | int],
-    tenant,
-    membership,
+    tenant: TenantDB,
+    membership: TenantMembershipDB,
     team_id: str | None,
 ) -> SwitchTenantResponse:
     return SwitchTenantResponse(
@@ -70,9 +71,7 @@ async def create_tenant(
     current_user: CurrentUser,
     token: Annotated[str, Depends(get_current_token)],
     repo: Annotated[TenantRepository, Depends(get_tenant_repository)],
-    workspace_service: Annotated[
-        TenantWorkspaceService, Depends(get_tenant_workspace_service)
-    ],
+    workspace_service: Annotated[TenantWorkspaceService, Depends(get_tenant_workspace_service)],
 ) -> SwitchTenantResponse:
     tenant, membership = await repo.create_tenant(
         name=payload.name,
@@ -86,7 +85,7 @@ async def create_tenant(
     try:
         token_payload = verify_token(token)
         session_jti = token_payload.get("jti")
-        tfa_verified = token_payload.get("tfaVerified", False)
+        tfa_verified = bool(token_payload.get("tfaVerified") or False)
         tfa_method = token_payload.get("tfaMethod")
     except Exception:
         pass
@@ -96,7 +95,7 @@ async def create_tenant(
         tenant_id=tenant.id,
         team_id=None,
         session_jti=session_jti,
-        tfa_verified=bool(tfa_verified),
+        tfa_verified=tfa_verified,
         tfa_method=tfa_method,
     )
 
@@ -113,9 +112,7 @@ async def switch_tenant(
     payload: SwitchTenantRequest,
     current_user: CurrentUser,
     token: Annotated[str, Depends(get_current_token)],
-    workspace_service: Annotated[
-        TenantWorkspaceService, Depends(get_tenant_workspace_service)
-    ],
+    workspace_service: Annotated[TenantWorkspaceService, Depends(get_tenant_workspace_service)],
     repo: Annotated[TenantRepository, Depends(get_tenant_repository)],
 ) -> SwitchTenantResponse:
     session_jti = None
@@ -124,7 +121,7 @@ async def switch_tenant(
     try:
         token_payload = verify_token(token)
         session_jti = token_payload.get("jti")
-        tfa_verified = token_payload.get("tfaVerified", False)
+        tfa_verified = bool(token_payload.get("tfaVerified") or False)
         tfa_method = token_payload.get("tfaMethod")
     except Exception:
         pass
@@ -134,7 +131,7 @@ async def switch_tenant(
         tenant_id=payload.tenantId,
         team_id=payload.teamId,
         session_jti=session_jti,
-        tfa_verified=bool(tfa_verified),
+        tfa_verified=tfa_verified,
         tfa_method=tfa_method,
     )
 

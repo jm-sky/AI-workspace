@@ -29,21 +29,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -57,9 +56,7 @@ async def upgrade() -> None:
         items_v2_exist = await table_exists(conn, "gear_items_v2")
         if not items_v2_exist:
             print("Creating gear_items_v2 table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE gear_items_v2 (
                         -- Identity
                         id VARCHAR(36) PRIMARY KEY,
@@ -157,84 +154,54 @@ async def upgrade() -> None:
                             )
                         )
                     );
-                """
-                )
-            )
+                """))
             print("✓ Created gear_items_v2 table")
 
             # Create indexes for performance
             print("Creating indexes...")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_user_id
                     ON gear_items_v2(user_id);
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_user_id")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_parent_item_id
                     ON gear_items_v2(parent_item_id);
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_parent_item_id")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_item_type
                     ON gear_items_v2(item_type);
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_item_type")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_is_public
                     ON gear_items_v2(is_public)
                     WHERE item_type = 'container';
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_is_public")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_linked_item_id
                     ON gear_items_v2(linked_item_id);
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_linked_item_id")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_catalogue_item_id
                     ON gear_items_v2(catalogue_item_id);
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_catalogue_item_id")
 
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE INDEX IF NOT EXISTS idx_gear_items_v2_favorite
                     ON gear_items_v2(favorite)
                     WHERE item_type = 'container';
-                """
-                )
-            )
+                """))
             print("✓ Created index: idx_gear_items_v2_favorite")
 
             print("✓ All indexes created successfully")
@@ -250,13 +217,9 @@ async def downgrade() -> None:
         items_v2_exist = await table_exists(conn, "gear_items_v2")
         if items_v2_exist:
             print("Dropping gear_items_v2 table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     DROP TABLE IF EXISTS gear_items_v2 CASCADE;
-                """
-                )
-            )
+                """))
             print("✓ Dropped gear_items_v2 table")
         else:
             print("✓ gear_items_v2 table does not exist")
@@ -265,9 +228,7 @@ async def downgrade() -> None:
 async def main() -> None:
     """Run migration based on command line argument."""
     if len(sys.argv) < 2:
-        print(
-            "Usage: python migrations/041_create_unified_gear_items.py [upgrade|downgrade]"
-        )
+        print("Usage: python migrations/041_create_unified_gear_items.py [upgrade|downgrade]")
         sys.exit(1)
 
     command = sys.argv[1].lower()
@@ -277,9 +238,7 @@ async def main() -> None:
         await downgrade()
     else:
         print(f"Unknown command: {command}")
-        print(
-            "Usage: python migrations/041_create_unified_gear_items.py [upgrade|downgrade]"
-        )
+        print("Usage: python migrations/041_create_unified_gear_items.py [upgrade|downgrade]")
         sys.exit(1)
 
 

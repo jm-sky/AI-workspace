@@ -86,9 +86,7 @@ class TestServiceRefresh:
         row = _token_row(expires_at=datetime.now(UTC) + timedelta(seconds=30))
         repo = _repo(row)
         provider = MagicMock()
-        provider.refresh_access_token = AsyncMock(
-            return_value=IntegrationOAuthTokenResult(access_token="ghu_fresh")
-        )
+        provider.refresh_access_token = AsyncMock(return_value=IntegrationOAuthTokenResult(access_token="ghu_fresh"))
 
         service = IntegrationTokenService(repo, registry=_registry(provider))
         result = await service.get_access_token("user-1", "github")
@@ -98,9 +96,7 @@ class TestServiceRefresh:
 
     @pytest.mark.asyncio
     async def test_expired_without_refresh_token_raises(self):
-        row = _token_row(
-            expires_at=datetime.now(UTC) - timedelta(minutes=5), has_refresh=False
-        )
+        row = _token_row(expires_at=datetime.now(UTC) - timedelta(minutes=5), has_refresh=False)
         repo = _repo(row)
         repo.decrypt_refresh_token.return_value = None
 
@@ -114,9 +110,7 @@ class TestServiceRefresh:
         row = _token_row(expires_at=datetime.now(UTC) - timedelta(minutes=5))
         repo = _repo(row)
         provider = MagicMock()
-        provider.refresh_access_token = AsyncMock(
-            side_effect=IntegrationRefreshNotSupportedError("cannot refresh")
-        )
+        provider.refresh_access_token = AsyncMock(side_effect=IntegrationRefreshNotSupportedError("cannot refresh"))
 
         service = IntegrationTokenService(repo, registry=_registry(provider))
 
@@ -129,9 +123,7 @@ class TestServiceRefresh:
         row = _token_row(expires_at=datetime.now(UTC) - timedelta(minutes=5))
         repo = _repo(row)
         provider = MagicMock()
-        provider.refresh_access_token = AsyncMock(
-            side_effect=IntegrationRefreshFailedError("bad_refresh_token")
-        )
+        provider.refresh_access_token = AsyncMock(side_effect=IntegrationRefreshFailedError("bad_refresh_token"))
 
         service = IntegrationTokenService(repo, registry=_registry(provider))
 
@@ -151,9 +143,7 @@ def _patch_httpx(monkeypatch, handler):
     def factory(*_args, **_kwargs):
         return real_client(transport=httpx.MockTransport(handler))
 
-    monkeypatch.setattr(
-        "app.modules.integrations.providers.github.httpx.AsyncClient", factory
-    )
+    monkeypatch.setattr("app.modules.integrations.providers.github.httpx.AsyncClient", factory)
 
 
 class TestGitHubProviderRefresh:

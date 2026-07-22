@@ -8,20 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.modules.agent.audit import redact_payload
+from app.modules.agent.db_models import AgentRunDB, AgentRunStepDB, AgentSessionDB
 from app.modules.agent.exceptions import (
     AgentNotConfiguredError,
     AgentToolsDisabledError,
-)
-from app.modules.agent.prompts.github_workspace import GITHUB_WORKSPACE_SYSTEM_PROMPT
-from app.modules.agent.prompts.jira_360 import JIRA_360_SYSTEM_PROMPT
-from app.modules.ai.utils.models_config import get_model_by_id, has_live_catalog
-from app.modules.memory.services.memory_service import MemoryService
-from app.modules.agent.repositories import AgentRunRepository, AgentSessionRepository
-from app.modules.agent.schemas import (
-    AgentRunResponse,
-    AgentRunStepResponse,
-    AgentSessionDetail,
-    AgentSessionSummary,
 )
 from app.modules.agent.guards import (
     SourceRoutingWarning,
@@ -29,14 +19,24 @@ from app.modules.agent.guards import (
     provider_of_tool,
 )
 from app.modules.agent.guards.source_routing import format_warnings
+from app.modules.agent.prompts.github_workspace import GITHUB_WORKSPACE_SYSTEM_PROMPT
+from app.modules.agent.prompts.jira_360 import JIRA_360_SYSTEM_PROMPT
+from app.modules.agent.repositories import AgentRunRepository, AgentSessionRepository
+from app.modules.agent.schemas import (
+    AgentRunResponse,
+    AgentRunStepResponse,
+    AgentSessionDetail,
+    AgentSessionSummary,
+)
 from app.modules.agent.services.agent_loop import AgentLoopEvent, AgentLoopService
 from app.modules.agent.tools import build_tool_registry
 from app.modules.agent.tools.base import AgentToolRegistry
+from app.modules.ai.utils.models_config import get_model_by_id, has_live_catalog
 from app.modules.integrations.service import IntegrationTokenService
+from app.modules.memory.services.memory_service import MemoryService
 from app.modules.tenants.service import TenantContext
 from app.modules.workspace_config.repositories import WorkspaceConfigRepository
 from app.modules.workspace_config.resolver import WorkspaceConfigResolver
-
 
 AGENT_PROMPTS: dict[str, str] = {
     "github-workspace": GITHUB_WORKSPACE_SYSTEM_PROMPT,
@@ -115,9 +115,7 @@ class AgentRunService:
         # Resolve the conversation this turn belongs to (create on first turn).
         session = None
         if session_id:
-            session = await self.session_repo.get_session(
-                session_id, user_id=tenant_ctx.user_id
-            )
+            session = await self.session_repo.get_session(session_id, user_id=tenant_ctx.user_id)
         if session is None:
             session = await self.session_repo.create_session(
                 tenant_id=tenant_ctx.tenant_id,
@@ -193,12 +191,8 @@ class AgentRunService:
                             step_index=trace_step.get("stepIndex", step_index),
                             step_type=trace_step.get("stepType", "step"),
                             name=trace_step.get("name"),
-                            input_data=redact_payload(raw_input)
-                            if raw_input is not None
-                            else None,
-                            output_data=redact_payload(raw_output)
-                            if raw_output is not None
-                            else None,
+                            input_data=(redact_payload(raw_input) if raw_input is not None else None),
+                            output_data=(redact_payload(raw_output) if raw_output is not None else None),
                             raw_input_data=raw_input if raw_enabled else None,
                             raw_output_data=raw_output if raw_enabled else None,
                             raw_expires_at=raw_expiry if raw_enabled else None,
@@ -215,9 +209,7 @@ class AgentRunService:
                         cost_usd=event.data.get("costUsd"),
                         blocks=event.data.get("blocks"),
                     )
-                    await self.session_repo.touch_session(
-                        session, title=_derive_title(message)
-                    )
+                    await self.session_repo.touch_session(session, title=_derive_title(message))
                     await self.db.commit()
                     yield AgentLoopEvent(
                         event="run_complete",
@@ -240,9 +232,7 @@ class AgentRunService:
                 data={"runId": run.id, "sessionId": session_id, "message": str(exc)},
             )
 
-    async def _load_history(
-        self, session_id: str, *, max_turns: int = 10
-    ) -> list[dict[str, str]]:
+    async def _load_history(self, session_id: str, *, max_turns: int = 10) -> list[dict[str, str]]:
         """Prior completed turns of a session as plain user/assistant messages."""
         prior = await self.run_repo.list_runs_for_session(session_id)
         turns: list[dict[str, str]] = []
@@ -326,11 +316,7 @@ class AgentRunService:
     ) -> None:
         """Append a warning if the user named a source the agent never queried."""
         steps = event.data.get("stepsTrace", [])
-        tools_used = [
-            step.get("name")
-            for step in steps
-            if step.get("stepType") == "tool_result" and step.get("name")
-        ]
+        tools_used = [step.get("name") for step in steps if step.get("stepType") == "tool_result" and step.get("name")]
         warnings = check_source_mismatch(
             user_message=user_message,
             tools_used=tools_used,
@@ -382,9 +368,7 @@ class AgentRunService:
                     "outputData": step.output_data,
                     "rawInputData": None if expired else step.raw_input_data,
                     "rawOutputData": None if expired else step.raw_output_data,
-                    "rawExpiresAt": step.raw_expires_at.isoformat()
-                    if step.raw_expires_at
-                    else None,
+                    "rawExpiresAt": (step.raw_expires_at.isoformat() if step.raw_expires_at else None),
                     "rawExpired": expired,
                     "createdAt": step.created_at.isoformat(),
                 }
@@ -444,9 +428,7 @@ class AgentRunService:
         )
         return [_to_session_summary(s) for s in sessions], total
 
-    async def get_session_detail(
-        self, session_id: str, *, user_id: str
-    ) -> AgentSessionDetail | None:
+    async def get_session_detail(self, session_id: str, *, user_id: str) -> AgentSessionDetail | None:
         session = await self.session_repo.get_session(session_id, user_id=user_id)
         if session is None:
             return None
@@ -516,7 +498,7 @@ def _build_tool_catalog(tool_registry: AgentToolRegistry) -> str:
     return "\n".join(lines)
 
 
-def _to_session_summary(session) -> AgentSessionSummary:
+def _to_session_summary(session: AgentSessionDB) -> AgentSessionSummary:
     return AgentSessionSummary(
         id=session.id,
         agentKey=session.agent_key,
@@ -526,7 +508,7 @@ def _to_session_summary(session) -> AgentSessionSummary:
     )
 
 
-def _to_run_response(run, steps) -> AgentRunResponse:
+def _to_run_response(run: AgentRunDB, steps: list[AgentRunStepDB]) -> AgentRunResponse:
     from app.modules.agent.schemas import RichBlock
 
     return AgentRunResponse(

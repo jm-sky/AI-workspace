@@ -5,14 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-import stripe
 
 from app.modules.billing.db_models import SubscriptionDB
 from app.modules.billing.exceptions import (
     CannotDowngradeGrandfatheredError,
     InvalidBillingIntervalError,
     InvalidPlanTierError,
-    StripeAPIError,
     SubscriptionAlreadyExistsError,
     SubscriptionNotFoundError,
 )
@@ -54,9 +52,7 @@ def sample_subscription() -> SubscriptionDB:
 
 
 @pytest.fixture
-def billing_service(
-    mock_repository: AsyncMock, mock_stripe_client: AsyncMock
-) -> BillingService:
+def billing_service(mock_repository: AsyncMock, mock_stripe_client: AsyncMock) -> BillingService:
     """Create BillingService instance with mocked dependencies."""
     return BillingService(repository=mock_repository, stripe_client=mock_stripe_client)
 
@@ -82,9 +78,7 @@ class TestGetSubscription:
         mock_repository.get_subscription_by_user_id.assert_called_once_with("user123")
 
     @pytest.mark.asyncio
-    async def test_get_subscription_not_found(
-        self, billing_service: BillingService, mock_repository: AsyncMock
-    ) -> None:
+    async def test_get_subscription_not_found(self, billing_service: BillingService, mock_repository: AsyncMock) -> None:
         """Test subscription not found."""
         mock_repository.get_subscription_by_user_id.return_value = None
 
@@ -136,9 +130,7 @@ class TestCreateCheckoutSession:
             assert response.sessionUrl == "https://checkout.stripe.com/test"
 
     @pytest.mark.asyncio
-    async def test_create_checkout_session_invalid_plan(
-        self, billing_service: BillingService, mock_repository: AsyncMock
-    ) -> None:
+    async def test_create_checkout_session_invalid_plan(self, billing_service: BillingService, mock_repository: AsyncMock) -> None:
         """Test checkout session with invalid plan tier."""
         with pytest.raises(InvalidPlanTierError):
             await billing_service.create_checkout_session(
@@ -150,9 +142,7 @@ class TestCreateCheckoutSession:
             )
 
     @pytest.mark.asyncio
-    async def test_create_checkout_session_invalid_interval(
-        self, billing_service: BillingService, mock_repository: AsyncMock
-    ) -> None:
+    async def test_create_checkout_session_invalid_interval(self, billing_service: BillingService, mock_repository: AsyncMock) -> None:
         """Test checkout session with invalid billing interval."""
         with pytest.raises(InvalidBillingIntervalError):
             await billing_service.create_checkout_session(

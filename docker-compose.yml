@@ -1,4 +1,4 @@
-name: ai-workspace-dev
+name: ai-workspace
 
 services:
   # PostgreSQL Database
@@ -12,8 +12,6 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ai-workspace-db-secret}
     volumes:
       - ai_workspace_postgres_data:/var/lib/postgresql/data
-    # ports:
-    #   - "127.0.0.1:${DB_FORWARD_PORT:-5435}:5432"  # Only localhost access
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backend}"]
       interval: 10s
@@ -26,6 +24,9 @@ services:
         max-file: "3"
     networks:
       - ai-workspace-network
+    # Expose port only for development (comment out in production)
+    # ports:
+    #   - "127.0.0.1:${DB_FORWARD_PORT:-5435}:5432"
 
   # Redis (for token blacklist and challenge storage)
   redis:
@@ -34,8 +35,6 @@ services:
     restart: unless-stopped
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-ai-workspace-redis-secret}
-    # ports:
-    #   - "127.0.0.1:${REDIS_FORWARD_PORT:-6382}:6379"  # Only localhost access
     volumes:
       - ai_workspace_redis_data:/data
     command: >
@@ -56,61 +55,16 @@ services:
         max-file: "3"
     networks:
       - ai-workspace-network
+    # Expose port only for development (comment out in production)
+    # ports:
+    #   - "127.0.0.1:${REDIS_FORWARD_PORT:-6382}:6379"
 
-  # MinIO Object Storage (S3-compatible)
-  # Check https://quay.io/repository/minio/minio?tab=tags for latest version
-  minio:
-    image: quay.io/minio/minio:latest
-    container_name: ai-workspace-minio
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:${MINIO_API_PORT:-9010}:9000"  # API port - localhost only
-      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9011}:9001"  # Console port - localhost only
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
-    volumes:
-      - ai_workspace_minio_data:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-      start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - ai-workspace-network
-
-  # MinIO Client - Initialize buckets
-  # Check https://quay.io/repository/minio/mc?tab=tags for latest version
-  minio-init:
-    image: quay.io/minio/mc:latest
-    container_name: ai-workspace-minio-init
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set localminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin123};
-      /usr/bin/mc mb localminio/uploads --ignore-existing;
-      /usr/bin/mc anonymous set download localminio/uploads;
-      exit 0;
-      "
-    restart: "no"
-    networks:
-      - ai-workspace-network
-
-  # Application (Development Mode)
+  # Application
   app:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
-    image: ai-workspace-backend:dev
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ai-workspace-backend:latest
     container_name: ai-workspace-app
     restart: unless-stopped
     depends_on:
@@ -118,18 +72,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     env_file:
-      - .env
+      - ./backend/.env
     environment:
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - PROJECT_NAME=${PROJECT_NAME:-ai-workspace}
       - APP_PORT=${APP_PORT:-8000}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-ai-workspace-db-secret}@db:5432/${POSTGRES_DB:-backend}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-ai-workspace-redis-secret}@redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5176"]}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5176}
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
@@ -142,15 +94,15 @@ services:
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
       - RECAPTCHA_MIN_SCORE=${RECAPTCHA_MIN_SCORE}
-      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-http://localhost:8003}
-      # MinIO/S3 Storage Configuration (optional - set STORAGE_TYPE=s3 to use)
+      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-}
+      # S3 Storage Configuration
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
-      - STORAGE_S3_BUCKET=${STORAGE_S3_BUCKET:-uploads}
-      - STORAGE_S3_ACCESS_KEY=${STORAGE_S3_ACCESS_KEY:-${MINIO_ROOT_USER:-minioadmin}}
-      - STORAGE_S3_SECRET_KEY=${STORAGE_S3_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-minioadmin123}}
+      - STORAGE_S3_BUCKET=${STORAGE_S3_BUCKET:-}
+      - STORAGE_S3_ACCESS_KEY=${STORAGE_S3_ACCESS_KEY:-}
+      - STORAGE_S3_SECRET_KEY=${STORAGE_S3_SECRET_KEY:-}
       - STORAGE_S3_REGION=${STORAGE_S3_REGION:-us-east-1}
-      - STORAGE_S3_ENDPOINT_URL=${STORAGE_S3_ENDPOINT_URL:-http://minio:9000}
-      - STORAGE_S3_PUBLIC_ENDPOINT_URL=${STORAGE_S3_PUBLIC_ENDPOINT_URL:-http://localhost:9010}
+      - STORAGE_S3_ENDPOINT_URL=${STORAGE_S3_ENDPOINT_URL:-}
+      - STORAGE_S3_PUBLIC_ENDPOINT_URL=${STORAGE_S3_PUBLIC_ENDPOINT_URL:-}
       # Stripe Billing Configuration
       - STRIPE_ENABLED=${STRIPE_ENABLED:-false}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
@@ -161,21 +113,16 @@ services:
       - STRIPE_PRO_PLUS_MONTHLY_PRICE_ID=${STRIPE_PRO_PLUS_MONTHLY_PRICE_ID}
       - STRIPE_PRO_PLUS_ANNUAL_PRICE_ID=${STRIPE_PRO_PLUS_ANNUAL_PRICE_ID}
     ports:
-      - "127.0.0.1:${APP_PORT:-8003}:8000"  # Only localhost access (Caddy proxy)
+      - "127.0.0.1:${APP_PORT:-8003}:8000"  # Only localhost access (reverse proxy required)
     volumes:
-      # Mount source code for hot reload
-      # Paths are relative to docker-compose.dev.yml location (backend/ directory)
-      # Using :delegated for better performance on WSL2/macOS
-      - ./app:/app/app:rw,delegated
-      - ./scripts:/app/scripts:rw,delegated
-      - ./tests:/app/tests:rw,delegated
-      - ./migrations:/app/migrations:rw,delegated
-      - ./main.py:/app/main.py:rw,delegated
-      - ./cli:/app/cli:ro,delegated
-      - ./cli.py:/app/cli.py:ro,delegated
-      - ./images:/app/images:ro,delegated
-      # Mount uploads directory for persistent file storage
+      # Mount uploads directory for persistent file storage (optional - S3 is preferred)
       - ai_workspace_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -190,10 +137,11 @@ networks:
 
 volumes:
   ai_workspace_postgres_data:
-    driver: local
+    external: true
+    name: ai_workspace_postgres_data
   ai_workspace_redis_data:
-    driver: local
+    external: true
+    name: ai_workspace_redis_data
   ai_workspace_uploads:
-    driver: local
-  ai_workspace_minio_data:
-    driver: local
+    external: true
+    name: ai_workspace_uploads

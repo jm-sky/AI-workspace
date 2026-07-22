@@ -48,5 +48,8 @@ Ustalenie po re-weryfikacji vs ai-kancelaria (po `git pull`). Memory injection *
 | 022 | [2026-07-20--022--tool-search.md](2026-07-20--022--tool-search.md) | Tool search — core + profil agenta / próg „wszystkie” | `done` |
 | 023 | [2026-07-20--023--agent-routing.md](2026-07-20--023--agent-routing.md) | Agent routing — auto-router + 2–3 agenci | `planned` |
 | 024 | [2026-07-20--024--chat-attachments-vision.md](2026-07-20--024--chat-attachments-vision.md) | Załączniki w czacie + vision (OpenRouter) | `planned` |
+| 025 | [2026-07-20--025--backport-shared-core-security-fixes.md](2026-07-20--025--backport-shared-core-security-fixes.md) | Backport: rate limiting, admin auth bypass, WebAuthn login (shared core) | `done` |
+| 026 | [2026-07-22--026--oauth-session-and-state-backport.md](2026-07-22--026--oauth-session-and-state-backport.md) | Backport: OAuth session/2FA parity + CSRF state store (gear-stack 036+037) | `done` |
+| 027 | [2026-07-11--027--chat-tool-memory-step-disappears.md](2026-07-11--027--chat-tool-memory-step-disappears.md) | Chat — krok narzędzia (memory) znika po zakończeniu runu | `todo` |
 
 When adding a new issue: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.

@@ -34,4 +34,3 @@ class SwitchTenantResponse(BaseModel):
     expiresIn: int
     tenant: TenantResponse
     teamId: str | None = None
-

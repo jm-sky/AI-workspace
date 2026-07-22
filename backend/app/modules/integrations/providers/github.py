@@ -81,9 +81,7 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
 
         return f"{self.AUTH_URL}?{urlencode(params)}"
 
-    async def exchange_code_for_token(
-        self, code: str, *, scopes: list[str]
-    ) -> IntegrationOAuthTokenResult:
+    async def exchange_code_for_token(self, code: str, *, scopes: list[str]) -> IntegrationOAuthTokenResult:
         if not self.is_configured():
             raise ValueError("GitHub integration is not configured")
 
@@ -103,9 +101,7 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
             data = response.json()
 
             if "error" in data:
-                raise ValueError(
-                    data.get("error_description") or data.get("error", "GitHub OAuth error")
-                )
+                raise ValueError(data.get("error_description") or data.get("error", "GitHub OAuth error"))
 
             access_token = data["access_token"]
             metadata = await self._fetch_user_metadata(client, access_token)
@@ -131,17 +127,13 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
                 provider_metadata=metadata,
             )
 
-    async def refresh_access_token(
-        self, refresh_token: str
-    ) -> IntegrationOAuthTokenResult:
+    async def refresh_access_token(self, refresh_token: str) -> IntegrationOAuthTokenResult:
         if not self.is_configured():
             raise ValueError("GitHub integration is not configured")
 
         # Refresh tokens only exist when the App opts into expiring user tokens.
         if not self._is_github_app():
-            raise IntegrationRefreshNotSupportedError(
-                "GitHub OAuth App tokens do not expire and cannot be refreshed"
-            )
+            raise IntegrationRefreshNotSupportedError("GitHub OAuth App tokens do not expire and cannot be refreshed")
 
         async with httpx.AsyncClient() as client:
             try:
@@ -159,14 +151,10 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
                 response.raise_for_status()
                 data = response.json()
             except httpx.HTTPError as exc:
-                raise IntegrationRefreshFailedError(
-                    f"GitHub refresh request failed: {exc}"
-                ) from exc
+                raise IntegrationRefreshFailedError(f"GitHub refresh request failed: {exc}") from exc
 
             if "error" in data:
-                raise IntegrationRefreshFailedError(
-                    data.get("error_description") or data["error"]
-                )
+                raise IntegrationRefreshFailedError(data.get("error_description") or data["error"])
 
             access_token = data["access_token"]
             metadata = await self._fetch_user_metadata(client, access_token)
@@ -185,9 +173,7 @@ class GitHubIntegrationProvider(IntegrationOAuthProvider):
                 provider_metadata=metadata,
             )
 
-    async def _fetch_user_metadata(
-        self, client: httpx.AsyncClient, access_token: str
-    ) -> dict[str, Any]:
+    async def _fetch_user_metadata(self, client: httpx.AsyncClient, access_token: str) -> dict[str, Any]:
         response = await client.get(
             self.USER_API_URL,
             headers=self._api_headers(access_token),

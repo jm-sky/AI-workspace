@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, JSON, String
+from sqlalchemy import JSON, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -38,23 +38,13 @@ class GearSettingsDB(Base):
     __tablename__ = "gear_settings"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    user_id: Mapped[str] = mapped_column(
-        String(36), nullable=False, unique=True, index=True
-    )
-    custom_categories: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
-    custom_container_types: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
-    custom_brands: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, unique=True, index=True)
+    custom_categories: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    custom_container_types: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    custom_brands: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
     preferred_weight_unit: Mapped[str | None] = mapped_column(String(10), nullable=True)
     default_currency: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

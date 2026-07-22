@@ -11,6 +11,7 @@ from typing import Any
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -18,7 +19,6 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -50,43 +50,25 @@ class GearContainerDB(Base):
     __tablename__ = "gear_containers"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id"), nullable=False, index=True
-    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
-    color: Mapped[str | None] = mapped_column(
-        String(20), nullable=True, default="default"
-    )
-    parent_container_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("gear_containers.id"), nullable=True
-    )
+    color: Mapped[str | None] = mapped_column(String(20), nullable=True, default="default")
+    parent_container_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("gear_containers.id"), nullable=True)
     brand: Mapped[str | None] = mapped_column(String(255), nullable=True)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
-    hide_when_nested: Mapped[bool | None] = mapped_column(
-        Boolean, nullable=True, default=False
-    )
+    hide_when_nested: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)
     weight_unit: Mapped[str | None] = mapped_column(String(5), nullable=True)
     max_weight: Mapped[float | None] = mapped_column(Float, nullable=True)
     max_weight_unit: Mapped[str | None] = mapped_column(String(5), nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_public: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False, index=True
-    )
-    is_hidden_by_reports: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False, index=True
-    )
-    favorite: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False, index=True
-    )
-    show_item_images: Mapped[bool | None] = mapped_column(
-        Boolean, nullable=True, default=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    is_hidden_by_reports: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    favorite: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    show_item_images: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -133,52 +115,36 @@ class GearItemDB(Base):
     __tablename__ = "gear_items"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    container_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("gear_containers.id"), nullable=False, index=True
-    )
+    container_id: Mapped[str] = mapped_column(String(36), ForeignKey("gear_containers.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     weight: Mapped[float] = mapped_column(Float, nullable=False)
     weight_unit: Mapped[str] = mapped_column(String(5), nullable=False, default="g")
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    expiration_date: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expiration_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     shelf_life: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     priority: Mapped[str] = mapped_column(String(20), nullable=False, default="medium")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="owned")
-    nested_container_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("gear_containers.id"), nullable=True
-    )
+    nested_container_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("gear_containers.id"), nullable=True)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
     currency: Mapped[str | None] = mapped_column(String(10), nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     brand: Mapped[str | None] = mapped_column(String(255), nullable=True)
     color: Mapped[str | None] = mapped_column(String(50), nullable=True)
     quality: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    linked_item_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("gear_items.id"), nullable=True
-    )
+    linked_item_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("gear_items.id"), nullable=True)
     catalogue_item_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("global_catalogue_items.id", ondelete="SET NULL"),
         nullable=True,
     )
     wearable: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
-    consumable: Mapped[bool | None] = mapped_column(
-        Boolean, nullable=True, default=False
-    )
+    consumable: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     order: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    show_on_container: Mapped[bool | None] = mapped_column(
-        Boolean, nullable=True, default=False
-    )
-    promote_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0, server_default="0"
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    show_on_container: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
+    promote_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -187,9 +153,7 @@ class GearItemDB(Base):
     )
 
     # Relationships
-    container: Mapped["GearContainerDB"] = relationship(
-        "GearContainerDB", back_populates="items", foreign_keys=[container_id]
-    )
+    container: Mapped[GearContainerDB] = relationship("GearContainerDB", back_populates="items", foreign_keys=[container_id])
 
     def __repr__(self) -> str:
         return f"<GearItemDB(id={self.id}, name={self.name}, category={self.category})>"
@@ -241,9 +205,7 @@ class ItemImageDB(Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id"), nullable=False, index=True
-    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
 
     # Storage info
     storage_type: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -251,9 +213,7 @@ class ItemImageDB(Base):
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)
     mime_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    external_url: Mapped[str | None] = mapped_column(
-        String(1000), nullable=True
-    )  # External URL if not hosted locally
+    external_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)  # External URL if not hosted locally
 
     # Image metadata
     width: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -265,9 +225,7 @@ class ItemImageDB(Base):
     is_processed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     original_file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -276,7 +234,7 @@ class ItemImageDB(Base):
     )
 
     # Relationships
-    item: Mapped["GearItemDB"] = relationship("GearItemDB", back_populates="images")
+    item: Mapped[GearItemDB] = relationship("GearItemDB", back_populates="images")
 
     def __repr__(self) -> str:
         return f"<ItemImageDB(id={self.id}, item_id={self.item_id}, file_name={self.file_name})>"
@@ -315,15 +273,9 @@ class ContainerShareTokenDB(Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id"), nullable=False, index=True
-    )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
     def __repr__(self) -> str:
         return f"<ContainerShareTokenDB(token={self.token[:8]}..., container_id={self.container_id})>"
@@ -336,12 +288,8 @@ GearContainerDB.user = relationship("UserDB", foreign_keys=[GearContainerDB.user
 ItemImageDB.user = relationship("UserDB", foreign_keys=[ItemImageDB.user_id])
 
 # Add relationships for share tokens
-ContainerShareTokenDB.container = relationship(
-    "GearContainerDB", foreign_keys=[ContainerShareTokenDB.container_id]
-)
-ContainerShareTokenDB.user = relationship(
-    "UserDB", foreign_keys=[ContainerShareTokenDB.user_id]
-)
+ContainerShareTokenDB.container = relationship("GearContainerDB", foreign_keys=[ContainerShareTokenDB.container_id])
+ContainerShareTokenDB.user = relationship("UserDB", foreign_keys=[ContainerShareTokenDB.user_id])
 
 
 class ContainerRatingDB(Base):
@@ -377,12 +325,8 @@ class ContainerRatingDB(Base):
         index=True,
     )
     rating: Mapped[int] = mapped_column(Integer, nullable=False)  # 1-5
-    rating_type: Mapped[str] = mapped_column(
-        String(10), nullable=False, default="user"
-    )  # 'owner' or 'user'
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    rating_type: Mapped[str] = mapped_column(String(10), nullable=False, default="user")  # 'owner' or 'user'
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -417,9 +361,7 @@ ContainerRatingDB.container = relationship(
     "GearContainerDB",
     back_populates="ratings",
 )
-ContainerRatingDB.user = relationship(
-    "UserDB", foreign_keys=[ContainerRatingDB.user_id]
-)
+ContainerRatingDB.user = relationship("UserDB", foreign_keys=[ContainerRatingDB.user_id])
 
 
 class GlobalCatalogueItemDB(Base):
@@ -466,12 +408,8 @@ class GlobalCatalogueItemDB(Base):
     quality: Mapped[str | None] = mapped_column(String(20), nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     color: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    shops: Mapped[list[dict[str, str]]] = mapped_column(
-        JSONB, nullable=False, default=list
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True, index=True
-    )
+    shops: Mapped[list[dict[str, str]]] = mapped_column(JSONB, nullable=False, default=list)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     created_by: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -490,7 +428,7 @@ class GlobalCatalogueItemDB(Base):
     )
 
     # Relationships
-    creator: Mapped["UserDB | None"] = relationship("UserDB", foreign_keys=[created_by])
+    creator: Mapped[UserDB | None] = relationship("UserDB", foreign_keys=[created_by])
 
     def __repr__(self) -> str:
         return f"<GlobalCatalogueItemDB(id={self.id}, name={self.name}, version={self.version})>"
@@ -531,9 +469,7 @@ class CatalogueItemImageDB(Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id"), nullable=False, index=True
-    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
 
     # Storage info
     storage_type: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -553,9 +489,7 @@ class CatalogueItemImageDB(Base):
     is_processed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     original_file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -564,10 +498,8 @@ class CatalogueItemImageDB(Base):
     )
 
     # Relationships
-    catalogue_item: Mapped["GlobalCatalogueItemDB"] = relationship(
-        "GlobalCatalogueItemDB", back_populates="images"
-    )
-    user: Mapped["UserDB"] = relationship("UserDB", foreign_keys=[user_id])
+    catalogue_item: Mapped[GlobalCatalogueItemDB] = relationship("GlobalCatalogueItemDB", back_populates="images")
+    user: Mapped[UserDB] = relationship("UserDB", foreign_keys=[user_id])
 
     def __repr__(self) -> str:
         return f"<CatalogueItemImageDB(id={self.id}, catalogue_item_id={self.catalogue_item_id}, file_name={self.file_name})>"
@@ -617,13 +549,11 @@ class ItemPromotionDB(Base):
     )
 
     # Relationships
-    item: Mapped["GearItemDB"] = relationship("GearItemDB", back_populates="promotions")
-    user: Mapped["UserDB"] = relationship("UserDB")
+    item: Mapped[GearItemDB] = relationship("GearItemDB", back_populates="promotions")
+    user: Mapped[UserDB] = relationship("UserDB")
 
     # Unique constraint: user can promote item only once
-    __table_args__ = (
-        UniqueConstraint("item_id", "user_id", name="unique_item_user_promotion"),
-    )
+    __table_args__ = (UniqueConstraint("item_id", "user_id", name="unique_item_user_promotion"),)
 
     def __repr__(self) -> str:
         return f"<ItemPromotionDB(id={self.id}, item_id={self.item_id}, user_id={self.user_id})>"
@@ -672,15 +602,9 @@ class ContentReportDB(Base):
     )
     reason: Mapped[str] = mapped_column(String(50), nullable=False)
     additional_info: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending", index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
-    reviewed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     reviewed_by: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -689,9 +613,7 @@ class ContentReportDB(Base):
 
     # Unique constraint: one report per user per container
     __table_args__ = (
-        UniqueConstraint(
-            "container_id", "reporter_user_id", name="unique_container_reporter"
-        ),
+        UniqueConstraint("container_id", "reporter_user_id", name="unique_container_reporter"),
         CheckConstraint(
             "reason IN ('spam_fraud', 'violence', 'sexual_content', 'profanity', 'other')",
             name="check_report_reason",
@@ -703,13 +625,9 @@ class ContentReportDB(Base):
     )
 
     # Relationships
-    container: Mapped["GearContainerDB"] = relationship(
-        "GearContainerDB", foreign_keys=[container_id], back_populates="reports"
-    )
-    reporter: Mapped["UserDB"] = relationship("UserDB", foreign_keys=[reporter_user_id])
-    reviewer: Mapped["UserDB | None"] = relationship(
-        "UserDB", foreign_keys=[reviewed_by]
-    )
+    container: Mapped[GearContainerDB] = relationship("GearContainerDB", foreign_keys=[container_id], back_populates="reports")
+    reporter: Mapped[UserDB] = relationship("UserDB", foreign_keys=[reporter_user_id])
+    reviewer: Mapped[UserDB | None] = relationship("UserDB", foreign_keys=[reviewed_by])
 
     def __repr__(self) -> str:
         return f"<ContentReportDB(id={self.id}, container_id={self.container_id}, reason={self.reason}, status={self.status})>"

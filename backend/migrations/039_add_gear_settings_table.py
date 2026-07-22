@@ -27,16 +27,14 @@ from app.core.database import engine
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database (PostgreSQL compatible)."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -54,9 +52,7 @@ async def upgrade() -> None:
 
         # Create gear_settings table
         print("Creating gear_settings table...")
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 CREATE TABLE gear_settings (
                     id VARCHAR(36) PRIMARY KEY,
                     user_id VARCHAR(36) NOT NULL UNIQUE,
@@ -69,12 +65,8 @@ async def upgrade() -> None:
                     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
-            """
-            )
-        )
-        await conn.execute(
-            text("CREATE INDEX ix_gear_settings_user_id ON gear_settings(user_id)")
-        )
+            """))
+        await conn.execute(text("CREATE INDEX ix_gear_settings_user_id ON gear_settings(user_id)"))
         print("✓ Created gear_settings table")
 
     print("✓ Migration completed successfully")

@@ -9,17 +9,17 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.auth.dependencies import get_token_blacklist_service
 from app.core.auth.token_blacklist import TokenBlacklistService
 
-from .service import AuthService
-from .types.repository import UserRepositoryInterface
 from .auth_utils import verify_token
 from .exceptions import (
     EmailNotVerifiedError,
     ExpiredTokenError,
-    InvalidTokenError,
     InactiveUserError,
+    InvalidTokenError,
 )
 from .models import User
 from .repositories import get_user_repository
+from .service import AuthService
+from .types.repository import UserRepositoryInterface
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,7 @@ security = HTTPBearer()
 # Try to use 2FA-enabled auth service if available
 HAS_2FA = False
 try:
-    from app.modules.two_factor.auth_integration import (
-        AuthServiceWith2FA,
-        get_auth_service_with_2fa,
-    )
     from app.modules.two_factor.repositories import get_two_factor_repository
-    from app.modules.two_factor.types.repository import TwoFactorRepositoryInterface
 
     HAS_2FA = True
 except ImportError:
@@ -44,14 +39,15 @@ except ImportError:
 
 def get_auth_service(
     user_repository: Annotated[UserRepositoryInterface, Depends(get_user_repository)],
-    blacklist_service: Annotated[
-        TokenBlacklistService, Depends(get_token_blacklist_service)
-    ],
-    two_factor_repository: Any = (
-        Depends(lambda: None) if not HAS_2FA else Depends(get_two_factor_repository)
-    ),
+    blacklist_service: Annotated[TokenBlacklistService, Depends(get_token_blacklist_service)],
+    two_factor_repository: Any = (Depends(lambda: None) if not HAS_2FA else Depends(get_two_factor_repository)),
 ) -> AuthService:
-    """Get auth service with 2FA support if available."""
+    """Get auth service with 2FA support if available.
+
+    Returns ``AuthServiceWith2FA`` (a subclass of ``AuthService``) when the 2FA
+    module is installed, otherwise a plain ``AuthService`` — both satisfy the
+    ``AuthService`` interface, so callers stay type-safe.
+    """
     from app.modules.teams.repositories import TeamRepository
     from app.modules.tenants.repositories import TenantRepository
     from app.modules.tenants.service import TenantWorkspaceService
@@ -72,9 +68,7 @@ def get_auth_service(
             blacklist_service=blacklist_service,
         )
         service.tenant_workspace_service = workspace_service
-        logger.debug(
-            f"Created auth service: {type(service).__name__} (2FA enabled: True)"
-        )
+        logger.debug(f"Created auth service: {type(service).__name__} (2FA enabled: True)")
         return service
 
     logger.debug("Using regular AuthService (2FA not available)")
@@ -176,9 +170,7 @@ async def _verify_user_token(
                 two_factor_service = TwoFactorService(repository=two_factor_repository)
 
                 # Check if user has 2FA enabled
-                has_2fa_enabled = await two_factor_service.has_two_factor_enabled(
-                    user_id
-                )
+                has_2fa_enabled = await two_factor_service.has_two_factor_enabled(user_id)
 
                 if has_2fa_enabled:
                     # User has 2FA enabled - token MUST have tfaVerified=True
@@ -204,42 +196,36 @@ async def _verify_user_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from None
     except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from None
     except InactiveUserError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive",
-        )
+        ) from None
     except EmailNotVerifiedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email verification required",
-        )
+        ) from None
 
 
 # Create get_current_user function with consistent signature
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     user_repository: Annotated[UserRepositoryInterface, Depends(get_user_repository)],
-    blacklist_service: Annotated[
-        TokenBlacklistService, Depends(get_token_blacklist_service)
-    ],
-    two_factor_repository: Any = (
-        Depends(lambda: None) if not HAS_2FA else Depends(get_two_factor_repository)
-    ),
+    blacklist_service: Annotated[TokenBlacklistService, Depends(get_token_blacklist_service)],
+    two_factor_repository: Any = (Depends(lambda: None) if not HAS_2FA else Depends(get_two_factor_repository)),
 ) -> User:
     """Get current user with optional 2FA verification check and blacklist validation."""
     token = credentials.credentials
     if HAS_2FA and two_factor_repository is not None:
-        return await _verify_user_token(
-            token, user_repository, blacklist_service, two_factor_repository
-        )
+        return await _verify_user_token(token, user_repository, blacklist_service, two_factor_repository)
     else:
         return await _verify_user_token(token, user_repository, blacklist_service, None)
 

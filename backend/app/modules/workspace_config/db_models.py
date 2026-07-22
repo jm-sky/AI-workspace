@@ -30,9 +30,7 @@ class WorkspaceConfigEntryDB(Base):
     tenant_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     config_key: Mapped[str] = mapped_column(String(100), nullable=False)
     config_value: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

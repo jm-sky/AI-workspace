@@ -27,15 +27,9 @@ class IntegrationOAuthProvider(ABC):
         """Build provider authorization URL."""
 
     @abstractmethod
-    async def exchange_code_for_token(
-        self, code: str, *, scopes: list[str]
-    ) -> IntegrationOAuthTokenResult:
+    async def exchange_code_for_token(self, code: str, *, scopes: list[str]) -> IntegrationOAuthTokenResult:
         """Exchange authorization code for tokens."""
 
-    async def refresh_access_token(
-        self, refresh_token: str
-    ) -> IntegrationOAuthTokenResult:
+    async def refresh_access_token(self, refresh_token: str) -> IntegrationOAuthTokenResult:
         """Exchange a refresh token for a fresh access token."""
-        raise IntegrationRefreshNotSupportedError(
-            f"{type(self).__name__} does not support token refresh"
-        )
+        raise IntegrationRefreshNotSupportedError(f"{type(self).__name__} does not support token refresh")

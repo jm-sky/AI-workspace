@@ -1,7 +1,8 @@
 """Tests for GitHub MCP tool execution."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.modules.mcp.github.tools import execute_github_tool
 

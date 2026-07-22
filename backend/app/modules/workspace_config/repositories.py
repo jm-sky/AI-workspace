@@ -26,9 +26,7 @@ class WorkspaceConfigRepository:
         scope_id: str | None,
         tenant_id: str | None = None,
     ) -> list[WorkspaceConfigEntryDB]:
-        stmt = select(WorkspaceConfigEntryDB).where(
-            WorkspaceConfigEntryDB.scope == scope.value
-        )
+        stmt = select(WorkspaceConfigEntryDB).where(WorkspaceConfigEntryDB.scope == scope.value)
         if scope_id is None:
             stmt = stmt.where(WorkspaceConfigEntryDB.scope_id.is_(None))
         else:
@@ -112,7 +110,7 @@ class WorkspaceConfigRepository:
 
         result = await self.db.execute(stmt)
         await self.db.commit()
-        return result.rowcount > 0
+        return (result.rowcount or 0) > 0  # type: ignore[attr-defined]
 
 
 def get_workspace_config_repository(

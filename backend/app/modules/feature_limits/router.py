@@ -1,7 +1,5 @@
 """Router for feature limits endpoints."""
 
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -73,9 +71,7 @@ async def get_limit_by_role(
     return limit
 
 
-@router.post(
-    "", response_model=FeatureLimitResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=FeatureLimitResponse, status_code=status.HTTP_201_CREATED)
 async def create_limit(
     data: FeatureLimitCreate,
     _: AdminOrOwnerUser,
@@ -97,7 +93,7 @@ async def create_limit(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.patch("/{role}", response_model=FeatureLimitResponse)
@@ -124,12 +120,12 @@ async def update_limit(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.delete("/{role}", status_code=status.HTTP_204_NO_CONTENT)
@@ -151,4 +147,4 @@ async def delete_limit(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e

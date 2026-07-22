@@ -36,8 +36,7 @@ class MemoryRepository:
         vector_literal = EmbeddingService.vector_to_pg_literal(embedding)
 
         await self.db.execute(
-            text(
-                """
+            text("""
                 INSERT INTO memory_entries (
                     id, tenant_id, user_id, scope, agent_key, session_id,
                     content, source, entry_metadata, embedding, created_at, updated_at
@@ -45,8 +44,7 @@ class MemoryRepository:
                     :id, :tenant_id, :user_id, :scope, :agent_key, :session_id,
                     :content, :source, CAST(:metadata AS jsonb), CAST(:embedding AS vector), :created_at, :updated_at
                 )
-                """
-            ),
+                """),
             {
                 "id": entry_id,
                 "tenant_id": tenant_id,
@@ -123,9 +121,13 @@ class MemoryRepository:
             MemoryEntry.tenant_id == tenant_id,
             MemoryEntry.user_id == user_id,
         )
-        count_query = select(func.count()).select_from(MemoryEntry).where(
-            MemoryEntry.tenant_id == tenant_id,
-            MemoryEntry.user_id == user_id,
+        count_query = (
+            select(func.count())
+            .select_from(MemoryEntry)
+            .where(
+                MemoryEntry.tenant_id == tenant_id,
+                MemoryEntry.user_id == user_id,
+            )
         )
 
         if scope:
@@ -145,9 +147,7 @@ class MemoryRepository:
         total_result = await self.db.execute(count_query)
         total = int(total_result.scalar() or 0)
 
-        result = await self.db.execute(
-            query.order_by(MemoryEntry.created_at.desc()).limit(limit).offset(offset)
-        )
+        result = await self.db.execute(query.order_by(MemoryEntry.created_at.desc()).limit(limit).offset(offset))
         return list(result.scalars().all()), total
 
     @staticmethod
@@ -184,8 +184,7 @@ class MemoryRepository:
         scope_filter = self._scope_filter_sql(agent_key, session_id)
 
         result = await self.db.execute(
-            text(
-                f"""
+            text(f"""
                 SELECT
                     id, tenant_id, user_id, scope, agent_key, session_id,
                     content, source, entry_metadata, created_at, updated_at,
@@ -198,8 +197,7 @@ class MemoryRepository:
                   AND 1 - (embedding <=> CAST(:query_vec AS vector)) >= :min_similarity
                 ORDER BY embedding <=> CAST(:query_vec AS vector)
                 LIMIT :limit
-                """
-            ),
+                """),
             {
                 "tenant_id": tenant_id,
                 "user_id": user_id,

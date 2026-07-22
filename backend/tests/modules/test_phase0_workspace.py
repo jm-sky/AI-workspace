@@ -8,12 +8,15 @@ from cryptography.fernet import Fernet
 
 from app.modules.auth.auth_utils import create_access_token, verify_token
 from app.modules.auth.models import User
-from app.modules.integrations.crypto import decrypt_integration_token, encrypt_integration_token
+from app.modules.integrations.crypto import (
+    decrypt_integration_token,
+    encrypt_integration_token,
+)
 from app.modules.integrations.service import IntegrationTokenService
 from app.modules.tenants.db_models import TenantDB, TenantMembershipDB
 from app.modules.tenants.service import TenantWorkspaceService
 from app.modules.workspace_config.resolver import WorkspaceConfigResolver
-from app.modules.workspace_config.types import ConfigKey, EffectiveWorkspaceConfig
+from app.modules.workspace_config.types import ConfigKey
 
 
 def _config_entry(key: str, value):
@@ -258,9 +261,7 @@ class TestTenantWorkspaceService:
         assert claims == {"tid": "tenant-1", "trol": "admin", "tmid": "team-1"}
 
     def test_access_token_carries_tenant_claims(self):
-        token = create_access_token(
-            data={"sub": "user-1", "tid": "tenant-1", "trol": "owner", "tmid": "team-1"}
-        )
+        token = create_access_token(data={"sub": "user-1", "tid": "tenant-1", "trol": "owner", "tmid": "team-1"})
         payload = verify_token(token)
         assert payload["tid"] == "tenant-1"
         assert payload["trol"] == "owner"
@@ -325,9 +326,7 @@ class TestIntegrationTokenService:
         repo.find_user_scoped = AsyncMock(return_value=personal)
         repo.find_team_scoped = AsyncMock(return_value=team)
         repo.find_tenant_scoped = AsyncMock(return_value=None)
-        repo.decrypt_access_token.side_effect = lambda row: (
-            "personal-token" if row is personal else "team-token"
-        )
+        repo.decrypt_access_token.side_effect = lambda row: ("personal-token" if row is personal else "team-token")
 
         service = IntegrationTokenService(repo)
         result = await service.resolve_access_token(

@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.modules.memory.db_models import MemoryEntry
 from app.modules.memory.repositories import MemoryRepository
 from app.modules.memory.schemas import MemoryEntryResponse
 from app.modules.memory.services.embedding_service import EmbeddingService
@@ -152,7 +153,7 @@ class MemoryService:
 
     @staticmethod
     def _to_response(
-        entry,
+        entry: MemoryEntry,
         *,
         similarity: float | None = None,
     ) -> MemoryEntryResponse:

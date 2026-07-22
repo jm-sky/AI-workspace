@@ -24,9 +24,7 @@ router = APIRouter(prefix="/sessions", tags=["agent-sessions"])
 
 def _get_agent_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_repo: Annotated[
-        IntegrationTokenRepository, Depends(get_integration_token_repository)
-    ],
+    token_repo: Annotated[IntegrationTokenRepository, Depends(get_integration_token_repository)],
 ) -> AgentRunService:
     return AgentRunService(db, IntegrationTokenService(token_repo))
 
@@ -55,7 +53,5 @@ async def get_session(
 ) -> AgentSessionDetail:
     detail = await service.get_session_detail(session_id, user_id=current_user.id)
     if detail is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     return detail

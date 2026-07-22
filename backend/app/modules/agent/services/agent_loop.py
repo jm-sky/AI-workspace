@@ -4,9 +4,10 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
 
 from app.core.config import settings
 from app.modules.agent.exceptions import (
@@ -119,12 +120,14 @@ class AgentLoopService:
         for iteration in range(self.max_steps):
             # Refresh each turn so tool_search activations appear in schemas.
             tools = self.tool_registry.openai_tools()
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,  # type: ignore[arg-type]
-                tools=tools if tools else None,
-                tool_choice="auto" if tools else None,
-            )
+            create_kwargs: dict[str, Any] = {
+                "model": self.model,
+                "messages": cast(list[ChatCompletionMessageParam], messages),
+            }
+            if tools:
+                create_kwargs["tools"] = cast(list[ChatCompletionToolParam], tools)
+                create_kwargs["tool_choice"] = "auto"
+            response = await self.client.chat.completions.create(**create_kwargs)
 
             usage = response.usage
             if usage:
@@ -143,9 +146,7 @@ class AgentLoopService:
                 "inputData": {"messages_count": len(messages)},
                 "outputData": {
                     "finish_reason": choice.finish_reason,
-                    "tool_calls": [
-                        tc.model_dump() for tc in (assistant_message.tool_calls or [])
-                    ],
+                    "tool_calls": [tc.model_dump() for tc in (assistant_message.tool_calls or [])],
                 },
             }
             steps_trace.append(model_step)
@@ -164,9 +165,7 @@ class AgentLoopService:
                 content = assistant_message.content or ""
                 total_tokens = prompt_tokens + completion_tokens
                 cost = calculate_cost(self.model, prompt_tokens, completion_tokens)
-                blocks = _build_blocks_from_trace(
-                    steps_trace, content, agent_key=self.agent_key
-                )
+                blocks = _build_blocks_from_trace(steps_trace, content, agent_key=self.agent_key)
                 yield AgentLoopEvent(
                     event="run_complete",
                     data={
@@ -238,9 +237,7 @@ class AgentLoopService:
                     }
                 )
 
-        raise AgentMaxStepsExceededError(
-            f"Agent exceeded maximum steps ({self.max_steps})"
-        )
+        raise AgentMaxStepsExceededError(f"Agent exceeded maximum steps ({self.max_steps})")
 
 
 def _build_blocks_from_trace(
@@ -312,7 +309,10 @@ def _jira_360_blocks(steps_trace: list[dict[str, Any]]) -> list[dict[str, Any]]:
             {
                 "type": "table",
                 "title": "GitLab",
-                "data": {"columns": ["type", "title", "state", "url"], "rows": gitlab_rows},
+                "data": {
+                    "columns": ["type", "title", "state", "url"],
+                    "rows": gitlab_rows,
+                },
             }
         )
 

@@ -6,9 +6,9 @@ from fastapi import Depends, HTTPException, status
 
 from app.modules.auth.dependencies import CurrentUser
 from app.modules.auth.repositories import UserRepository, get_user_repository
+from app.modules.teams.repositories import TeamRepository, get_team_repository
 from app.modules.tenants.repositories import TenantRepository, get_tenant_repository
 from app.modules.tenants.service import TenantContext, TenantWorkspaceService
-from app.modules.teams.repositories import TeamRepository, get_team_repository
 
 
 async def require_tenant_context(

@@ -3,13 +3,17 @@
 from dataclasses import dataclass
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.modules.auth.auth_utils import create_access_token, create_refresh_token, verify_token
+from app.modules.auth.auth_utils import (
+    create_access_token,
+    create_refresh_token,
+    verify_token,
+)
 from app.modules.auth.dependencies import CurrentUser, get_current_token
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository, get_user_repository
+from app.modules.auth.types.jwt import CreateAccessTokenOptions, CreateRefreshTokenOptions
 from app.modules.teams.repositories import TeamRepository, get_team_repository
 from app.modules.tenants.repositories import TenantRepository, get_tenant_repository
 
@@ -47,11 +51,7 @@ class TenantWorkspaceService:
                 if team_id:
                     team = await self.team_repo.get_team(team_id)
                     team_membership = await self.team_repo.get_membership(team_id, user.id)
-                    if (
-                        team is None
-                        or team.tenant_id != tenant_id
-                        or team_membership is None
-                    ):
+                    if team is None or team.tenant_id != tenant_id or team_membership is None:
                         team_id = None
                 return TenantContext(
                     user_id=user.id,
@@ -133,11 +133,9 @@ class TenantWorkspaceService:
                     detail="Not a member of this team",
                 )
 
-        updated_user = await self.user_repo.set_active_workspace(
-            user.id, tenant_id, team_id
-        )
+        updated_user = await self.user_repo.set_active_workspace(user.id, tenant_id, team_id)
 
-        token_data: dict = {
+        token_data: CreateAccessTokenOptions = {
             "sub": updated_user.id,
             "email": updated_user.email,
             "tfaVerified": tfa_verified,
@@ -153,7 +151,7 @@ class TenantWorkspaceService:
             token_data["jti"] = session_jti
 
         access_token = create_access_token(data=token_data)
-        refresh_data = {
+        refresh_data: CreateRefreshTokenOptions = {
             "sub": updated_user.id,
             "email": updated_user.email,
             "tfaVerified": tfa_verified,
@@ -172,10 +170,10 @@ class TenantWorkspaceService:
             "expiresIn": settings.security.access_token_expires_minutes * 60,
         }
 
-    def workspace_claims(self, workspace: TenantContext | None) -> dict[str, str]:
+    def workspace_claims(self, workspace: TenantContext | None) -> CreateAccessTokenOptions:
         if workspace is None:
             return {}
-        claims: dict[str, str] = {
+        claims: CreateAccessTokenOptions = {
             "tid": workspace.tenant_id,
             "trol": workspace.tenant_role,
         }
@@ -225,11 +223,7 @@ async def get_current_tenant_context(
     if team_id:
         team = await team_repo.get_team(team_id)
         team_membership = await team_repo.get_membership(team_id, current_user.id)
-        if (
-            team is None
-            or team.tenant_id != tenant_id
-            or team_membership is None
-        ):
+        if team is None or team.tenant_id != tenant_id or team_membership is None:
             team_id = None
 
     return TenantContext(

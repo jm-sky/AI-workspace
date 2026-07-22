@@ -1,4 +1,4 @@
-name: ai-workspace-dev
+name: ai-workspace
 
 services:
   # PostgreSQL Database
@@ -57,10 +57,10 @@ services:
     networks:
       - ai-workspace-network
 
-  # Application (Development Mode)
+  # Application (hot reload via volume mounts — WSL and VPS)
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile.dev
     image: ai-workspace-backend:dev
     container_name: ai-workspace-app
@@ -71,66 +71,31 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - .env
+      # Secrets and app config live here. Do not re-list them under environment:
+      # with ${VAR} — empty host interpolation would override env_file values.
+      - ./backend/.env
     environment:
+      # Docker-network overrides only
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - PROJECT_NAME=${PROJECT_NAME:-ai-workspace}
       - APP_PORT=${APP_PORT:-8000}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-ai-workspace-db-secret}@db:5432/${POSTGRES_DB:-backend}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-ai-workspace-redis-secret}@redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
-      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5176"]}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5176}
-      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
-      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
-      - GOOGLE_OAUTH_REDIRECT_URI=${GOOGLE_OAUTH_REDIRECT_URI}
-      - FACEBOOK_OAUTH_CLIENT_ID=${FACEBOOK_OAUTH_CLIENT_ID}
-      - FACEBOOK_OAUTH_CLIENT_SECRET=${FACEBOOK_OAUTH_CLIENT_SECRET}
-      - FACEBOOK_OAUTH_REDIRECT_URI=${FACEBOOK_OAUTH_REDIRECT_URI}
-      - GITHUB_OAUTH_CLIENT_ID=${GITHUB_OAUTH_CLIENT_ID}
-      - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
-      - GITHUB_OAUTH_REDIRECT_URI=${GITHUB_OAUTH_REDIRECT_URI}
-      - GITHUB_APP_ID=${GITHUB_APP_ID}
-      - GITHUB_INTEGRATION_OAUTH_CLIENT_ID=${GITHUB_INTEGRATION_OAUTH_CLIENT_ID}
-      - GITHUB_INTEGRATION_OAUTH_CLIENT_SECRET=${GITHUB_INTEGRATION_OAUTH_CLIENT_SECRET}
-      - GITHUB_INTEGRATION_OAUTH_REDIRECT_URI=${GITHUB_INTEGRATION_OAUTH_REDIRECT_URI}
-      - RECAPTCHA_ENABLED=${RECAPTCHA_ENABLED}
-      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
-      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
-      - RECAPTCHA_MIN_SCORE=${RECAPTCHA_MIN_SCORE}
-      - STORAGE_BASE_URL=${STORAGE_BASE_URL:-http://localhost:8003}
-      # MinIO/S3 Storage Configuration (optional - set STORAGE_TYPE=s3 to use)
-      - STORAGE_TYPE=${STORAGE_TYPE:-local}
-      - STORAGE_S3_BUCKET=${STORAGE_S3_BUCKET:-uploads}
-      - STORAGE_S3_ACCESS_KEY=${STORAGE_S3_ACCESS_KEY:-${MINIO_ROOT_USER:-minioadmin}}
-      - STORAGE_S3_SECRET_KEY=${STORAGE_S3_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-minioadmin123}}
-      - STORAGE_S3_REGION=${STORAGE_S3_REGION:-us-east-1}
-      - STORAGE_S3_ENDPOINT_URL=${STORAGE_S3_ENDPOINT_URL:-http://rustfs-server:9000}
-      - STORAGE_S3_PUBLIC_ENDPOINT_URL=${STORAGE_S3_PUBLIC_ENDPOINT_URL}
-      # Stripe Billing Configuration
-      - STRIPE_ENABLED=${STRIPE_ENABLED:-false}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - STRIPE_PRO_MONTHLY_PRICE_ID=${STRIPE_PRO_MONTHLY_PRICE_ID}
-      - STRIPE_PRO_ANNUAL_PRICE_ID=${STRIPE_PRO_ANNUAL_PRICE_ID}
-      - STRIPE_PRO_PLUS_MONTHLY_PRICE_ID=${STRIPE_PRO_PLUS_MONTHLY_PRICE_ID}
-      - STRIPE_PRO_PLUS_ANNUAL_PRICE_ID=${STRIPE_PRO_PLUS_ANNUAL_PRICE_ID}
     ports:
       - "127.0.0.1:${APP_PORT:-8003}:8000"  # Only localhost access (Caddy proxy)
     volumes:
-      # Mount source code for hot reload
-      # Paths are relative to docker-compose.dev.yml location (backend/ directory)
+      # Mount source code for hot reload (paths relative to repo root)
       # Using :delegated for better performance on WSL2/macOS
-      - ./app:/app/app:rw,delegated
-      - ./scripts:/app/scripts:rw,delegated
-      - ./tests:/app/tests:rw,delegated
-      - ./migrations:/app/migrations:rw,delegated
-      - ./main.py:/app/main.py:rw,delegated
-      - ./cli:/app/cli:ro,delegated
-      - ./cli.py:/app/cli.py:ro,delegated
-      - ./images:/app/images:ro,delegated
+      - ./backend/app:/app/app:rw,delegated
+      - ./backend/scripts:/app/scripts:rw,delegated
+      - ./backend/tests:/app/tests:rw,delegated
+      - ./backend/migrations:/app/migrations:rw,delegated
+      - ./backend/main.py:/app/main.py:rw,delegated
+      - ./backend/cli:/app/cli:ro,delegated
+      - ./backend/cli.py:/app/cli.py:ro,delegated
+      - ./backend/pyproject.toml:/app/pyproject.toml:ro,delegated
+      - ./backend/images:/app/images:ro,delegated
       # Mount uploads directory for persistent file storage
       - ai_workspace_uploads:/app/uploads
     logging:

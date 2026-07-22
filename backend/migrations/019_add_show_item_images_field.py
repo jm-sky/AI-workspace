@@ -16,21 +16,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_schema = 'public' 
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -39,16 +38,14 @@ async def table_exists(conn, table_name: str) -> bool:
 async def column_exists(conn, table_name: str, column_name: str) -> bool:
     """Check if a column exists in a table."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
-                SELECT FROM information_schema.columns 
-                WHERE table_schema = 'public' 
+                SELECT FROM information_schema.columns
+                WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -63,14 +60,10 @@ async def upgrade() -> None:
 
         if not containers_exist:
             print("gear_containers table does not exist, skipping migration...")
-            print(
-                "Note: Table will be created with show_item_images field when created from models"
-            )
+            print("Note: Table will be created with show_item_images field when created from models")
             return
 
-        show_item_images_exists = await column_exists(
-            conn, "gear_containers", "show_item_images"
-        )
+        show_item_images_exists = await column_exists(conn, "gear_containers", "show_item_images")
 
         if show_item_images_exists:
             print("show_item_images column already exists, skipping migration...")
@@ -78,14 +71,10 @@ async def upgrade() -> None:
 
         print("gear_containers table exists, adding show_item_images field...")
         # Add show_item_images field to gear_containers
-        await conn.execute(
-            text(
-                """
-                ALTER TABLE gear_containers 
+        await conn.execute(text("""
+                ALTER TABLE gear_containers
                 ADD COLUMN show_item_images BOOLEAN NOT NULL DEFAULT FALSE;
-            """
-            )
-        )
+            """))
         print("✓ Added show_item_images field to gear_containers table")
 
     print("✓ Migration completed successfully")
@@ -97,14 +86,10 @@ async def downgrade() -> None:
 
     async with engine.begin() as conn:
         # Remove show_item_images field from gear_containers
-        await conn.execute(
-            text(
-                """
-                ALTER TABLE gear_containers 
+        await conn.execute(text("""
+                ALTER TABLE gear_containers
                 DROP COLUMN IF EXISTS show_item_images;
-            """
-            )
-        )
+            """))
         print("✓ Removed show_item_images field from gear_containers table")
 
     print("✓ Downgrade completed successfully")

@@ -48,11 +48,7 @@ class ChatService:
         # Determine which model and token to use
         model = request.model or user_settings.selected_model
         max_tokens = request.max_tokens or user_settings.max_tokens
-        temperature = (
-            request.temperature
-            if request.temperature != 1.0
-            else user_settings.temperature
-        )
+        temperature = request.temperature if request.temperature != 1.0 else user_settings.temperature
 
         # Get API token (user's or system)
         api_token = None
@@ -60,12 +56,8 @@ class ChatService:
             api_token = await self.settings_service.get_api_token(user_id)
 
         # Build messages (needed for cache key and debug)
-        messages = self._build_messages(
-            request.message, request.history, request.context
-        )
-        full_prompt = "\n\n".join(
-            [f"{msg['role']}: {msg['content']}" for msg in messages]
-        )
+        messages = self._build_messages(request.message, request.history, request.context)
+        full_prompt = "\n\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
 
         # Check cache if enabled
         if settings.ai.cache_enabled and self.cache_service:
@@ -84,11 +76,7 @@ class ChatService:
                 # Return cached response
                 return AiChatResponse(
                     message=cached["message"],
-                    structured_output=(
-                        StructuredOutput(**cached["structured_output"])
-                        if cached.get("structured_output")
-                        else None
-                    ),
+                    structured_output=(StructuredOutput(**cached["structured_output"]) if cached.get("structured_output") else None),
                     tokens=cached["tokens"],
                     cost=cached.get("cost"),
                     model=cached["model"],
@@ -160,9 +148,7 @@ class ChatService:
                 },
                 "cost": cost,
             }
-            await self.cache_service.set(
-                cache_key, cache_data, ttl_days=settings.ai.cache_ttl_classify
-            )
+            await self.cache_service.set(cache_key, cache_data, ttl_days=settings.ai.cache_ttl_classify)
 
         return AiChatResponse(
             message=cleaned_message,
@@ -177,9 +163,7 @@ class ChatService:
             prompt=full_prompt,
         )
 
-    def _build_messages(
-        self, user_message: str, history: list, context: dict
-    ) -> list[dict[str, str]]:
+    def _build_messages(self, user_message: str, history: list, context: dict) -> list[dict[str, str]]:
         """Build messages array for AI.
 
         Args:
@@ -250,9 +234,7 @@ Keep your responses concise and helpful."""
 
         try:
             data = json.loads(match.group(1))
-            return StructuredOutput(
-                action=data.get("action"), data=data.get("data", {})
-            )
+            return StructuredOutput(action=data.get("action"), data=data.get("data", {}))
         except (json.JSONDecodeError, ValueError):
             return None
 

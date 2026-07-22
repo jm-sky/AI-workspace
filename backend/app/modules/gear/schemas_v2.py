@@ -16,9 +16,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-from sqlalchemy.orm import object_session
 from sqlalchemy.orm.attributes import instance_state
-
 
 # Type aliases matching frontend
 GearItemType = Literal["container", "item"]
@@ -243,9 +241,7 @@ class GearItemResponseV2(BaseModel):
     max_weight_unit: str | None = Field(None, serialization_alias="maxWeightUnit")
     hide_when_nested: bool | None = Field(None, serialization_alias="hideWhenNested")
     is_public: bool | None = Field(None, serialization_alias="isPublic")
-    is_hidden_by_reports: bool | None = Field(
-        None, serialization_alias="isHiddenByReports"
-    )
+    is_hidden_by_reports: bool | None = Field(None, serialization_alias="isHiddenByReports")
     favorite: bool | None = None
     show_item_images: bool | None = Field(None, serialization_alias="showItemImages")
 
@@ -380,9 +376,7 @@ class GearItemBatchUpdateOrderV2(BaseModel):
 class GearItemFiltersV2(BaseModel):
     """Query filters for fetching gear items."""
 
-    itemType: Literal["container", "item", "all"] | None = Field(
-        "all", alias="itemType"
-    )
+    itemType: Literal["container", "item", "all"] | None = Field("all", alias="itemType")
     parentItemId: str | None = Field(None, alias="parentItemId")
     isPublic: bool | None = Field(None, alias="isPublic")
     favorite: bool | None = None

@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from app.modules.agent.exceptions import AgentToolError
 from app.modules.agent.tools.base import AgentTool, AgentToolDefinition
 from app.modules.integrations.service import IntegrationTokenService
 from app.modules.mcp.github.client import GitHubApiClient
