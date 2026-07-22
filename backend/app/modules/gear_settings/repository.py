@@ -28,9 +28,7 @@ class GearSettingsRepository:
         Returns:
             Gear settings or None if not found
         """
-        result = await self.db.execute(
-            select(GearSettingsDB).where(GearSettingsDB.user_id == user_id)
-        )
+        result = await self.db.execute(select(GearSettingsDB).where(GearSettingsDB.user_id == user_id))
         return result.scalar_one_or_none()
 
     async def get_or_create(self, user_id: str) -> GearSettingsDB:

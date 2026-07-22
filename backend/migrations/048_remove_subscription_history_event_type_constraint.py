@@ -22,15 +22,13 @@ from app.core.database import engine
 async def table_exists(conn, table_name: str) -> bool:
     """Check if table exists (PostgreSQL compatible)."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -39,16 +37,14 @@ async def table_exists(conn, table_name: str) -> bool:
 async def constraint_exists(conn, table_name: str, constraint_name: str) -> bool:
     """Check if constraint exists."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.table_constraints
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND constraint_name = :constraint_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "constraint_name": constraint_name},
     )
     return result.scalar() is True
@@ -60,17 +56,11 @@ async def upgrade() -> None:
 
     async with engine.begin() as conn:
         if await table_exists(conn, "subscription_history"):
-            if await constraint_exists(
-                conn, "subscription_history", "valid_event_type"
-            ):
-                await conn.execute(
-                    text(
-                        """
+            if await constraint_exists(conn, "subscription_history", "valid_event_type"):
+                await conn.execute(text("""
                         ALTER TABLE subscription_history
                         DROP CONSTRAINT valid_event_type
-                    """
-                    )
-                )
+                    """))
                 print("✓ Removed valid_event_type constraint")
             else:
                 print("✓ Constraint already removed")
@@ -87,25 +77,17 @@ async def downgrade() -> None:
     async with engine.begin() as conn:
         if await table_exists(conn, "subscription_history"):
             # Drop constraint if exists (idempotent)
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE subscription_history
                     DROP CONSTRAINT IF EXISTS valid_event_type
-                """
-                )
-            )
+                """))
 
             # Re-add original constraint
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE subscription_history
                     ADD CONSTRAINT valid_event_type
                     CHECK (event_type IN ('created', 'updated', 'canceled', 'renewed', 'payment_failed'))
-                """
-                )
-            )
+                """))
             print("✓ Re-added valid_event_type constraint")
         else:
             print("⚠ Table subscription_history does not exist")
@@ -117,9 +99,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Remove subscription_history event_type constraint"
-    )
+    parser = argparse.ArgumentParser(description="Remove subscription_history event_type constraint")
     parser.add_argument("action", choices=["upgrade", "downgrade"])
     args = parser.parse_args()
 

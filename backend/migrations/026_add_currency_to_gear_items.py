@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -30,15 +31,13 @@ async def table_exists(conn, table_name: str) -> bool:
         True if table exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_schema = 'public' 
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -56,16 +55,14 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
         True if column exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
-                SELECT FROM information_schema.columns 
-                WHERE table_schema = 'public' 
-                AND table_name = :table_name 
+                SELECT FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -80,9 +77,7 @@ async def upgrade() -> None:
 
         if not items_exist:
             print("gear_items table does not exist, skipping migration...")
-            print(
-                "Note: Table will be created with currency field when created from models"
-            )
+            print("Note: Table will be created with currency field when created from models")
             return
 
         currency_exists = await column_exists(conn, "gear_items", "currency")
@@ -93,14 +88,10 @@ async def upgrade() -> None:
 
         print("gear_items table exists, adding currency field...")
         # Add currency field to gear_items
-        await conn.execute(
-            text(
-                """
-                ALTER TABLE gear_items 
+        await conn.execute(text("""
+                ALTER TABLE gear_items
                 ADD COLUMN currency VARCHAR(10);
-            """
-            )
-        )
+            """))
         print("✓ Added currency field to gear_items table")
 
     print("✓ Migration completed successfully")
@@ -125,14 +116,10 @@ async def downgrade() -> None:
 
         print("gear_items table exists, removing currency field...")
         # Remove currency field from gear_items
-        await conn.execute(
-            text(
-                """
-                ALTER TABLE gear_items 
+        await conn.execute(text("""
+                ALTER TABLE gear_items
                 DROP COLUMN currency;
-            """
-            )
-        )
+            """))
         print("✓ Removed currency field from gear_items table")
 
     print("✓ Downgrade completed successfully")

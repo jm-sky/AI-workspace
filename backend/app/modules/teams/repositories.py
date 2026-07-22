@@ -19,9 +19,7 @@ class TeamRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def list_for_user_in_tenant(
-        self, *, user_id: str, tenant_id: str
-    ) -> list[tuple[TeamDB, TeamMembershipDB]]:
+    async def list_for_user_in_tenant(self, *, user_id: str, tenant_id: str) -> list[tuple[TeamDB, TeamMembershipDB]]:
         stmt = (
             select(TeamDB, TeamMembershipDB)
             .join(TeamMembershipDB, TeamMembershipDB.team_id == TeamDB.id)
@@ -35,11 +33,7 @@ class TeamRepository:
         return [(row[0], row[1]) for row in result.all()]
 
     async def list_for_tenant(self, tenant_id: str) -> list[TeamDB]:
-        stmt = (
-            select(TeamDB)
-            .where(TeamDB.tenant_id == tenant_id)
-            .order_by(TeamDB.created_at)
-        )
+        stmt = select(TeamDB).where(TeamDB.tenant_id == tenant_id).order_by(TeamDB.created_at)
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
@@ -47,9 +41,7 @@ class TeamRepository:
         result = await self.db.execute(select(TeamDB).where(TeamDB.id == team_id))
         return result.scalar_one_or_none()
 
-    async def get_membership(
-        self, team_id: str, user_id: str
-    ) -> TeamMembershipDB | None:
+    async def get_membership(self, team_id: str, user_id: str) -> TeamMembershipDB | None:
         result = await self.db.execute(
             select(TeamMembershipDB).where(
                 TeamMembershipDB.team_id == team_id,
@@ -84,9 +76,7 @@ class TeamRepository:
         await self.db.refresh(team)
         return team, membership
 
-    async def add_member(
-        self, team_id: str, user_id: str, role: str = "member"
-    ) -> TeamMembershipDB:
+    async def add_member(self, team_id: str, user_id: str, role: str = "member") -> TeamMembershipDB:
         existing = await self.get_membership(team_id, user_id)
         if existing:
             logger.info("User %s already member of team %s", user_id, team_id)

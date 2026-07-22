@@ -52,18 +52,11 @@ async def verify_recaptcha(token: str, action: str = "submit") -> dict[str, Any]
             logger.info(f"reCAPTCHA score: {result['score']}")
         except RecaptchaError as e:
             logger.warning(f"reCAPTCHA failed: {e}")
-            raise HTTPException(status_code=400, detail="Bot detected")
+            raise HTTPException(status_code=400, detail="Bot detected") from e
     """
     # Log reCAPTCHA configuration
-    logger.info(
-        f"reCAPTCHA verification called - enabled: {settings.recaptcha.enabled}, action: {action}"
-    )
-    logger.debug(
-        f"reCAPTCHA config - secret_key present: {bool(settings.recaptcha.secret_key)}, "
-        f"site_key present: {bool(settings.recaptcha.site_key)}, "
-        f"min_score: {settings.recaptcha.min_score}, "
-        f"verify_url: {settings.recaptcha.verify_url}"
-    )
+    logger.info(f"reCAPTCHA verification called - enabled: {settings.recaptcha.enabled}, action: {action}")
+    logger.debug(f"reCAPTCHA config - secret_key present: {bool(settings.recaptcha.secret_key)}, " f"site_key present: {bool(settings.recaptcha.site_key)}, " f"min_score: {settings.recaptcha.min_score}, " f"verify_url: {settings.recaptcha.verify_url}")
 
     # Skip verification if reCAPTCHA is disabled (for development/testing)
     if not settings.recaptcha.enabled:
@@ -74,14 +67,10 @@ async def verify_recaptcha(token: str, action: str = "submit") -> dict[str, Any]
         logger.error("reCAPTCHA token is missing")
         raise RecaptchaError("reCAPTCHA token is required")
 
-    logger.debug(
-        f"reCAPTCHA token received - length: {len(token)}, first 20 chars: {token[:20]}..."
-    )
+    logger.debug(f"reCAPTCHA token received - length: {len(token)}, first 20 chars: {token[:20]}...")
 
     try:
-        logger.info(
-            f"Sending reCAPTCHA verification request to {settings.recaptcha.verify_url}"
-        )
+        logger.info(f"Sending reCAPTCHA verification request to {settings.recaptcha.verify_url}")
         async with httpx.AsyncClient() as client:
             request_data = {
                 "secret": settings.recaptcha.secret_key,
@@ -105,49 +94,34 @@ async def verify_recaptcha(token: str, action: str = "submit") -> dict[str, Any]
             logger.debug(f"reCAPTCHA API raw response: {result}")
 
         # Log the result for debugging
-        logger.info(
-            f"reCAPTCHA verification: success={result.get('success')}, "
-            f"score={result.get('score')}, action={result.get('action')}, "
-            f"hostname={result.get('hostname')}"
-        )
+        logger.info(f"reCAPTCHA verification: success={result.get('success')}, " f"score={result.get('score')}, action={result.get('action')}, " f"hostname={result.get('hostname')}")
 
         # Check if verification was successful
         if not result.get("success"):
             error_codes = result.get("error-codes", [])
             error_message = ", ".join(error_codes) if error_codes else "unknown error"
-            logger.error(
-                f"reCAPTCHA verification failed: {error_message}. "
-                f"Token length: {len(token)}, Action: {action}, "
-                f"Full error codes: {error_codes}"
-            )
+            logger.error(f"reCAPTCHA verification failed: {error_message}. " f"Token length: {len(token)}, Action: {action}, " f"Full error codes: {error_codes}")
             raise RecaptchaError(f"reCAPTCHA verification failed: {error_message}")
 
         # Verify action matches (prevents token reuse across different forms)
         if result.get("action") != action:
-            logger.warning(
-                f"reCAPTCHA action mismatch: expected '{action}', "
-                f"got '{result.get('action')}'"
-            )
+            logger.warning(f"reCAPTCHA action mismatch: expected '{action}', " f"got '{result.get('action')}'")
             raise RecaptchaError("reCAPTCHA action mismatch")
 
         # Check score threshold
         score = result.get("score", 0.0)
         if score < settings.recaptcha.min_score:
-            logger.warning(
-                f"reCAPTCHA score too low: {score} < {settings.recaptcha.min_score}"
-            )
-            raise RecaptchaError(
-                f"reCAPTCHA verification failed: score too low ({score})"
-            )
+            logger.warning(f"reCAPTCHA score too low: {score} < {settings.recaptcha.min_score}")
+            raise RecaptchaError(f"reCAPTCHA verification failed: score too low ({score})")
 
         return result  # type: ignore[no-any-return]
 
     except httpx.HTTPError as e:
         logger.error(f"reCAPTCHA HTTP error: {e}")
-        raise RecaptchaError(f"reCAPTCHA service error: {e}")
+        raise RecaptchaError(f"reCAPTCHA service error: {e}") from e
     except RecaptchaError:
         # Re-raise RecaptchaError as is
         raise
     except Exception as e:
         logger.error(f"reCAPTCHA verification error: {e}")
-        raise RecaptchaError(f"reCAPTCHA verification error: {e}")
+        raise RecaptchaError(f"reCAPTCHA verification error: {e}") from e

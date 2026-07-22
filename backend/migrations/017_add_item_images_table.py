@@ -15,21 +15,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -46,9 +45,7 @@ async def upgrade() -> None:
             return
 
         # Create item_images table
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 CREATE TABLE item_images (
                     id VARCHAR(36) PRIMARY KEY,
                     item_id VARCHAR(36) NOT NULL,
@@ -81,37 +78,23 @@ async def upgrade() -> None:
                     CONSTRAINT fk_item_images_user_id FOREIGN KEY (user_id)
                         REFERENCES users(id)
                 );
-            """
-            )
-        )
+            """))
         print("✓ Created item_images table")
 
         # Create indexes for better query performance
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 CREATE INDEX ix_item_images_item_id ON item_images(item_id);
-            """
-            )
-        )
+            """))
         print("✓ Created index on item_id")
 
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 CREATE INDEX ix_item_images_user_id ON item_images(user_id);
-            """
-            )
-        )
+            """))
         print("✓ Created index on user_id")
 
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 CREATE INDEX ix_item_images_order ON item_images(item_id, "order");
-            """
-            )
-        )
+            """))
         print("✓ Created index on item_id and order")
 
     print("✓ Migration completed successfully")
@@ -123,41 +106,25 @@ async def downgrade() -> None:
 
     async with engine.begin() as conn:
         # Drop indexes first
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 DROP INDEX IF EXISTS ix_item_images_item_id;
-            """
-            )
-        )
+            """))
         print("✓ Dropped index on item_id")
 
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 DROP INDEX IF EXISTS ix_item_images_user_id;
-            """
-            )
-        )
+            """))
         print("✓ Dropped index on user_id")
 
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 DROP INDEX IF EXISTS ix_item_images_order;
-            """
-            )
-        )
+            """))
         print("✓ Dropped index on item_id and order")
 
         # Drop table
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 DROP TABLE IF EXISTS item_images CASCADE;
-            """
-            )
-        )
+            """))
         print("✓ Dropped item_images table")
 
     print("✓ Downgrade completed successfully")

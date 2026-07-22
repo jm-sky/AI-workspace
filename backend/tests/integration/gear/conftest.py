@@ -5,22 +5,22 @@ These fixtures establish baseline behavior before unified model migration.
 """
 
 import os
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
-from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.database import Base
-from app.modules.auth.db_models import UserDB
 from app.modules.auth.auth_utils import get_password_hash
+from app.modules.auth.db_models import UserDB
 from app.modules.gear.db_models import GearContainerDB, GearItemDB
 from app.modules.gear.repository import GearRepository
-from app.modules.gear.service import GearService
-from app.modules.gear.schemas import ContainerCreate, ItemCreate
 from app.modules.gear.repository_v2 import GearRepositoryV2
+from app.modules.gear.schemas import ContainerCreate, ItemCreate
+from app.modules.gear.service import GearService
 from app.modules.gear.service_v2 import GearServiceV2
 
 
@@ -47,9 +47,7 @@ async def async_db_session() -> AsyncGenerator[AsyncSession, None]:
         await conn.run_sync(Base.metadata.create_all)
 
     # Create session
-    async_session_maker = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session_maker() as session:
         yield session
@@ -215,17 +213,13 @@ async def create_test_item(
 
 async def get_container_count(session: AsyncSession, user_id: str) -> int:
     """Get total number of containers for a user."""
-    result = await session.execute(
-        select(GearContainerDB).where(GearContainerDB.user_id == user_id)
-    )
+    result = await session.execute(select(GearContainerDB).where(GearContainerDB.user_id == user_id))
     containers = result.scalars().all()
     return len(containers)
 
 
 async def get_item_count(session: AsyncSession, container_id: str) -> int:
     """Get total number of items in a container."""
-    result = await session.execute(
-        select(GearItemDB).where(GearItemDB.container_id == container_id)
-    )
+    result = await session.execute(select(GearItemDB).where(GearItemDB.container_id == container_id))
     items = result.scalars().all()
     return len(items)

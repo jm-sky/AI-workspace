@@ -5,11 +5,10 @@ to users, containers, and items across all users.
 """
 
 import logging
-from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.auth.db_models import UserDB
 from app.modules.gear.db_models import GearContainerDB, GearItemDB
@@ -33,9 +32,7 @@ class AdminRepository:
         self.db = db
 
     # User operations
-    async def get_all_users(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[tuple[UserDB, UserDB | None]]:
+    async def get_all_users(self, skip: int = 0, limit: int = 100) -> list[tuple[UserDB, UserDB | None]]:
         """Get all users with their auth data.
 
         Args:
@@ -45,20 +42,12 @@ class AdminRepository:
         Returns:
             List of tuples (UserDB, UserDB) - both refer to same user for consistency
         """
-        stmt = (
-            select(UserDB)
-            .where(UserDB.deleted_at.is_(None))
-            .offset(skip)
-            .limit(limit)
-            .order_by(UserDB.created_at.desc())
-        )
+        stmt = select(UserDB).where(UserDB.deleted_at.is_(None)).offset(skip).limit(limit).order_by(UserDB.created_at.desc())
         result = await self.db.execute(stmt)
         users = result.scalars().all()
 
         # Return tuple format for consistency with service expectations
-        users_with_auth: list[tuple[UserDB, UserDB | None]] = [
-            (user, user) for user in users
-        ]
+        users_with_auth: list[tuple[UserDB, UserDB | None]] = [(user, user) for user in users]
 
         return users_with_auth
 
@@ -82,9 +71,7 @@ class AdminRepository:
         return (user, user)
 
     # Container operations
-    async def get_all_containers(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[tuple[GearContainerDB, int]]:
+    async def get_all_containers(self, skip: int = 0, limit: int = 100) -> list[tuple[GearContainerDB, int]]:
         """Get all containers with item counts.
 
         Args:
@@ -121,9 +108,7 @@ class AdminRepository:
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
-    async def update_container(
-        self, container_id: str, data: dict
-    ) -> GearContainerDB | None:
+    async def update_container(self, container_id: str, data: dict) -> GearContainerDB | None:
         """Update container by ID (admin only).
 
         Args:
@@ -170,9 +155,7 @@ class AdminRepository:
         return True
 
     # Item operations
-    async def get_all_items(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[tuple[GearItemDB, GearContainerDB, UserDB]]:
+    async def get_all_items(self, skip: int = 0, limit: int = 100) -> list[tuple[GearItemDB, GearContainerDB, UserDB]]:
         """Get all items with container and user data.
 
         Args:
@@ -182,21 +165,12 @@ class AdminRepository:
         Returns:
             List of tuples (GearItemDB, GearContainerDB, UserDB)
         """
-        stmt = (
-            select(GearItemDB, GearContainerDB, UserDB)
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .join(UserDB, GearContainerDB.user_id == UserDB.id)
-            .offset(skip)
-            .limit(limit)
-            .order_by(GearItemDB.created_at.desc())
-        )
+        stmt = select(GearItemDB, GearContainerDB, UserDB).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).join(UserDB, GearContainerDB.user_id == UserDB.id).offset(skip).limit(limit).order_by(GearItemDB.created_at.desc())
         result = await self.db.execute(stmt)
         # Convert rows to typed tuples
         return [(row[0], row[1], row[2]) for row in result.all()]
 
-    async def get_item_by_id(
-        self, item_id: str
-    ) -> tuple[GearItemDB | None, GearContainerDB | None, UserDB | None]:
+    async def get_item_by_id(self, item_id: str) -> tuple[GearItemDB | None, GearContainerDB | None, UserDB | None]:
         """Get item by ID with container and user data.
 
         Args:
@@ -205,12 +179,7 @@ class AdminRepository:
         Returns:
             Tuple of (GearItemDB, GearContainerDB, UserDB) or (None, None, None)
         """
-        stmt = (
-            select(GearItemDB, GearContainerDB, UserDB)
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .join(UserDB, GearContainerDB.user_id == UserDB.id)
-            .where(GearItemDB.id == item_id)
-        )
+        stmt = select(GearItemDB, GearContainerDB, UserDB).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).join(UserDB, GearContainerDB.user_id == UserDB.id).where(GearItemDB.id == item_id)
         result = await self.db.execute(stmt)
         row = result.first()
 

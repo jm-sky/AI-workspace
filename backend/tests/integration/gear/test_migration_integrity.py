@@ -12,14 +12,14 @@ Test Coverage:
 """
 
 import pytest
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.db_models import UserDB
 from app.modules.gear.db_models import GearContainerDB, GearItemDB
 from app.modules.gear.db_models_v2 import GearItemDBV2
-from app.modules.gear.service_v2 import GearServiceV2
 from app.modules.gear.schemas_v2 import GearItemCreateV2
+from app.modules.gear.service_v2 import GearServiceV2
 
 
 class TestMigrationIntegrity:
@@ -33,11 +33,7 @@ class TestMigrationIntegrity:
     ) -> None:
         """Verify all V1 containers exist in V2 with itemType='container'."""
         # Get counts
-        v1_stmt = (
-            select(func.count())
-            .select_from(GearContainerDB)
-            .where(GearContainerDB.user_id == test_user.id)
-        )
+        v1_stmt = select(func.count()).select_from(GearContainerDB).where(GearContainerDB.user_id == test_user.id)
         v1_result = await async_db_session.execute(v1_stmt)
         v1_count = v1_result.scalar()
 
@@ -53,9 +49,7 @@ class TestMigrationIntegrity:
         v2_count = v2_result.scalar()
 
         # Assert
-        assert (
-            v2_count == v1_count
-        ), f"Container count mismatch: V1 has {v1_count}, V2 has {v2_count}"
+        assert v2_count == v1_count, f"Container count mismatch: V1 has {v1_count}, V2 has {v2_count}"
 
     @pytest.mark.asyncio
     async def test_all_items_migrated(
@@ -65,12 +59,7 @@ class TestMigrationIntegrity:
     ) -> None:
         """Verify all V1 items exist in V2 with itemType='item'."""
         # Get counts
-        v1_stmt = (
-            select(func.count())
-            .select_from(GearItemDB)
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .where(GearContainerDB.user_id == test_user.id)
-        )
+        v1_stmt = select(func.count()).select_from(GearItemDB).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).where(GearContainerDB.user_id == test_user.id)
         v1_result = await async_db_session.execute(v1_stmt)
         v1_count = v1_result.scalar()
 
@@ -86,9 +75,7 @@ class TestMigrationIntegrity:
         v2_count = v2_result.scalar()
 
         # Assert
-        assert (
-            v2_count == v1_count
-        ), f"Item count mismatch: V1 has {v1_count}, V2 has {v2_count}"
+        assert v2_count == v1_count, f"Item count mismatch: V1 has {v1_count}, V2 has {v2_count}"
 
     @pytest.mark.asyncio
     async def test_total_count_preserved(
@@ -98,40 +85,23 @@ class TestMigrationIntegrity:
     ) -> None:
         """Verify total row count: V2 = V1_containers + V1_items."""
         # Get V1 counts
-        v1_containers_stmt = (
-            select(func.count())
-            .select_from(GearContainerDB)
-            .where(GearContainerDB.user_id == test_user.id)
-        )
+        v1_containers_stmt = select(func.count()).select_from(GearContainerDB).where(GearContainerDB.user_id == test_user.id)
         v1_containers_result = await async_db_session.execute(v1_containers_stmt)
         v1_containers_count = v1_containers_result.scalar()
 
-        v1_items_stmt = (
-            select(func.count())
-            .select_from(GearItemDB)
-            .join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id)
-            .where(GearContainerDB.user_id == test_user.id)
-        )
+        v1_items_stmt = select(func.count()).select_from(GearItemDB).join(GearContainerDB, GearItemDB.container_id == GearContainerDB.id).where(GearContainerDB.user_id == test_user.id)
         v1_items_result = await async_db_session.execute(v1_items_stmt)
         v1_items_count = v1_items_result.scalar()
 
         # Get V2 count
-        v2_stmt = (
-            select(func.count())
-            .select_from(GearItemDBV2)
-            .where(GearItemDBV2.user_id == test_user.id)
-        )
+        v2_stmt = select(func.count()).select_from(GearItemDBV2).where(GearItemDBV2.user_id == test_user.id)
         v2_result = await async_db_session.execute(v2_stmt)
         v2_count = v2_result.scalar()
 
         expected_count = v1_containers_count + v1_items_count
 
         # Assert
-        assert v2_count == expected_count, (
-            f"Total count mismatch: expected {expected_count} "
-            f"({v1_containers_count} containers + {v1_items_count} items), "
-            f"got {v2_count}"
-        )
+        assert v2_count == expected_count, f"Total count mismatch: expected {expected_count} " f"({v1_containers_count} containers + {v1_items_count} items), " f"got {v2_count}"
 
     @pytest.mark.asyncio
     async def test_container_nesting_preserved(
@@ -330,17 +300,11 @@ class TestMigrationIntegrity:
         assert container_v2.category is None  # Category is the key discriminator
         assert container_v2.quantity is None or container_v2.quantity == 1  # Default
         assert container_v2.status is None or container_v2.status == "owned"  # Default
-        assert (
-            container_v2.priority is None or container_v2.priority == "medium"
-        )  # Default
+        assert container_v2.priority is None or container_v2.priority == "medium"  # Default
         assert container_v2.expiration_date is None
         assert container_v2.quality is None
-        assert (
-            container_v2.wearable is None or container_v2.wearable is False
-        )  # Default
-        assert (
-            container_v2.consumable is None or container_v2.consumable is False
-        )  # Default
+        assert container_v2.wearable is None or container_v2.wearable is False  # Default
+        assert container_v2.consumable is None or container_v2.consumable is False  # Default
 
     @pytest.mark.asyncio
     async def test_item_has_no_container_fields(
@@ -375,11 +339,7 @@ class TestMigrationIntegrity:
         assert item_v2.container_type is None
         assert item_v2.max_weight is None
         assert item_v2.max_weight_unit is None
-        assert (
-            item_v2.hide_when_nested is None or item_v2.hide_when_nested is False
-        )  # Default
+        assert item_v2.hide_when_nested is None or item_v2.hide_when_nested is False  # Default
         assert item_v2.is_public is None or item_v2.is_public is False  # Default
         assert item_v2.favorite is None or item_v2.favorite is False  # Default
-        assert (
-            item_v2.show_item_images is None or item_v2.show_item_images is False
-        )  # Default
+        assert item_v2.show_item_images is None or item_v2.show_item_images is False  # Default

@@ -28,15 +28,11 @@ class FeatureLimitDB(Base):
     __tablename__ = "feature_limits"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    role: Mapped[str] = mapped_column(
-        String(50), unique=True, nullable=False, index=True
-    )
+    role: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     ai_limit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     storage_limit_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -44,8 +40,4 @@ class FeatureLimitDB(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        CheckConstraint(
-            "role IN ('user', 'premium', 'admin', 'owner')", name="valid_role"
-        ),
-    )
+    __table_args__ = (CheckConstraint("role IN ('user', 'premium', 'admin', 'owner')", name="valid_role"),)

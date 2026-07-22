@@ -16,21 +16,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def column_exists(conn, table_name: str, column_name: str) -> bool:
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -50,12 +49,7 @@ async def upgrade() -> None:
                 await conn.execute(text(f"ALTER TABLE agent_run_steps {ddl}"))
                 added.append(column)
 
-        await conn.execute(
-            text(
-                "CREATE INDEX IF NOT EXISTS idx_agent_run_steps_raw_expires_at "
-                "ON agent_run_steps(raw_expires_at)"
-            )
-        )
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_agent_run_steps_raw_expires_at " "ON agent_run_steps(raw_expires_at)"))
 
         if added:
             print(f"✓ Added columns: {', '.join(added)}")
@@ -68,13 +62,9 @@ async def upgrade() -> None:
 async def downgrade() -> None:
     print("Reverting two-tier agent audit migration...")
     async with engine.begin() as conn:
-        await conn.execute(
-            text("DROP INDEX IF EXISTS idx_agent_run_steps_raw_expires_at;")
-        )
+        await conn.execute(text("DROP INDEX IF EXISTS idx_agent_run_steps_raw_expires_at;"))
         for column in ("raw_input_data", "raw_output_data", "raw_expires_at"):
-            await conn.execute(
-                text(f"ALTER TABLE agent_run_steps DROP COLUMN IF EXISTS {column};")
-            )
+            await conn.execute(text(f"ALTER TABLE agent_run_steps DROP COLUMN IF EXISTS {column};"))
     print("✓ Dropped raw audit columns")
 
 

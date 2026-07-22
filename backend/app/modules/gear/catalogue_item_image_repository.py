@@ -1,6 +1,6 @@
 """Database repository for catalogue item images."""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,9 +51,7 @@ class CatalogueItemImageRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_catalogue_item(
-        self, catalogue_item_id: str
-    ) -> Sequence[CatalogueItemImageDB]:
+    async def get_by_catalogue_item(self, catalogue_item_id: str) -> Sequence[CatalogueItemImageDB]:
         """
         Get all images for a catalogue item, ordered by order field.
 
@@ -63,11 +61,7 @@ class CatalogueItemImageRepository:
         Returns:
             List of images
         """
-        stmt = (
-            select(CatalogueItemImageDB)
-            .where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id)
-            .order_by(CatalogueItemImageDB.order)
-        )
+        stmt = select(CatalogueItemImageDB).where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id).order_by(CatalogueItemImageDB.order)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -81,11 +75,7 @@ class CatalogueItemImageRepository:
         Returns:
             Number of images
         """
-        stmt = (
-            select(func.count())
-            .select_from(CatalogueItemImageDB)
-            .where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id)
-        )
+        stmt = select(func.count()).select_from(CatalogueItemImageDB).where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id)
         result = await self.db.execute(stmt)
         return result.scalar() or 0
 
@@ -100,12 +90,7 @@ class CatalogueItemImageRepository:
         Returns:
             Updated image record if found, None otherwise
         """
-        stmt = (
-            update(CatalogueItemImageDB)
-            .where(CatalogueItemImageDB.id == image_id)
-            .values(**data)
-            .returning(CatalogueItemImageDB)
-        )
+        stmt = update(CatalogueItemImageDB).where(CatalogueItemImageDB.id == image_id).values(**data).returning(CatalogueItemImageDB)
         result = await self.db.execute(stmt)
         await self.db.commit()
         return result.scalar_one_or_none()
@@ -137,9 +122,7 @@ class CatalogueItemImageRepository:
         Returns:
             Next order value
         """
-        stmt = select(func.max(CatalogueItemImageDB.order)).where(
-            CatalogueItemImageDB.catalogue_item_id == catalogue_item_id
-        )
+        stmt = select(func.max(CatalogueItemImageDB.order)).where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id)
         result = await self.db.execute(stmt)
         max_order = result.scalar()
         return (max_order or -1) + 1
@@ -151,17 +134,11 @@ class CatalogueItemImageRepository:
         Args:
             catalogue_item_id: Catalogue item ID
         """
-        stmt = (
-            update(CatalogueItemImageDB)
-            .where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id)
-            .values(is_primary=False)
-        )
+        stmt = update(CatalogueItemImageDB).where(CatalogueItemImageDB.catalogue_item_id == catalogue_item_id).values(is_primary=False)
         await self.db.execute(stmt)
         await self.db.commit()
 
-    async def get_primary_image(
-        self, catalogue_item_id: str
-    ) -> CatalogueItemImageDB | None:
+    async def get_primary_image(self, catalogue_item_id: str) -> CatalogueItemImageDB | None:
         """
         Get primary image for a catalogue item.
 
@@ -173,14 +150,12 @@ class CatalogueItemImageRepository:
         """
         stmt = select(CatalogueItemImageDB).where(
             CatalogueItemImageDB.catalogue_item_id == catalogue_item_id,
-            CatalogueItemImageDB.is_primary == True,
+            CatalogueItemImageDB.is_primary,
         )  # noqa: E712
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_primary_images_by_catalogue_items(
-        self, catalogue_item_ids: list[str]
-    ) -> dict[str, CatalogueItemImageDB]:
+    async def get_primary_images_by_catalogue_items(self, catalogue_item_ids: list[str]) -> dict[str, CatalogueItemImageDB]:
         """
         Get primary images for multiple catalogue items in a single query.
 
@@ -194,7 +169,7 @@ class CatalogueItemImageRepository:
             return {}
         stmt = select(CatalogueItemImageDB).where(
             CatalogueItemImageDB.catalogue_item_id.in_(catalogue_item_ids),
-            CatalogueItemImageDB.is_primary == True,
+            CatalogueItemImageDB.is_primary,
         )  # noqa: E712
         result = await self.db.execute(stmt)
         images = result.scalars().all()
@@ -210,9 +185,7 @@ class CatalogueItemImageRepository:
         Returns:
             Total storage usage in bytes
         """
-        stmt = select(func.sum(CatalogueItemImageDB.file_size)).where(
-            CatalogueItemImageDB.user_id == user_id
-        )
+        stmt = select(func.sum(CatalogueItemImageDB.file_size)).where(CatalogueItemImageDB.user_id == user_id)
         result = await self.db.execute(stmt)
         total = result.scalar()
         return total or 0

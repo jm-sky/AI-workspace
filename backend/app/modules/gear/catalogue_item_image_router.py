@@ -22,21 +22,15 @@ async def upload_catalogue_item_image(
     catalogue_item_id: str,
     current_user: AdminOrOwnerUser,
     file: UploadFile = File(...),
-    is_primary: bool = Query(
-        False, description="Whether this should be the primary image"
-    ),
+    is_primary: bool = Query(False, description="Whether this should be the primary image"),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     service = CatalogueItemImageUploadService(db)
     await service.validate_upload(file, catalogue_item_id, current_user.id)
-    return await service.upload_image(
-        file, catalogue_item_id, current_user.id, is_primary
-    )
+    return await service.upload_image(file, catalogue_item_id, current_user.id, is_primary)
 
 
-@router.get(
-    "/{catalogue_item_id}/images", response_model=list[CatalogueItemImageResponse]
-)
+@router.get("/{catalogue_item_id}/images", response_model=list[CatalogueItemImageResponse])
 async def get_catalogue_item_images(
     catalogue_item_id: str,
     db: AsyncSession = Depends(get_db),
@@ -54,9 +48,7 @@ async def delete_catalogue_item_image(
     service = CatalogueItemImageUploadService(db)
     success = await service.delete_image(image_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
     return {"message": "Image deleted successfully"}
 
 
@@ -85,9 +77,7 @@ async def toggle_catalogue_primary_image(
     return {"message": "Primary image toggled successfully", "is_primary": is_primary}
 
 
-@router.post(
-    "/{catalogue_item_id}/images/from-url", response_model=CatalogueItemImageResponse
-)
+@router.post("/{catalogue_item_id}/images/from-url", response_model=CatalogueItemImageResponse)
 async def upload_catalogue_item_image_from_url(
     catalogue_item_id: str,
     current_user: AdminOrOwnerUser,
@@ -95,6 +85,4 @@ async def upload_catalogue_item_image_from_url(
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     service = CatalogueItemImageUploadService(db)
-    return await service.upload_image_from_url(
-        data.url, catalogue_item_id, current_user.id, data.isPrimary, data.hostLocally
-    )
+    return await service.upload_image_from_url(data.url, catalogue_item_id, current_user.id, data.isPrimary, data.hostLocally)

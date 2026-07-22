@@ -31,10 +31,7 @@ class MemorySearchTool(AgentTool):
     def definition(self) -> AgentToolDefinition:
         return AgentToolDefinition(
             name="memory_search",
-            description=(
-                "Search stored memories semantically. Use when prior context, "
-                "preferences, or facts may help answer the user."
-            ),
+            description=("Search stored memories semantically. Use when prior context, " "preferences, or facts may help answer the user."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -109,11 +106,7 @@ class MemorySaveTool(AgentTool):
     def definition(self) -> AgentToolDefinition:
         return AgentToolDefinition(
             name="memory_save",
-            description=(
-                "Save an important fact, preference, or note to memory for future sessions. "
-                "Use scope 'user' for personal facts, 'agent' for agent-specific context, "
-                "'session' for this chat only."
-            ),
+            description=("Save an important fact, preference, or note to memory for future sessions. " "Use scope 'user' for personal facts, 'agent' for agent-specific context, " "'session' for this chat only."),
             parameters={
                 "type": "object",
                 "properties": {

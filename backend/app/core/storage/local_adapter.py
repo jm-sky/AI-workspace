@@ -2,9 +2,8 @@
 
 import shutil
 from pathlib import Path
-from typing import Optional
 
-import aiofiles  # type: ignore[import-untyped]
+import aiofiles
 
 from app.core.storage.adapter import StorageAdapter
 
@@ -18,7 +17,7 @@ class LocalStorageAdapter(StorageAdapter):
 
         Args:
             base_path: Base directory for file storage
-            base_url: Base URL for serving files (e.g., https://api.ai-workspace.dev-made.it). If None, uses relative paths.
+            base_url: Base URL for serving files (e.g., https://api.gear-stack.com). If None, uses relative paths.
         """
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
@@ -29,7 +28,7 @@ class LocalStorageAdapter(StorageAdapter):
         file_content: bytes,
         destination_path: str,
         content_type: str,
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """Upload file to local filesystem."""
         full_path = self.base_path / destination_path
@@ -66,7 +65,7 @@ class LocalStorageAdapter(StorageAdapter):
             return f"{self.base_url}{url_path}"
         return url_path
 
-    async def get_available_space(self) -> Optional[int]:
+    async def get_available_space(self) -> int | None:
         """Get available disk space."""
         stat = shutil.disk_usage(self.base_path)
         return stat.free

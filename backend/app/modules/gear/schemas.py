@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .validators import MAX_MARKDOWN_LENGTH, sanitize_markdown_content
 
-
 # Type aliases matching frontend
 GearContainerType = str  # Allows custom types: 'backpack', 'bag', 'pouch', etc.
 GearItemStatus = Literal["owned", "missing", "toBuy"]
@@ -145,9 +144,7 @@ class ItemResponse(BaseModel):
     priority: GearItemPriority
     status: GearItemStatus
     containerId: str | None = Field(None, alias="containerId")
-    container: ContainerInfo | None = (
-        None  # Container information (id, name, type, color)
-    )
+    container: ContainerInfo | None = None  # Container information (id, name, type, color)
     price: float | None = None
     currency: str | None = None
     url: str | None = None
@@ -161,9 +158,7 @@ class ItemResponse(BaseModel):
     order: int | None = Field(None, ge=0)
     showOnContainer: bool | None = Field(None, alias="showOnContainer")
     primaryImageUrl: str | None = Field(None, alias="primaryImageUrl")
-    promoteCount: int = Field(
-        0, alias="promote_count", serialization_alias="promoteCount"
-    )
+    promoteCount: int = Field(0, alias="promote_count", serialization_alias="promoteCount")
     createdAt: datetime
     updatedAt: datetime
 
@@ -191,21 +186,13 @@ class ContainerResponse(BaseModel):
     favorite: bool
     showItemImages: bool | None = Field(None, alias="showItemImages")
     authorName: str | None = None  # Only populated for public containers
-    authorId: str | None = Field(
-        None, alias="authorId"
-    )  # Author user ID (only for public containers)
+    authorId: str | None = Field(None, alias="authorId")  # Author user ID (only for public containers)
     items: list[ItemResponse] = []
     # Rating fields
     ownerRating: int | None = Field(None, alias="ownerRating")  # Owner's rating (1-5)
-    userRating: int | None = Field(
-        None, alias="userRating"
-    )  # Current user's rating (if logged in)
-    averageUserRating: float | None = Field(
-        None, alias="averageUserRating"
-    )  # Average of all user ratings
-    userRatingCount: int = Field(
-        default=0, alias="userRatingCount"
-    )  # Number of user ratings
+    userRating: int | None = Field(None, alias="userRating")  # Current user's rating (if logged in)
+    averageUserRating: float | None = Field(None, alias="averageUserRating")  # Average of all user ratings
+    userRatingCount: int = Field(default=0, alias="userRatingCount")  # Number of user ratings
     createdAt: datetime
     updatedAt: datetime
 
@@ -325,9 +312,7 @@ class ItemOrderUpdate(BaseModel):
 class BatchOrderUpdateRequest(BaseModel):
     """Schema for batch updating items' order."""
 
-    items: list[ItemOrderUpdate] = Field(
-        ..., min_length=1, description="List of items with their new order values"
-    )
+    items: list[ItemOrderUpdate] = Field(..., min_length=1, description="List of items with their new order values")
 
     model_config = {"populate_by_name": True}
 
@@ -336,9 +321,7 @@ class BatchOrderUpdateRequest(BaseModel):
 class ShareTokenCreate(BaseModel):
     """Schema for creating a share token."""
 
-    expiresAt: datetime | None = Field(
-        None, alias="expiresAt", description="Optional expiration timestamp"
-    )
+    expiresAt: datetime | None = Field(None, alias="expiresAt", description="Optional expiration timestamp")
 
     model_config = {"populate_by_name": True}
 
@@ -348,12 +331,8 @@ class ShareTokenResponse(BaseModel):
 
     token: str = Field(..., description="Share token")
     containerId: str = Field(..., alias="containerId", description="Container ID")
-    expiresAt: datetime | None = Field(
-        None, alias="expiresAt", description="Expiration timestamp if set"
-    )
-    createdAt: datetime = Field(
-        ..., alias="createdAt", description="Token creation timestamp"
-    )
+    expiresAt: datetime | None = Field(None, alias="expiresAt", description="Expiration timestamp if set")
+    createdAt: datetime = Field(..., alias="createdAt", description="Token creation timestamp")
     shareUrl: str = Field(..., alias="shareUrl", description="Full share URL")
 
     model_config = {"populate_by_name": True}
@@ -396,9 +375,7 @@ class CatalogueShop(BaseModel):
     variant: str | None = None
     price: float | None = Field(None, ge=0)
     currency: str | None = Field(None, max_length=10)
-    updatedAt: str | None = Field(
-        None, alias="updated_at", serialization_alias="updatedAt"
-    )
+    updatedAt: str | None = Field(None, alias="updated_at", serialization_alias="updatedAt")
 
     model_config = {"populate_by_name": True}
 
@@ -409,23 +386,17 @@ class GlobalCatalogueItemBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     category: GearItemCategory
     weight: float = Field(..., ge=0)
-    weightUnit: GearWeightUnit = Field(
-        default="g", alias="weight_unit", serialization_alias="weightUnit"
-    )
+    weightUnit: GearWeightUnit = Field(default="g", alias="weight_unit", serialization_alias="weightUnit")
     description: str | None = None
     brand: str | None = Field(None, max_length=255)
     model: str | None = Field(None, max_length=255)
-    priceTier: Literal["low", "medium", "high"] | None = Field(
-        None, alias="price_tier", serialization_alias="priceTier"
-    )
+    priceTier: Literal["low", "medium", "high"] | None = Field(None, alias="price_tier", serialization_alias="priceTier")
     price: float | None = Field(None, ge=0)
     currency: str | None = Field(None, max_length=10)
     quality: GearItemQuality | None = None
     url: str | None = None
     color: str | None = Field(None, max_length=50)
-    shops: list[CatalogueShop] = Field(
-        default_factory=list, alias="shops", serialization_alias="shops"
-    )
+    shops: list[CatalogueShop] = Field(default_factory=list, alias="shops", serialization_alias="shops")
 
     model_config = {"populate_by_name": True}
 
@@ -473,9 +444,7 @@ class GlobalCatalogueItemUpdate(BaseModel):
     quality: GearItemQuality | None = None
     url: str | None = None
     color: str | None = Field(None, max_length=50)
-    shops: list[CatalogueShop] | None = Field(
-        None, alias="shops", serialization_alias="shops"
-    )
+    shops: list[CatalogueShop] | None = Field(None, alias="shops", serialization_alias="shops")
     isActive: bool | None = Field(None, alias="isActive")
 
     model_config = {"populate_by_name": True}
@@ -487,9 +456,7 @@ class GlobalCatalogueItemResponse(GlobalCatalogueItemBase):
     id: str
     version: int
     isActive: bool = Field(alias="is_active", serialization_alias="isActive")
-    createdBy: str | None = Field(
-        None, alias="created_by", serialization_alias="createdBy"
-    )
+    createdBy: str | None = Field(None, alias="created_by", serialization_alias="createdBy")
     creatorName: str | None = Field(
         None,
         description="Creator name if profile is public, otherwise None",
@@ -497,9 +464,7 @@ class GlobalCatalogueItemResponse(GlobalCatalogueItemBase):
     )
     createdAt: datetime = Field(alias="created_at", serialization_alias="createdAt")
     updatedAt: datetime = Field(alias="updated_at", serialization_alias="updatedAt")
-    primaryImageUrl: str | None = Field(
-        None, alias="primaryImageUrl", serialization_alias="primaryImageUrl"
-    )
+    primaryImageUrl: str | None = Field(None, alias="primaryImageUrl", serialization_alias="primaryImageUrl")
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
@@ -529,9 +494,7 @@ class ItemPromotionStatus(BaseModel):
         alias="promoteCount",
         serialization_alias="promoteCount",
     )
-    threshold: int = Field(
-        ..., description="Required number of promotions to add to catalogue"
-    )
+    threshold: int = Field(..., description="Required number of promotions to add to catalogue")
     remaining: int = Field(..., description="Remaining promotions needed")
     percentage: float = Field(..., description="Percentage progress (0-100)")
     in_catalogue: bool = Field(
@@ -590,28 +553,16 @@ class ContentReportResponse(BaseModel):
     """Schema for content report response."""
 
     id: str
-    containerId: str = Field(
-        ..., alias="container_id", serialization_alias="containerId"
-    )
+    containerId: str = Field(..., alias="container_id", serialization_alias="containerId")
     containerName: str | None = Field(None, serialization_alias="containerName")
-    reporterUserId: str = Field(
-        ..., alias="reporter_user_id", serialization_alias="reporterUserId"
-    )
+    reporterUserId: str = Field(..., alias="reporter_user_id", serialization_alias="reporterUserId")
     reporterName: str | None = Field(None, serialization_alias="reporterName")
     reason: ReportReason
-    additionalInfo: str | None = Field(
-        None, alias="additional_info", serialization_alias="additionalInfo"
-    )
+    additionalInfo: str | None = Field(None, alias="additional_info", serialization_alias="additionalInfo")
     status: ReportStatus
-    createdAt: datetime = Field(
-        ..., alias="created_at", serialization_alias="createdAt"
-    )
-    reviewedAt: datetime | None = Field(
-        None, alias="reviewed_at", serialization_alias="reviewedAt"
-    )
-    reviewedBy: str | None = Field(
-        None, alias="reviewed_by", serialization_alias="reviewedBy"
-    )
+    createdAt: datetime = Field(..., alias="created_at", serialization_alias="createdAt")
+    reviewedAt: datetime | None = Field(None, alias="reviewed_at", serialization_alias="reviewedAt")
+    reviewedBy: str | None = Field(None, alias="reviewed_by", serialization_alias="reviewedBy")
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
@@ -639,10 +590,6 @@ class UserLimitsResponse(BaseModel):
     """Response schema for user account limits and usage."""
 
     tier: Literal["free", "pro", "pro_plus"]
-    limits: dict[str, int] = Field(
-        ..., description="Account limits (items, containers)"
-    )
+    limits: dict[str, int] = Field(..., description="Account limits (items, containers)")
     usage: dict[str, int] = Field(..., description="Current usage (items, containers)")
-    percentage: dict[str, float] = Field(
-        ..., description="Usage percentage (items, containers)"
-    )
+    percentage: dict[str, float] = Field(..., description="Usage percentage (items, containers)")

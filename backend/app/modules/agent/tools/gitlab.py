@@ -28,10 +28,7 @@ class GitLabSearchByJiraKeyTool(AgentTool):
     def definition(self) -> AgentToolDefinition:
         return AgentToolDefinition(
             name="gitlab_search_by_jira_key",
-            description=(
-                "Search GitLab for merge requests and issues that reference "
-                "a Jira issue key in title or description."
-            ),
+            description=("Search GitLab for merge requests and issues that reference " "a Jira issue key in title or description."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -41,10 +38,7 @@ class GitLabSearchByJiraKeyTool(AgentTool):
                     },
                     "project_id": {
                         "type": "string",
-                        "description": (
-                            "Optional GitLab project ID or URL-encoded path "
-                            "(e.g. group/project). Searches all accessible projects when omitted."
-                        ),
+                        "description": ("Optional GitLab project ID or URL-encoded path " "(e.g. group/project). Searches all accessible projects when omitted."),
                     },
                 },
                 "required": ["jira_key"],
@@ -113,10 +107,7 @@ async def _search_scope(
     project_id: str | None,
 ) -> list[dict[str, Any]]:
     if project_id:
-        url = (
-            f"{base_url}/api/v4/projects/{quote(str(project_id), safe='')}"
-            f"/{scope}?search={search_term}&per_page=20"
-        )
+        url = f"{base_url}/api/v4/projects/{quote(str(project_id), safe='')}" f"/{scope}?search={search_term}&per_page=20"
     else:
         url = f"{base_url}/api/v4/{scope}?search={search_term}&per_page=20"
 
@@ -124,9 +115,7 @@ async def _search_scope(
     if response.status_code == 401:
         raise AgentToolError("GitLab authentication failed — reconnect integration")
     if response.status_code >= 400:
-        raise AgentToolError(
-            f"GitLab API error {response.status_code}: {response.text[:500]}"
-        )
+        raise AgentToolError(f"GitLab API error {response.status_code}: {response.text[:500]}")
     data = response.json()
     return data if isinstance(data, list) else []
 

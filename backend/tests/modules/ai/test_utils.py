@@ -20,9 +20,7 @@ class TestEncryption:
         """Test token encryption and decryption."""
         # Generate test key
         test_key = Fernet.generate_key().decode()
-        monkeypatch.setattr(
-            "app.modules.ai.utils.encryption.settings.ai.token_encryption_key", test_key
-        )
+        monkeypatch.setattr("app.modules.ai.utils.encryption.settings.ai.token_encryption_key", test_key)
 
         # Test token
         original_token = "sk-or-v1-test-token-123"
@@ -39,9 +37,7 @@ class TestEncryption:
     def test_encrypt_different_tokens_produce_different_results(self, monkeypatch):
         """Test that different tokens produce different encrypted values."""
         test_key = Fernet.generate_key().decode()
-        monkeypatch.setattr(
-            "app.modules.ai.utils.encryption.settings.ai.token_encryption_key", test_key
-        )
+        monkeypatch.setattr("app.modules.ai.utils.encryption.settings.ai.token_encryption_key", test_key)
 
         token1 = "sk-or-v1-token1"
         token2 = "sk-or-v1-token2"

@@ -9,12 +9,8 @@ from pydantic import BaseModel, Field, field_validator
 class FeatureLimitBase(BaseModel):
     """Base schema for feature limits."""
 
-    role: str = Field(
-        ..., description="User role", pattern="^(user|premium|admin|owner)$"
-    )
-    ai_limit: float | None = Field(
-        None, description="AI usage limit in USD (null = unlimited)"
-    )
+    role: str = Field(..., description="User role", pattern="^(user|premium|admin|owner)$")
+    ai_limit: float | None = Field(None, description="AI usage limit in USD (null = unlimited)")
     storage_limit_bytes: int = Field(..., description="Storage limit in bytes", gt=0)
     description: str | None = Field(None, description="Optional description")
 
@@ -36,12 +32,8 @@ class FeatureLimitCreate(FeatureLimitBase):
 class FeatureLimitUpdate(BaseModel):
     """Schema for updating a feature limit."""
 
-    ai_limit: float | None = Field(
-        None, description="AI usage limit in USD (null = unlimited)"
-    )
-    storage_limit_bytes: int | None = Field(
-        None, description="Storage limit in bytes", gt=0
-    )
+    ai_limit: float | None = Field(None, description="AI usage limit in USD (null = unlimited)")
+    storage_limit_bytes: int | None = Field(None, description="Storage limit in bytes", gt=0)
     description: str | None = Field(None, description="Optional description")
 
     @field_validator("ai_limit")
@@ -58,9 +50,7 @@ class FeatureLimitResponse(BaseModel):
 
     id: UUID = Field(..., description="Limit ID")
     role: str = Field(..., description="User role")
-    ai_limit: float | None = Field(
-        None, description="AI usage limit in USD (null = unlimited)"
-    )
+    ai_limit: float | None = Field(None, description="AI usage limit in USD (null = unlimited)")
     storage_limit_bytes: int = Field(..., description="Storage limit in bytes")
     description: str | None = Field(None, description="Optional description")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -74,9 +64,7 @@ class FeatureLimitResponse(BaseModel):
         return cls(
             id=db_model.id,
             role=db_model.role,
-            ai_limit=(
-                float(db_model.ai_limit) if db_model.ai_limit is not None else None
-            ),
+            ai_limit=(float(db_model.ai_limit) if db_model.ai_limit is not None else None),
             storage_limit_bytes=db_model.storage_limit_bytes,
             description=db_model.description,
             created_at=db_model.created_at,

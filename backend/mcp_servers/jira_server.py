@@ -37,15 +37,19 @@ def jira_get_issue(issue_key: str, *, access_token: str, base_url: str, client_f
 def main() -> None:
     token = os.environ.get("MCP_USER_ACCESS_TOKEN", "")
     base_url = os.environ.get("JIRA_BASE_URL", "")
-    client_field = os.environ.get("JIRA_CLIENT_FIELD", "customfield_10001")
+    os.environ.get("JIRA_CLIENT_FIELD", "customfield_10001")
     if not token or not base_url:
         raise SystemExit("Set MCP_USER_ACCESS_TOKEN and JIRA_BASE_URL")
 
-    print(json.dumps({
-        "server": "jira-mcp",
-        "tools": ["jira_get_issue"],
-        "note": "Use agent module in-process tools for production",
-    }))
+    print(
+        json.dumps(
+            {
+                "server": "jira-mcp",
+                "tools": ["jira_get_issue"],
+                "note": "Use agent module in-process tools for production",
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

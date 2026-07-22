@@ -1,6 +1,6 @@
 """GitHub REST API client for MCP tools."""
 
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -27,7 +27,7 @@ class GitHubApiClient:
         path: str,
         *,
         params: dict[str, Any] | None = None,
-    ) -> Any:
+    ) -> dict[str, Any]:
         url = f"{self.API_BASE}{path}"
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(
@@ -39,18 +39,14 @@ class GitHubApiClient:
             if response.status_code == 401:
                 raise AgentToolError("GitHub authentication failed — reconnect integration")
             if response.status_code == 403:
-                raise AgentToolError(
-                    "GitHub API rate limit or insufficient permissions — check OAuth scopes"
-                )
+                raise AgentToolError("GitHub API rate limit or insufficient permissions — check OAuth scopes")
             if response.status_code == 404:
                 raise AgentToolError(f"GitHub resource not found: {path}")
             if response.status_code >= 400:
-                raise AgentToolError(
-                    f"GitHub API error {response.status_code}: {response.text[:500]}"
-                )
+                raise AgentToolError(f"GitHub API error {response.status_code}: {response.text[:500]}")
             if response.status_code == 204:
                 return {}
-            return response.json()
+            return cast(dict[str, Any], response.json())
 
     async def get_authenticated_user(self) -> dict[str, Any]:
         return await self._request("GET", "/user")
@@ -165,9 +161,7 @@ def _normalize_issue(item: dict[str, Any]) -> dict[str, Any]:
         "author": (item.get("user") or {}).get("login"),
         "labels": labels,
         "url": item.get("html_url"),
-        "repository": (item.get("repository_url") or "").replace(
-            "https://api.github.com/repos/", ""
-        ),
+        "repository": (item.get("repository_url") or "").replace("https://api.github.com/repos/", ""),
         "body_preview": (item.get("body") or "")[:300] or None,
         "updated_at": item.get("updated_at"),
     }

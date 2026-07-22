@@ -4,14 +4,19 @@ Helper functions for common repository operations using composition over inherit
 These functions can be used by any repository without requiring base class inheritance.
 """
 
-from typing import Any, TypeVar, Type
-from sqlalchemy import select, func
+from typing import Any, Protocol
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-T = TypeVar("T")
+
+class HasId(Protocol):
+    """Protocol for ORM models with an id column."""
+
+    id: Any
 
 
-async def get_by_id(session: AsyncSession, model: Type[T], id: str) -> T | None:
+async def get_by_id[T: HasId](session: AsyncSession, model: type[T], id: str) -> T | None:
     """Get entity by ID.
 
     Args:
@@ -22,13 +27,11 @@ async def get_by_id(session: AsyncSession, model: Type[T], id: str) -> T | None:
     Returns:
         Entity instance or None if not found
     """
-    # Use getattr to access the id column dynamically
-    id_column = getattr(model, "id")
-    result = await session.execute(select(model).where(id_column == id))
+    result = await session.execute(select(model).where(model.id == id))
     return result.scalar_one_or_none()
 
 
-async def count_all(session: AsyncSession, model: Type[T]) -> int:
+async def count_all[T](session: AsyncSession, model: type[T]) -> int:
     """Count all entities of given model.
 
     Args:
@@ -42,9 +45,7 @@ async def count_all(session: AsyncSession, model: Type[T]) -> int:
     return result.scalar_one()
 
 
-async def exists_by_field(
-    session: AsyncSession, model: Type[T], field_name: str, value: Any
-) -> bool:
+async def exists_by_field[T](session: AsyncSession, model: type[T], field_name: str, value: Any) -> bool:
     """Check if entity exists with given field value.
 
     Args:
@@ -60,9 +61,7 @@ async def exists_by_field(
         exists = await exists_by_field(session, UserDB, "email", "test@example.com")
     """
     field = getattr(model, field_name)
-    result = await session.execute(
-        select(func.count()).select_from(model).where(field == value)
-    )
+    result = await session.execute(select(func.count()).select_from(model).where(field == value))
     count = result.scalar_one()
     return count > 0
 

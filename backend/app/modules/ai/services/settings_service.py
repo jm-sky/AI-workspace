@@ -31,9 +31,7 @@ class SettingsService:
         settings = await self.repo.get_or_create(user_id)
         return self._to_schema(settings)
 
-    async def update_settings(
-        self, user_id: str, updates: AiUpdateSettings
-    ) -> AiSettings:
+    async def update_settings(self, user_id: str, updates: AiUpdateSettings) -> AiSettings:
         """Update user settings.
 
         Args:
@@ -62,9 +60,7 @@ class SettingsService:
 
         encrypted = encrypt_token(request.api_token)
 
-        await self.repo.update(
-            settings, use_own_token=True, encrypted_api_token=encrypted
-        )
+        await self.repo.update(settings, use_own_token=True, encrypted_api_token=encrypted)
 
     async def remove_api_token(self, user_id: str) -> None:
         """Remove user's API token.
@@ -86,11 +82,7 @@ class SettingsService:
         """
         settings = await self.repo.get_by_user_id(user_id)
 
-        if (
-            not settings
-            or not settings.use_own_token
-            or not settings.encrypted_api_token
-        ):
+        if not settings or not settings.use_own_token or not settings.encrypted_api_token:
             return None
 
         return decrypt_token(settings.encrypted_api_token)

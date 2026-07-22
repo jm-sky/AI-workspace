@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.modules.agent.services.agent_loop import AgentLoopService
-from app.modules.agent.tools.base import AgentTool, AgentToolDefinition, AgentToolRegistry
+from app.modules.agent.tools.base import (
+    AgentTool,
+    AgentToolDefinition,
+    AgentToolRegistry,
+)
 
 
 class _EchoTool(AgentTool):
@@ -37,7 +41,10 @@ def _make_completion(*, content: str | None = None, tool_calls=None, finish_reas
             {
                 "id": tc.id,
                 "type": "function",
-                "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                "function": {
+                    "name": tc.function.name,
+                    "arguments": tc.function.arguments,
+                },
             }
             for tc in (tool_calls or [])
         ],

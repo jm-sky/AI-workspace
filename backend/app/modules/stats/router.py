@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -45,11 +45,7 @@ async def get_user_stats(
     total = total_result.scalar() or 0
 
     # Count new users this month
-    new_this_month_stmt = (
-        select(func.count(UserDB.id))
-        .where(UserDB.created_at >= month_start)
-        .where(UserDB.deleted_at.is_(None))
-    )
+    new_this_month_stmt = select(func.count(UserDB.id)).where(UserDB.created_at >= month_start).where(UserDB.deleted_at.is_(None))
     new_this_month_result = await db.execute(new_this_month_stmt)
     new_this_month = new_this_month_result.scalar() or 0
 
@@ -79,9 +75,7 @@ async def get_container_stats(
     total = total_result.scalar() or 0
 
     # Count new containers this month
-    new_this_month_stmt = select(func.count(GearContainerDB.id)).where(
-        GearContainerDB.created_at >= month_start
-    )
+    new_this_month_stmt = select(func.count(GearContainerDB.id)).where(GearContainerDB.created_at >= month_start)
     new_this_month_result = await db.execute(new_this_month_stmt)
     new_this_month = new_this_month_result.scalar() or 0
 
@@ -111,9 +105,7 @@ async def get_item_stats(
     total = total_result.scalar() or 0
 
     # Count new items this month
-    new_this_month_stmt = select(func.count(GearItemDB.id)).where(
-        GearItemDB.created_at >= month_start
-    )
+    new_this_month_stmt = select(func.count(GearItemDB.id)).where(GearItemDB.created_at >= month_start)
     new_this_month_result = await db.execute(new_this_month_stmt)
     new_this_month = new_this_month_result.scalar() or 0
 

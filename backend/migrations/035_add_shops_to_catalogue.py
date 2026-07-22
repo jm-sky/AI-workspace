@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -31,16 +32,14 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
         True if column exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -59,12 +58,10 @@ async def upgrade() -> None:
 
         print("Adding shops column...")
         await conn.execute(
-            text(
-                """
+            text("""
                 ALTER TABLE global_catalogue_items
                 ADD COLUMN shops JSONB NOT NULL DEFAULT '[]'::JSONB;
-            """
-            ),
+            """),
         )
 
         print("✓ Added shops field to global_catalogue_items table")
@@ -85,12 +82,10 @@ async def downgrade() -> None:
 
         print("Removing shops column...")
         await conn.execute(
-            text(
-                """
+            text("""
                 ALTER TABLE global_catalogue_items
                 DROP COLUMN shops;
-            """
-            ),
+            """),
         )
 
         print("✓ Removed shops field from global_catalogue_items table")
@@ -102,9 +97,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add shops to global_catalogue_items migration"
-    )
+    parser = argparse.ArgumentParser(description="Add shops to global_catalogue_items migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

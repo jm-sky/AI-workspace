@@ -5,17 +5,17 @@ from fastapi import APIRouter, Depends
 from app.core.health_details import build_health_details, verify_health_details_token
 from app.modules.admin.router import router as admin_router
 from app.modules.agent.router import router as agent_router
+from app.modules.ai.routers.models import router as ai_models_router
 from app.modules.auth.router import router as auth_router
 from app.modules.billing.router import router as billing_router
 from app.modules.feature_limits.router import router as feature_limits_router
-from app.modules.logs.router import router as logs_router
 from app.modules.integrations.router import router as integrations_router
+from app.modules.logs.router import router as logs_router
 from app.modules.memory.router import router as memory_router
 from app.modules.settings.router import router as settings_router
 from app.modules.teams.router import router as teams_router
 from app.modules.tenants.router import router as tenants_router
 from app.modules.users.router import router as users_router
-from app.modules.ai.routers.models import router as ai_models_router
 from app.modules.workspace_config.router import router as workspace_config_router
 
 api_router = APIRouter()

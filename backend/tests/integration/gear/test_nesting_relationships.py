@@ -12,10 +12,9 @@ Both systems exist simultaneously, creating complexity that unified model aims t
 """
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.db_models import UserDB
-from app.modules.gear.schemas import ContainerCreate, ItemCreate
+from app.modules.gear.schemas import ItemCreate
 from app.modules.gear.service import GearService
 
 from .conftest import create_test_container, create_test_item
@@ -32,9 +31,7 @@ class TestContainerNesting:
     ) -> None:
         """Test basic two-level container nesting."""
         # Arrange & Act
-        backpack = await create_test_container(
-            gear_service, test_user.id, "Main Backpack", container_type="backpack"
-        )
+        backpack = await create_test_container(gear_service, test_user.id, "Main Backpack", container_type="backpack")
         pouch = await create_test_container(
             gear_service,
             test_user.id,
@@ -59,9 +56,7 @@ class TestContainerNesting:
     ) -> None:
         """Test three-level deep container nesting."""
         # Arrange & Act
-        backpack = await create_test_container(
-            gear_service, test_user.id, "Backpack", container_type="backpack"
-        )
+        backpack = await create_test_container(gear_service, test_user.id, "Backpack", container_type="backpack")
         pouch = await create_test_container(
             gear_service,
             test_user.id,
@@ -90,15 +85,9 @@ class TestContainerNesting:
         """Test multiple containers nested in same parent."""
         # Arrange & Act
         backpack = await create_test_container(gear_service, test_user.id, "Backpack")
-        pouch1 = await create_test_container(
-            gear_service, test_user.id, "Pouch 1", parent_id=backpack["id"]
-        )
-        pouch2 = await create_test_container(
-            gear_service, test_user.id, "Pouch 2", parent_id=backpack["id"]
-        )
-        pouch3 = await create_test_container(
-            gear_service, test_user.id, "Pouch 3", parent_id=backpack["id"]
-        )
+        pouch1 = await create_test_container(gear_service, test_user.id, "Pouch 1", parent_id=backpack["id"])
+        pouch2 = await create_test_container(gear_service, test_user.id, "Pouch 2", parent_id=backpack["id"])
+        pouch3 = await create_test_container(gear_service, test_user.id, "Pouch 3", parent_id=backpack["id"])
 
         # Assert
         assert pouch1["parentContainerId"] == backpack["id"]
@@ -113,23 +102,15 @@ class TestContainerNesting:
     ) -> None:
         """Test moving container to different parent."""
         # Arrange
-        backpack1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        backpack2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
-        pouch = await create_test_container(
-            gear_service, test_user.id, "Pouch", parent_id=backpack1["id"]
-        )
+        backpack1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        backpack2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
+        pouch = await create_test_container(gear_service, test_user.id, "Pouch", parent_id=backpack1["id"])
 
         # Act - Move pouch from backpack1 to backpack2
         from app.modules.gear.schemas import ContainerUpdate
 
         update_data = ContainerUpdate(parentContainerId=backpack2["id"])
-        updated = await gear_service.update_container(
-            pouch["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_container(pouch["id"], test_user.id, update_data)
 
         # Assert
         assert updated is not None
@@ -144,18 +125,14 @@ class TestContainerNesting:
         """Test removing container from parent (make it top-level)."""
         # Arrange
         backpack = await create_test_container(gear_service, test_user.id, "Backpack")
-        pouch = await create_test_container(
-            gear_service, test_user.id, "Pouch", parent_id=backpack["id"]
-        )
+        pouch = await create_test_container(gear_service, test_user.id, "Pouch", parent_id=backpack["id"])
         assert pouch["parentContainerId"] == backpack["id"]
 
         # Act - Remove from parent
         from app.modules.gear.schemas import ContainerUpdate
 
         update_data = ContainerUpdate(parentContainerId=None)
-        updated = await gear_service.update_container(
-            pouch["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_container(pouch["id"], test_user.id, update_data)
 
         # Assert
         assert updated is not None
@@ -184,12 +161,8 @@ class TestItemNestedContainerReference:
         The field exists in database but ItemCreate schema doesn't expose it.
         """
         # Arrange
-        main_backpack = await create_test_container(
-            gear_service, test_user.id, "Main Backpack"
-        )
-        small_backpack = await create_test_container(
-            gear_service, test_user.id, "Small Backpack"
-        )
+        main_backpack = await create_test_container(gear_service, test_user.id, "Main Backpack")
+        await create_test_container(gear_service, test_user.id, "Small Backpack")
 
         # Act - Try to create item with nested container reference
         # Note: ItemCreate doesn't have nestedContainerId field
@@ -218,9 +191,7 @@ class TestItemNestedContainerReference:
         System 2 (nested_container_id in items) is not accessible via API.
         """
         # Arrange - Create containers
-        main_backpack = await create_test_container(
-            gear_service, test_user.id, "Main Backpack"
-        )
+        main_backpack = await create_test_container(gear_service, test_user.id, "Main Backpack")
 
         # System 1: Container nesting via parent_container_id (WORKS)
         admin_pouch = await create_test_container(
@@ -242,9 +213,7 @@ class TestItemNestedContainerReference:
 
         # Assert - Only System 1 nesting works
         # System 1: admin_pouch nested via parent_container_id
-        fetched_pouch = await gear_service.get_container(
-            admin_pouch["id"], test_user.id
-        )
+        fetched_pouch = await gear_service.get_container(admin_pouch["id"], test_user.id)
         assert fetched_pouch is not None
         assert fetched_pouch.parentContainerId == main_backpack["id"]
 
@@ -275,9 +244,7 @@ class TestComplexNestingScenarios:
           - Water Bottle - regular item
         """
         # Arrange - Create main bug-out bag
-        bug_out_bag = await create_test_container(
-            gear_service, test_user.id, "72h Bug-Out Bag", container_type="backpack"
-        )
+        bug_out_bag = await create_test_container(gear_service, test_user.id, "72h Bug-Out Bag", container_type="backpack")
 
         # System 1: EDC Pouch nested inside bug-out bag
         edc_pouch = await create_test_container(
@@ -333,16 +300,12 @@ class TestComplexNestingScenarios:
 
         # Assert - Verify structure
         # 1. EDC Pouch nested in bug-out bag
-        fetched_edc_pouch = await gear_service.get_container(
-            edc_pouch["id"], test_user.id
-        )
+        fetched_edc_pouch = await gear_service.get_container(edc_pouch["id"], test_user.id)
         assert fetched_edc_pouch is not None
         assert fetched_edc_pouch.parentContainerId == bug_out_bag["id"]
 
         # 2. First Aid Pouch nested in bug-out bag
-        fetched_first_aid = await gear_service.get_container(
-            first_aid_pouch["id"], test_user.id
-        )
+        fetched_first_aid = await gear_service.get_container(first_aid_pouch["id"], test_user.id)
         assert fetched_first_aid is not None
         assert fetched_first_aid.parentContainerId == bug_out_bag["id"]
 
@@ -355,9 +318,7 @@ class TestComplexNestingScenarios:
         assert len(edc_pouch_items) == 2  # Flashlight + Multi-tool
 
         # 5. Items in First Aid Pouch
-        first_aid_items = await gear_service.get_items(
-            first_aid_pouch["id"], test_user.id
-        )
+        first_aid_items = await gear_service.get_items(first_aid_pouch["id"], test_user.id)
         assert len(first_aid_items) == 1  # Bandages
 
     @pytest.mark.asyncio
@@ -368,18 +329,14 @@ class TestComplexNestingScenarios:
     ) -> None:
         """Test that get_containers returns both top-level and nested containers."""
         # Arrange
-        top_level_bag = await create_test_container(
-            gear_service, test_user.id, "Top Level Bag"
-        )
+        top_level_bag = await create_test_container(gear_service, test_user.id, "Top Level Bag")
         nested_pouch = await create_test_container(
             gear_service,
             test_user.id,
             "Nested Pouch",
             parent_id=top_level_bag["id"],
         )
-        another_top_level = await create_test_container(
-            gear_service, test_user.id, "Another Top Level"
-        )
+        another_top_level = await create_test_container(gear_service, test_user.id, "Another Top Level")
 
         # Act
         all_containers = await gear_service.get_containers(test_user.id)
@@ -406,17 +363,13 @@ class TestNestingEdgeCases:
         This would create a circular reference.
         """
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "Self-Ref Container"
-        )
+        container = await create_test_container(gear_service, test_user.id, "Self-Ref Container")
 
         # Act - Try to make container its own parent
         from app.modules.gear.schemas import ContainerUpdate
 
         update_data = ContainerUpdate(parentContainerId=container["id"])
-        updated = await gear_service.update_container(
-            container["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_container(container["id"], test_user.id, update_data)
 
         # Assert - Current behavior: update succeeds but creates circular reference
         # (This is a known issue that unified model should prevent)
@@ -459,18 +412,10 @@ class TestNestingEdgeCases:
         """Test deep nesting (5+ levels) to verify system handles it."""
         # Arrange & Act - Create 5-level nesting
         level1 = await create_test_container(gear_service, test_user.id, "Level 1")
-        level2 = await create_test_container(
-            gear_service, test_user.id, "Level 2", parent_id=level1["id"]
-        )
-        level3 = await create_test_container(
-            gear_service, test_user.id, "Level 3", parent_id=level2["id"]
-        )
-        level4 = await create_test_container(
-            gear_service, test_user.id, "Level 4", parent_id=level3["id"]
-        )
-        level5 = await create_test_container(
-            gear_service, test_user.id, "Level 5", parent_id=level4["id"]
-        )
+        level2 = await create_test_container(gear_service, test_user.id, "Level 2", parent_id=level1["id"])
+        level3 = await create_test_container(gear_service, test_user.id, "Level 3", parent_id=level2["id"])
+        level4 = await create_test_container(gear_service, test_user.id, "Level 4", parent_id=level3["id"])
+        level5 = await create_test_container(gear_service, test_user.id, "Level 5", parent_id=level4["id"])
 
         # Assert - Verify chain
         fetched_level5 = await gear_service.get_container(level5["id"], test_user.id)

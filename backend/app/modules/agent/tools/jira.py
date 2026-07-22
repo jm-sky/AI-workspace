@@ -28,10 +28,7 @@ class JiraGetIssueTool(AgentTool):
     def definition(self) -> AgentToolDefinition:
         return AgentToolDefinition(
             name="jira_get_issue",
-            description=(
-                "Fetch a Jira issue by key (e.g. IT-123). Returns summary, "
-                "status, description, and the Klient (client) field when present."
-            ),
+            description=("Fetch a Jira issue by key (e.g. IT-123). Returns summary, " "status, description, and the Klient (client) field when present."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -74,9 +71,7 @@ class JiraGetIssueTool(AgentTool):
             if response.status_code == 404:
                 raise AgentToolError(f"Jira issue not found: {issue_key}")
             if response.status_code >= 400:
-                raise AgentToolError(
-                    f"Jira API error {response.status_code}: {response.text[:500]}"
-                )
+                raise AgentToolError(f"Jira API error {response.status_code}: {response.text[:500]}")
             data = response.json()
 
         fields = data.get("fields", {})

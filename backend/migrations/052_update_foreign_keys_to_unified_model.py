@@ -24,21 +24,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -47,16 +46,14 @@ async def table_exists(conn, table_name: str) -> bool:
 async def constraint_exists(conn, table_name: str, constraint_name: str) -> bool:
     """Check if a constraint exists on a table."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.table_constraints
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND constraint_name = :constraint_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "constraint_name": constraint_name},
     )
     return result.scalar() is True
@@ -70,9 +67,7 @@ async def upgrade() -> None:
         # Verify gear_items_v2 exists
         items_v2_exist = await table_exists(conn, "gear_items_v2")
         if not items_v2_exist:
-            print(
-                "❌ Error: gear_items_v2 table does not exist. Run migrations 041 and 042 first."
-            )
+            print("❌ Error: gear_items_v2 table does not exist. Run migrations 041 and 042 first.")
             sys.exit(1)
 
         # 1. Update item_images table
@@ -80,32 +75,22 @@ async def upgrade() -> None:
         item_images_exist = await table_exists(conn, "item_images")
         if item_images_exist:
             # Drop old constraint if exists
-            old_constraint = await constraint_exists(
-                conn, "item_images", "item_images_item_id_fkey"
-            )
+            old_constraint = await constraint_exists(conn, "item_images", "item_images_item_id_fkey")
             if old_constraint:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE item_images
                         DROP CONSTRAINT IF EXISTS item_images_item_id_fkey;
-                    """
-                    )
-                )
+                    """))
                 print("  ✓ Dropped old constraint: item_images_item_id_fkey")
 
             # Add new constraint pointing to gear_items_v2
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE item_images
                     ADD CONSTRAINT item_images_item_id_fkey
                         FOREIGN KEY (item_id)
                         REFERENCES gear_items_v2(id)
                         ON DELETE CASCADE;
-                """
-                )
-            )
+                """))
             print("  ✓ Added new constraint: item_images → gear_items_v2")
         else:
             print("  ⚠️  item_images table does not exist, skipping")
@@ -121,30 +106,20 @@ async def upgrade() -> None:
                 "container_share_tokens_container_id_fkey",
             )
             if old_constraint:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE container_share_tokens
                         DROP CONSTRAINT IF EXISTS container_share_tokens_container_id_fkey;
-                    """
-                    )
-                )
-                print(
-                    "  ✓ Dropped old constraint: container_share_tokens_container_id_fkey"
-                )
+                    """))
+                print("  ✓ Dropped old constraint: container_share_tokens_container_id_fkey")
 
             # Add new constraint pointing to gear_items_v2
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE container_share_tokens
                     ADD CONSTRAINT container_share_tokens_container_id_fkey
                         FOREIGN KEY (container_id)
                         REFERENCES gear_items_v2(id)
                         ON DELETE CASCADE;
-                """
-                )
-            )
+                """))
             print("  ✓ Added new constraint: container_share_tokens → gear_items_v2")
         else:
             print("  ⚠️  container_share_tokens table does not exist, skipping")
@@ -154,32 +129,22 @@ async def upgrade() -> None:
         ratings_exist = await table_exists(conn, "container_ratings")
         if ratings_exist:
             # Drop old constraint if exists
-            old_constraint = await constraint_exists(
-                conn, "container_ratings", "container_ratings_container_id_fkey"
-            )
+            old_constraint = await constraint_exists(conn, "container_ratings", "container_ratings_container_id_fkey")
             if old_constraint:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE container_ratings
                         DROP CONSTRAINT IF EXISTS container_ratings_container_id_fkey;
-                    """
-                    )
-                )
+                    """))
                 print("  ✓ Dropped old constraint: container_ratings_container_id_fkey")
 
             # Add new constraint pointing to gear_items_v2
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE container_ratings
                     ADD CONSTRAINT container_ratings_container_id_fkey
                         FOREIGN KEY (container_id)
                         REFERENCES gear_items_v2(id)
                         ON DELETE CASCADE;
-                """
-                )
-            )
+                """))
             print("  ✓ Added new constraint: container_ratings → gear_items_v2")
         else:
             print("  ⚠️  container_ratings table does not exist, skipping")
@@ -197,30 +162,22 @@ async def downgrade() -> None:
         item_images_exist = await table_exists(conn, "item_images")
         if item_images_exist:
             # Drop v2 constraint
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE item_images
                     DROP CONSTRAINT IF EXISTS item_images_item_id_fkey;
-                """
-                )
-            )
+                """))
             print("  ✓ Dropped constraint: item_images_item_id_fkey")
 
             # Add back old constraint if gear_items exists
             items_exist = await table_exists(conn, "gear_items")
             if items_exist:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE item_images
                         ADD CONSTRAINT item_images_item_id_fkey
                             FOREIGN KEY (item_id)
                             REFERENCES gear_items(id)
                             ON DELETE CASCADE;
-                    """
-                    )
-                )
+                    """))
                 print("  ✓ Restored constraint: item_images → gear_items")
         else:
             print("  ⚠️  item_images table does not exist, skipping")
@@ -230,33 +187,23 @@ async def downgrade() -> None:
         share_tokens_exist = await table_exists(conn, "container_share_tokens")
         if share_tokens_exist:
             # Drop v2 constraint
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE container_share_tokens
                     DROP CONSTRAINT IF EXISTS container_share_tokens_container_id_fkey;
-                """
-                )
-            )
+                """))
             print("  ✓ Dropped constraint: container_share_tokens_container_id_fkey")
 
             # Add back old constraint if gear_containers exists
             containers_exist = await table_exists(conn, "gear_containers")
             if containers_exist:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE container_share_tokens
                         ADD CONSTRAINT container_share_tokens_container_id_fkey
                             FOREIGN KEY (container_id)
                             REFERENCES gear_containers(id)
                             ON DELETE CASCADE;
-                    """
-                    )
-                )
-                print(
-                    "  ✓ Restored constraint: container_share_tokens → gear_containers"
-                )
+                    """))
+                print("  ✓ Restored constraint: container_share_tokens → gear_containers")
         else:
             print("  ⚠️  container_share_tokens table does not exist, skipping")
 
@@ -265,30 +212,22 @@ async def downgrade() -> None:
         ratings_exist = await table_exists(conn, "container_ratings")
         if ratings_exist:
             # Drop v2 constraint
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE container_ratings
                     DROP CONSTRAINT IF EXISTS container_ratings_container_id_fkey;
-                """
-                )
-            )
+                """))
             print("  ✓ Dropped constraint: container_ratings_container_id_fkey")
 
             # Add back old constraint if gear_containers exists
             containers_exist = await table_exists(conn, "gear_containers")
             if containers_exist:
-                await conn.execute(
-                    text(
-                        """
+                await conn.execute(text("""
                         ALTER TABLE container_ratings
                         ADD CONSTRAINT container_ratings_container_id_fkey
                             FOREIGN KEY (container_id)
                             REFERENCES gear_containers(id)
                             ON DELETE CASCADE;
-                    """
-                    )
-                )
+                    """))
                 print("  ✓ Restored constraint: container_ratings → gear_containers")
         else:
             print("  ⚠️  container_ratings table does not exist, skipping")
@@ -299,9 +238,7 @@ async def downgrade() -> None:
 async def main() -> None:
     """Run migration based on command line argument."""
     if len(sys.argv) < 2:
-        print(
-            "Usage: python migrations/043_update_foreign_keys_to_unified_model.py [upgrade|downgrade]"
-        )
+        print("Usage: python migrations/043_update_foreign_keys_to_unified_model.py [upgrade|downgrade]")
         sys.exit(1)
 
     command = sys.argv[1].lower()
@@ -311,9 +248,7 @@ async def main() -> None:
         await downgrade()
     else:
         print(f"Unknown command: {command}")
-        print(
-            "Usage: python migrations/043_update_foreign_keys_to_unified_model.py [upgrade|downgrade]"
-        )
+        print("Usage: python migrations/043_update_foreign_keys_to_unified_model.py [upgrade|downgrade]")
         sys.exit(1)
 
 

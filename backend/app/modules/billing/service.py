@@ -12,7 +12,6 @@ from .exceptions import (
     StripeAPIError,
     StripeCustomerNotFoundError,
     StripeSubscriptionNotFoundError,
-    SubscriptionAlreadyExistsError,
     SubscriptionNotFoundError,
 )
 from .repository import BillingRepository
@@ -99,32 +98,20 @@ class BillingService:
 
         # Validate billing interval
         if billing_interval not in ["monthly", "annual"]:
-            raise InvalidBillingIntervalError(
-                f"Invalid billing interval: {billing_interval}"
-            )
+            raise InvalidBillingIntervalError(f"Invalid billing interval: {billing_interval}")
 
         # Check if user already has a subscription
         subscription = await self.repository.get_subscription_by_user_id(user_id)
 
         # If user has active paid subscription, cancel it first to allow upgrade/downgrade
-        if (
-            subscription
-            and subscription.plan_tier in ["pro", "pro_plus"]
-            and subscription.status == "active"
-        ):
-            logger.info(
-                f"User {user_id} changing from {subscription.plan_tier} to {plan_tier}, canceling old subscription"
-            )
+        if subscription and subscription.plan_tier in ["pro", "pro_plus"] and subscription.status == "active":
+            logger.info(f"User {user_id} changing from {subscription.plan_tier} to {plan_tier}, canceling old subscription")
 
             # Cancel old Stripe subscription if it exists
             if subscription.stripe_subscription_id:
                 try:
-                    await self.stripe_client.cancel_subscription(
-                        subscription.stripe_subscription_id, cancel_at_period_end=False
-                    )  # Cancel immediately
-                    logger.info(
-                        f"Canceled Stripe subscription {subscription.stripe_subscription_id}"
-                    )
+                    await self.stripe_client.cancel_subscription(subscription.stripe_subscription_id, cancel_at_period_end=False)  # Cancel immediately
+                    logger.info(f"Canceled Stripe subscription {subscription.stripe_subscription_id}")
                 except Exception as e:
                     logger.warning(f"Failed to cancel old Stripe subscription: {e}")
 
@@ -143,9 +130,7 @@ class BillingService:
         else:
             try:
                 # Create Stripe customer (email will be fetched from user record in router)
-                customer = await self.stripe_client.create_customer(
-                    user_id=user_id, email="", name=""
-                )
+                customer = await self.stripe_client.create_customer(user_id=user_id, email="", name="")
                 customer_id = customer.id
 
                 # Update subscription with customer ID
@@ -164,7 +149,7 @@ class BillingService:
                     )
             except Exception as e:
                 logger.error(f"Failed to create Stripe customer: {e}")
-                raise StripeAPIError(f"Failed to create Stripe customer: {e}")
+                raise StripeAPIError(f"Failed to create Stripe customer: {e}") from e
 
         # Get price ID based on plan and billing interval
         price_id = self._get_price_id(plan_tier, billing_interval)
@@ -185,11 +170,9 @@ class BillingService:
             return CheckoutSessionResponse(sessionId=session.id, sessionUrl=session.url)
         except Exception as e:
             logger.error(f"Failed to create checkout session: {e}")
-            raise StripeAPIError(f"Failed to create checkout session: {e}")
+            raise StripeAPIError(f"Failed to create checkout session: {e}") from e
 
-    async def create_portal_session(
-        self, user_id: str, return_url: str
-    ) -> PortalSessionResponse:
+    async def create_portal_session(self, user_id: str, return_url: str) -> PortalSessionResponse:
         """
         Create a Stripe Billing Portal session for subscription management.
 
@@ -207,20 +190,14 @@ class BillingService:
         """
         subscription = await self.repository.get_subscription_by_user_id(user_id)
         if not subscription:
-            raise SubscriptionNotFoundError(
-                f"Subscription not found for user {user_id}"
-            )
+            raise SubscriptionNotFoundError(f"Subscription not found for user {user_id}")
 
         if not subscription.stripe_customer_id:
-            raise StripeCustomerNotFoundError(
-                f"Stripe customer not found for user {user_id}"
-            )
+            raise StripeCustomerNotFoundError(f"Stripe customer not found for user {user_id}")
 
         # Grandfathered users cannot access portal (they have lifetime access)
         if subscription.is_grandfathered:
-            raise CannotDowngradeGrandfatheredError(
-                "Grandfathered users have lifetime access and cannot modify their subscription"
-            )
+            raise CannotDowngradeGrandfatheredError("Grandfathered users have lifetime access and cannot modify their subscription")
 
         try:
             session = await self.stripe_client.create_portal_session(
@@ -232,7 +209,7 @@ class BillingService:
             return PortalSessionResponse(sessionUrl=session.url)
         except Exception as e:
             logger.error(f"Failed to create portal session: {e}")
-            raise StripeAPIError(f"Failed to create portal session: {e}")
+            raise StripeAPIError(f"Failed to create portal session: {e}") from e
 
     async def cancel_subscription(self, user_id: str) -> SubscriptionResponse:
         """
@@ -252,25 +229,17 @@ class BillingService:
         """
         subscription = await self.repository.get_subscription_by_user_id(user_id)
         if not subscription:
-            raise SubscriptionNotFoundError(
-                f"Subscription not found for user {user_id}"
-            )
+            raise SubscriptionNotFoundError(f"Subscription not found for user {user_id}")
 
         if subscription.is_grandfathered:
-            raise CannotDowngradeGrandfatheredError(
-                "Grandfathered users have lifetime access and cannot cancel"
-            )
+            raise CannotDowngradeGrandfatheredError("Grandfathered users have lifetime access and cannot cancel")
 
         if not subscription.stripe_subscription_id:
-            raise StripeSubscriptionNotFoundError(
-                f"Stripe subscription not found for user {user_id}"
-            )
+            raise StripeSubscriptionNotFoundError(f"Stripe subscription not found for user {user_id}")
 
         try:
             # Cancel subscription at period end
-            stripe_sub = await self.stripe_client.cancel_subscription(
-                subscription.stripe_subscription_id
-            )
+            stripe_sub = await self.stripe_client.cancel_subscription(subscription.stripe_subscription_id)
 
             # Update database
             updated_subscription = await self.repository.update_subscription(
@@ -292,11 +261,9 @@ class BillingService:
             return SubscriptionResponse.model_validate(updated_subscription)
         except Exception as e:
             logger.error(f"Failed to cancel subscription: {e}")
-            raise StripeAPIError(f"Failed to cancel subscription: {e}")
+            raise StripeAPIError(f"Failed to cancel subscription: {e}") from e
 
-    async def update_openrouter_token(
-        self, user_id: str, token: str | None
-    ) -> SubscriptionResponse:
+    async def update_openrouter_token(self, user_id: str, token: str | None) -> SubscriptionResponse:
         """
         Update user's OpenRouter API token (for Free tier BYOK).
 
@@ -312,9 +279,7 @@ class BillingService:
         """
         subscription = await self.repository.get_subscription_by_user_id(user_id)
         if not subscription:
-            raise SubscriptionNotFoundError(
-                f"Subscription not found for user {user_id}"
-            )
+            raise SubscriptionNotFoundError(f"Subscription not found for user {user_id}")
 
         # Update user's OpenRouter token (stored in users table)
         # This is handled in the router by updating the User model
@@ -338,9 +303,7 @@ class BillingService:
         """
         subscription = await self.repository.get_subscription_by_user_id(user_id)
         if not subscription:
-            raise SubscriptionNotFoundError(
-                f"Subscription not found for user {user_id}"
-            )
+            raise SubscriptionNotFoundError(f"Subscription not found for user {user_id}")
 
         plan_tier = subscription.plan_tier
 
@@ -386,7 +349,7 @@ class BillingService:
         plan_limits = limits.get(plan_tier, limits["free"])
 
         # Type cast plan_tier to Literal and dict bool values to proper types
-        from typing import cast, Literal
+        from typing import Literal, cast
 
         plan_tier_typed = cast(Literal["free", "pro", "pro_plus"], plan_tier)
 
@@ -401,9 +364,7 @@ class BillingService:
             containersLimit=plan_limits["containersLimit"],
         )
 
-    async def check_ai_access(
-        self, user_id: str, openrouter_token: str | None = None
-    ) -> bool:
+    async def check_ai_access(self, user_id: str, openrouter_token: str | None = None) -> bool:
         """
         Check if user has access to AI features.
 
@@ -428,9 +389,7 @@ class BillingService:
         # Free tier requires BYOK
         if subscription.plan_tier == "free":
             if not openrouter_token:
-                raise FreeTrierRequiresBYOKError(
-                    "Free tier users must provide OpenRouter API token"
-                )
+                raise FreeTrierRequiresBYOKError("Free tier users must provide OpenRouter API token")
             return True
 
         return False
@@ -465,15 +424,11 @@ class BillingService:
             raise InvalidPlanTierError(f"Invalid plan tier: {plan_tier}")
 
         if billing_interval not in price_map[plan_tier]:
-            raise InvalidBillingIntervalError(
-                f"Invalid billing interval: {billing_interval}"
-            )
+            raise InvalidBillingIntervalError(f"Invalid billing interval: {billing_interval}")
 
         price_id = price_map[plan_tier][billing_interval]
         if not price_id:
-            raise InvalidPlanTierError(
-                f"Price ID not configured for {plan_tier}/{billing_interval}"
-            )
+            raise InvalidPlanTierError(f"Price ID not configured for {plan_tier}/{billing_interval}")
 
         return price_id
 
@@ -496,20 +451,15 @@ class BillingService:
         Returns:
             List of subscriptions with user details
         """
-        from uuid import UUID as PyUUID
+
+        from sqlalchemy import select
 
         from app.modules.auth.db_models import UserDB
-        from sqlalchemy import select
 
         from .db_models import SubscriptionDB
 
         # Get all subscriptions with user info
-        subscriptions = await self.repository.db.execute(
-            select(SubscriptionDB)
-            .join(UserDB, SubscriptionDB.user_id == UserDB.id)
-            .offset(skip)
-            .limit(limit)
-        )
+        subscriptions = await self.repository.db.execute(select(SubscriptionDB).join(UserDB, SubscriptionDB.user_id == UserDB.id).offset(skip).limit(limit))
 
         results = []
         for sub in subscriptions.scalars().all():
@@ -550,9 +500,7 @@ class BillingService:
         from .db_models import SubscriptionDB
 
         # Get all subscriptions
-        subscriptions = (
-            (await self.repository.db.execute(select(SubscriptionDB))).scalars().all()
-        )
+        subscriptions = (await self.repository.db.execute(select(SubscriptionDB))).scalars().all()
 
         total_subscriptions = len(subscriptions)
 
@@ -589,9 +537,7 @@ class BillingService:
         # Get total users count
         from app.modules.auth.db_models import UserDB
 
-        total_users = (
-            await self.repository.db.execute(select(func.count(UserDB.id)))
-        ).scalar() or 0
+        total_users = (await self.repository.db.execute(select(func.count(UserDB.id)))).scalar() or 0
 
         return {
             "totalUsers": total_users,
@@ -636,12 +582,8 @@ class BillingService:
         """
         from uuid import UUID as PyUUID
 
-        from .db_models import SubscriptionDB
-
         # Get subscription
-        subscription = await self.repository.get_subscription_by_id(
-            PyUUID(subscription_id)
-        )
+        subscription = await self.repository.get_subscription_by_id(PyUUID(subscription_id))
         if not subscription:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
@@ -659,10 +601,7 @@ class BillingService:
             changes.append(("status", subscription.status, status))
             subscription.status = status
 
-        if (
-            is_grandfathered is not None
-            and is_grandfathered != subscription.is_grandfathered
-        ):
+        if is_grandfathered is not None and is_grandfathered != subscription.is_grandfathered:
             changes.append(
                 (
                     "is_grandfathered",
@@ -672,10 +611,7 @@ class BillingService:
             )
             subscription.is_grandfathered = is_grandfathered
 
-        if (
-            cancel_at_period_end is not None
-            and cancel_at_period_end != subscription.cancel_at_period_end
-        ):
+        if cancel_at_period_end is not None and cancel_at_period_end != subscription.cancel_at_period_end:
             changes.append(
                 (
                     "cancel_at_period_end",
@@ -687,9 +623,7 @@ class BillingService:
 
         # Save changes
         if changes:
-            updated_subscription = await self.repository.update_subscription(
-                subscription_id=subscription.id
-            )
+            updated_subscription = await self.repository.update_subscription(subscription_id=subscription.id)
 
             # Log changes to history
             for change_type, old_val, new_val in changes:
@@ -732,27 +666,19 @@ class BillingService:
         """
         from uuid import UUID as PyUUID
 
-        from .db_models import SubscriptionDB
-
         # Try to get subscription - first try as UUID, then as user_id (ULID)
         subscription = None
 
         # Try as UUID first (normal case)
         try:
             subscription_uuid = PyUUID(subscription_id)
-            subscription = await self.repository.get_subscription_by_id(
-                subscription_uuid
-            )
+            subscription = await self.repository.get_subscription_by_id(subscription_uuid)
         except (ValueError, TypeError):
             # Not a UUID, might be ULID (user_id) - try to find by user_id
-            subscription = await self.repository.get_subscription_by_user_id(
-                subscription_id
-            )
+            subscription = await self.repository.get_subscription_by_user_id(subscription_id)
 
         if not subscription:
-            logger.error(
-                f"Subscription not found: {subscription_id} (tried as UUID and as user_id)"
-            )
+            logger.error(f"Subscription not found: {subscription_id} (tried as UUID and as user_id)")
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
         # Cancel Stripe subscription if it exists
@@ -763,13 +689,9 @@ class BillingService:
                     subscription.stripe_subscription_id,
                     cancel_at_period_end=False,
                 )
-                logger.info(
-                    f"Cancelled Stripe subscription {subscription.stripe_subscription_id} for admin action"
-                )
+                logger.info(f"Cancelled Stripe subscription {subscription.stripe_subscription_id} for admin action")
             except Exception as e:
-                logger.warning(
-                    f"Failed to cancel Stripe subscription {subscription.stripe_subscription_id}: {e}"
-                )
+                logger.warning(f"Failed to cancel Stripe subscription {subscription.stripe_subscription_id}: {e}")
                 # Continue with database update even if Stripe fails
 
         # Track changes for audit log
@@ -798,9 +720,7 @@ class BillingService:
 
         # Save changes
         if changes:
-            updated_subscription = await self.repository.update_subscription(
-                subscription_id=subscription.id
-            )
+            updated_subscription = await self.repository.update_subscription(subscription_id=subscription.id)
 
             # Log changes to history
             for change_type, old_val, new_val in changes:

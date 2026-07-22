@@ -10,12 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.exceptions import (
     AgentError,
     AgentNotConfiguredError,
     AgentToolsDisabledError,
 )
-from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.schemas import AgentChatRequest
 from app.modules.agent.services.agent_run_service import AgentRunService
 from app.modules.auth.dependencies import CurrentUser
@@ -30,9 +30,7 @@ router = APIRouter(prefix="/chat", tags=["agent-chat"])
 
 def _get_agent_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_repo: Annotated[
-        IntegrationTokenRepository, Depends(get_integration_token_repository)
-    ],
+    token_repo: Annotated[IntegrationTokenRepository, Depends(get_integration_token_repository)],
 ) -> AgentRunService:
     return AgentRunService(db, IntegrationTokenService(token_repo))
 

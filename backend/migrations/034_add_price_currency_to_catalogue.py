@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -31,16 +32,14 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
         True if column exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -52,9 +51,7 @@ async def upgrade() -> None:
 
     async with engine.begin() as conn:
         price_exists = await column_exists(conn, "global_catalogue_items", "price")
-        currency_exists = await column_exists(
-            conn, "global_catalogue_items", "currency"
-        )
+        currency_exists = await column_exists(conn, "global_catalogue_items", "currency")
 
         if price_exists and currency_exists:
             print("price and currency columns already exist, skipping migration...")
@@ -63,23 +60,19 @@ async def upgrade() -> None:
         if not price_exists:
             print("Adding price column...")
             await conn.execute(
-                text(
-                    """
+                text("""
                     ALTER TABLE global_catalogue_items
                     ADD COLUMN price FLOAT;
-                """
-                ),
+                """),
             )
 
         if not currency_exists:
             print("Adding currency column...")
             await conn.execute(
-                text(
-                    """
+                text("""
                     ALTER TABLE global_catalogue_items
                     ADD COLUMN currency VARCHAR(10);
-                """
-                ),
+                """),
             )
 
         print("✓ Added price and currency fields to global_catalogue_items table")
@@ -93,9 +86,7 @@ async def downgrade() -> None:
 
     async with engine.begin() as conn:
         price_exists = await column_exists(conn, "global_catalogue_items", "price")
-        currency_exists = await column_exists(
-            conn, "global_catalogue_items", "currency"
-        )
+        currency_exists = await column_exists(conn, "global_catalogue_items", "currency")
 
         if not price_exists and not currency_exists:
             print("price and currency columns do not exist, skipping downgrade...")
@@ -104,23 +95,19 @@ async def downgrade() -> None:
         if price_exists:
             print("Removing price column...")
             await conn.execute(
-                text(
-                    """
+                text("""
                     ALTER TABLE global_catalogue_items
                     DROP COLUMN price;
-                """
-                ),
+                """),
             )
 
         if currency_exists:
             print("Removing currency column...")
             await conn.execute(
-                text(
-                    """
+                text("""
                     ALTER TABLE global_catalogue_items
                     DROP COLUMN currency;
-                """
-                ),
+                """),
             )
 
         print("✓ Removed price and currency fields from global_catalogue_items table")
@@ -132,9 +119,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add price and currency to global_catalogue_items migration"
-    )
+    parser = argparse.ArgumentParser(description="Add price and currency to global_catalogue_items migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

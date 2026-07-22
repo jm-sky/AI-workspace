@@ -1,9 +1,9 @@
 """User Management module for FastAPI applications."""
 
-from .router import router
 from .models import User
-from .schemas import UserUpdate, UserResponse
 from .repositories import UserRepository, get_user_repository
+from .router import router
+from .schemas import UserResponse, UserUpdate
 
 __all__ = [
     "router",

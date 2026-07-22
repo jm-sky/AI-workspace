@@ -1,7 +1,6 @@
 """Repository for feature limits operations."""
 
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,9 +28,7 @@ class FeatureLimitRepository:
         Returns:
             Limit or None if not found
         """
-        result = await self.db.execute(
-            select(FeatureLimitDB).where(FeatureLimitDB.role == role)
-        )
+        result = await self.db.execute(select(FeatureLimitDB).where(FeatureLimitDB.role == role))
         return result.scalar_one_or_none()
 
     async def get_all(self) -> list[FeatureLimitDB]:
@@ -40,9 +37,7 @@ class FeatureLimitRepository:
         Returns:
             List of all limits
         """
-        result = await self.db.execute(
-            select(FeatureLimitDB).order_by(FeatureLimitDB.role)
-        )
+        result = await self.db.execute(select(FeatureLimitDB).order_by(FeatureLimitDB.role))
         return list(result.scalars().all())
 
     async def create(self, **kwargs: Any) -> FeatureLimitDB:

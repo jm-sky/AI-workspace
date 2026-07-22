@@ -33,15 +33,9 @@ class TestCascadeDeletion:
         """Test that deleting container cascades to delete all items."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        item1 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2"
-        )
-        item3 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 3"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container["id"], "Item 1")
+        item2 = await create_test_item(gear_service, test_user.id, container["id"], "Item 2")
+        item3 = await create_test_item(gear_service, test_user.id, container["id"], "Item 3")
 
         # Verify items exist
         assert await gear_service.get_item(item1["id"], test_user.id) is not None
@@ -68,9 +62,7 @@ class TestCascadeDeletion:
         """
         # Arrange
         parent = await create_test_container(gear_service, test_user.id, "Parent")
-        child = await create_test_container(
-            gear_service, test_user.id, "Child", parent_id=parent["id"]
-        )
+        await create_test_container(gear_service, test_user.id, "Child", parent_id=parent["id"])
 
         # Act & Assert
         with pytest.raises(IntegrityError):
@@ -91,12 +83,8 @@ class TestCascadeDeletion:
         """
         # Arrange
         parent = await create_test_container(gear_service, test_user.id, "Parent")
-        child1 = await create_test_container(
-            gear_service, test_user.id, "Child 1", parent_id=parent["id"]
-        )
-        child2 = await create_test_container(
-            gear_service, test_user.id, "Child 2", parent_id=parent["id"]
-        )
+        await create_test_container(gear_service, test_user.id, "Child 1", parent_id=parent["id"])
+        await create_test_container(gear_service, test_user.id, "Child 2", parent_id=parent["id"])
 
         # Act - delete_all_containers may encounter FK constraint issues
         # depending on deletion order
@@ -129,9 +117,7 @@ class TestForeignKeyConstraints:
             category="water",
             weight=100.0,
         )
-        item = await gear_service.create_item(
-            "non-existent-container-id", test_user.id, data
-        )
+        item = await gear_service.create_item("non-existent-container-id", test_user.id, data)
 
         # Assert
         assert item is None  # Service returns None for invalid container
@@ -192,15 +178,11 @@ class TestCircularReferences:
         This creates logical inconsistency that unified model should prevent.
         """
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "Self-Ref Container"
-        )
+        container = await create_test_container(gear_service, test_user.id, "Self-Ref Container")
 
         # Act - Set container as its own parent
         update_data = ContainerUpdate(parentContainerId=container["id"])
-        updated = await gear_service.update_container(
-            container["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_container(container["id"], test_user.id, update_data)
 
         # Assert - Current system allows this
         assert updated is not None
@@ -220,9 +202,7 @@ class TestCircularReferences:
         LIMITATION: A -> B -> A circular reference is possible.
         """
         # Arrange
-        container_a = await create_test_container(
-            gear_service, test_user.id, "Container A"
-        )
+        container_a = await create_test_container(gear_service, test_user.id, "Container A")
         container_b = await create_test_container(
             gear_service,
             test_user.id,
@@ -232,9 +212,7 @@ class TestCircularReferences:
 
         # Act - Make A a child of B (creates A -> B -> A cycle)
         update_data = ContainerUpdate(parentContainerId=container_b["id"])
-        updated_a = await gear_service.update_container(
-            container_a["id"], test_user.id, update_data
-        )
+        updated_a = await gear_service.update_container(container_a["id"], test_user.id, update_data)
 
         # Assert - System allows circular reference
         assert updated_a is not None
@@ -262,12 +240,8 @@ class TestDataConsistency:
     ) -> None:
         """Test that item's container reference remains valid after container updates."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "Original Name"
-        )
-        item = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item"
-        )
+        container = await create_test_container(gear_service, test_user.id, "Original Name")
+        item = await create_test_item(gear_service, test_user.id, container["id"], "Item")
 
         # Act - Update container
         update_data = ContainerUpdate(name="Updated Name")
@@ -288,12 +262,8 @@ class TestDataConsistency:
     ) -> None:
         """Test that nested container reference remains valid after parent updates."""
         # Arrange
-        parent = await create_test_container(
-            gear_service, test_user.id, "Parent", weight=500.0, weight_unit="g"
-        )
-        child = await create_test_container(
-            gear_service, test_user.id, "Child", parent_id=parent["id"]
-        )
+        parent = await create_test_container(gear_service, test_user.id, "Parent", weight=500.0, weight_unit="g")
+        child = await create_test_container(gear_service, test_user.id, "Child", parent_id=parent["id"])
 
         # Act - Update parent
         update_data = ContainerUpdate(weight=600.0)
@@ -318,9 +288,7 @@ class TestDataConsistency:
         """Test that orphaned items cannot exist (cascade delete prevents them)."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Container")
-        item = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item"
-        )
+        item = await create_test_item(gear_service, test_user.id, container["id"], "Item")
 
         # Act - Delete container
         await gear_service.delete_container(container["id"], test_user.id)
@@ -341,14 +309,10 @@ class TestUserIsolation:
     ) -> None:
         """Test that users cannot access other users' containers."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "User Container"
-        )
+        container = await create_test_container(gear_service, test_user.id, "User Container")
 
         # Act - Try to access with different user ID
-        other_user_access = await gear_service.get_container(
-            container["id"], "different-user-id"
-        )
+        other_user_access = await gear_service.get_container(container["id"], "different-user-id")
 
         # Assert
         assert other_user_access is None
@@ -362,9 +326,7 @@ class TestUserIsolation:
         """Test that users cannot access other users' items."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Container")
-        item = await create_test_item(
-            gear_service, test_user.id, container["id"], "User Item"
-        )
+        item = await create_test_item(gear_service, test_user.id, container["id"], "User Item")
 
         # Act - Try to access with different user ID
         other_user_access = await gear_service.get_item(item["id"], "different-user-id")
@@ -380,15 +342,11 @@ class TestUserIsolation:
     ) -> None:
         """Test that users cannot modify other users' containers."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "User Container"
-        )
+        container = await create_test_container(gear_service, test_user.id, "User Container")
 
         # Act - Try to update with different user ID
         update_data = ContainerUpdate(name="Hacked Name")
-        updated = await gear_service.update_container(
-            container["id"], "different-user-id", update_data
-        )
+        updated = await gear_service.update_container(container["id"], "different-user-id", update_data)
 
         # Assert - Update should fail (return None)
         assert updated is None
@@ -406,14 +364,10 @@ class TestUserIsolation:
     ) -> None:
         """Test that users cannot delete other users' containers."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "User Container"
-        )
+        container = await create_test_container(gear_service, test_user.id, "User Container")
 
         # Act - Try to delete with different user ID
-        result = await gear_service.delete_container(
-            container["id"], "different-user-id"
-        )
+        result = await gear_service.delete_container(container["id"], "different-user-id")
 
         # Assert - Delete should fail
         assert result is False
@@ -438,12 +392,8 @@ class TestBulkOperations:
         but this documents expected behavior.
         """
         # Arrange
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Container 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Container 2"
-        )
+        await create_test_container(gear_service, test_user.id, "Container 1")
+        await create_test_container(gear_service, test_user.id, "Container 2")
 
         # Act
         deleted_count = await gear_service.delete_all_containers(test_user.id)
@@ -464,12 +414,8 @@ class TestBulkOperations:
         """Test that get_all_items only returns the specified user's items."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Container")
-        item1 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container["id"], "Item 1")
+        item2 = await create_test_item(gear_service, test_user.id, container["id"], "Item 2")
 
         # Act
         all_items = await gear_service.get_all_items(test_user.id)
@@ -495,15 +441,9 @@ class TestConstraintEdgeCases:
         parent = await create_test_container(gear_service, test_user.id, "Parent")
 
         # Act
-        child1 = await create_test_container(
-            gear_service, test_user.id, "Child 1", parent_id=parent["id"]
-        )
-        child2 = await create_test_container(
-            gear_service, test_user.id, "Child 2", parent_id=parent["id"]
-        )
-        child3 = await create_test_container(
-            gear_service, test_user.id, "Child 3", parent_id=parent["id"]
-        )
+        child1 = await create_test_container(gear_service, test_user.id, "Child 1", parent_id=parent["id"])
+        child2 = await create_test_container(gear_service, test_user.id, "Child 2", parent_id=parent["id"])
+        child3 = await create_test_container(gear_service, test_user.id, "Child 3", parent_id=parent["id"])
 
         # Assert
         assert child1["parentContainerId"] == parent["id"]
@@ -519,18 +459,14 @@ class TestConstraintEdgeCases:
         """Test that removing parent reference makes container top-level."""
         # Arrange
         parent = await create_test_container(gear_service, test_user.id, "Parent")
-        child = await create_test_container(
-            gear_service, test_user.id, "Child", parent_id=parent["id"]
-        )
+        child = await create_test_container(gear_service, test_user.id, "Child", parent_id=parent["id"])
 
         # Verify nested
         assert child["parentContainerId"] == parent["id"]
 
         # Act - Remove parent reference
         update_data = ContainerUpdate(parentContainerId=None)
-        updated = await gear_service.update_container(
-            child["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_container(child["id"], test_user.id, update_data)
 
         # Assert - Now top-level
         assert updated is not None
@@ -545,18 +481,10 @@ class TestConstraintEdgeCases:
         """Test that deeply nested structure maintains referential integrity."""
         # Arrange - Create 5-level nesting
         l1 = await create_test_container(gear_service, test_user.id, "Level 1")
-        l2 = await create_test_container(
-            gear_service, test_user.id, "Level 2", parent_id=l1["id"]
-        )
-        l3 = await create_test_container(
-            gear_service, test_user.id, "Level 3", parent_id=l2["id"]
-        )
-        l4 = await create_test_container(
-            gear_service, test_user.id, "Level 4", parent_id=l3["id"]
-        )
-        l5 = await create_test_container(
-            gear_service, test_user.id, "Level 5", parent_id=l4["id"]
-        )
+        l2 = await create_test_container(gear_service, test_user.id, "Level 2", parent_id=l1["id"])
+        l3 = await create_test_container(gear_service, test_user.id, "Level 3", parent_id=l2["id"])
+        l4 = await create_test_container(gear_service, test_user.id, "Level 4", parent_id=l3["id"])
+        l5 = await create_test_container(gear_service, test_user.id, "Level 5", parent_id=l4["id"])
 
         # Act - Verify all references valid
         fetched_l5 = await gear_service.get_container(l5["id"], test_user.id)

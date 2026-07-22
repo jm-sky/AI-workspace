@@ -11,9 +11,7 @@ from app.modules.integrations.exceptions import IntegrationEncryptionError
 def _get_cipher() -> Fernet:
     key = settings.integrations.token_encryption_key or settings.ai.token_encryption_key
     if not key:
-        raise IntegrationEncryptionError(
-            "INTEGRATION_TOKEN_ENCRYPTION_KEY or AI_TOKEN_ENCRYPTION_KEY not configured"
-        )
+        raise IntegrationEncryptionError("INTEGRATION_TOKEN_ENCRYPTION_KEY or AI_TOKEN_ENCRYPTION_KEY not configured")
     try:
         return Fernet(key)
     except Exception as exc:

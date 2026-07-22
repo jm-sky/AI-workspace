@@ -136,11 +136,7 @@ class AgentRunRepository:
         return list(result.scalars().all()), total
 
     async def get_steps(self, run_id: str) -> list[AgentRunStepDB]:
-        stmt = (
-            select(AgentRunStepDB)
-            .where(AgentRunStepDB.run_id == run_id)
-            .order_by(AgentRunStepDB.step_index.asc())
-        )
+        stmt = select(AgentRunStepDB).where(AgentRunStepDB.run_id == run_id).order_by(AgentRunStepDB.step_index.asc())
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
@@ -158,23 +154,16 @@ class AgentRunRepository:
             .where(
                 AgentRunStepDB.raw_expires_at.is_not(None),
                 AgentRunStepDB.raw_expires_at < cutoff,
-                (
-                    AgentRunStepDB.raw_input_data.is_not(None)
-                    | AgentRunStepDB.raw_output_data.is_not(None)
-                ),
+                (AgentRunStepDB.raw_input_data.is_not(None) | AgentRunStepDB.raw_output_data.is_not(None)),
             )
             .values(raw_input_data=None, raw_output_data=None, raw_expires_at=None)
         )
         result = await self.db.execute(stmt)
-        return result.rowcount or 0
+        return result.rowcount or 0  # type: ignore[attr-defined]
 
     async def list_runs_for_session(self, session_id: str) -> list[AgentRunDB]:
         """All runs in a session, oldest first (conversation order)."""
-        stmt = (
-            select(AgentRunDB)
-            .where(AgentRunDB.session_id == session_id)
-            .order_by(AgentRunDB.created_at.asc())
-        )
+        stmt = select(AgentRunDB).where(AgentRunDB.session_id == session_id).order_by(AgentRunDB.created_at.asc())
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
@@ -204,9 +193,7 @@ class AgentSessionRepository:
         await self.db.flush()
         return session
 
-    async def get_session(
-        self, session_id: str, *, user_id: str
-    ) -> AgentSessionDB | None:
+    async def get_session(self, session_id: str, *, user_id: str) -> AgentSessionDB | None:
         stmt = select(AgentSessionDB).where(
             AgentSessionDB.id == session_id,
             AgentSessionDB.user_id == user_id,
@@ -214,9 +201,7 @@ class AgentSessionRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def touch_session(
-        self, session: AgentSessionDB, *, title: str | None = None
-    ) -> AgentSessionDB:
+    async def touch_session(self, session: AgentSessionDB, *, title: str | None = None) -> AgentSessionDB:
         session.last_message_at = datetime.now(UTC)
         if title and not session.title:
             session.title = title

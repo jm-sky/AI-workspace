@@ -5,7 +5,7 @@ from uuid import UUID
 from app.modules.ai.db_models import AIHistoryDB
 from app.modules.ai.repositories import HistoryRepository
 from app.modules.ai.schemas import AiHistoryDetail, AiHistoryItem, AiHistoryListResponse
-from app.modules.ai.utils.models_config import calculate_cost, get_model_by_id
+from app.modules.ai.utils.models_config import get_model_by_id
 
 
 class HistoryService:
@@ -83,19 +83,13 @@ class HistoryService:
         Returns:
             History list response
         """
-        entries, total = await self.repo.list_by_user(
-            user_id=user_id, limit=limit, offset=offset, operation_type=operation_type
-        )
+        entries, total = await self.repo.list_by_user(user_id=user_id, limit=limit, offset=offset, operation_type=operation_type)
 
         items = [self._to_list_item(entry) for entry in entries]
 
-        return AiHistoryListResponse(
-            items=items, total=total, limit=limit, offset=offset
-        )
+        return AiHistoryListResponse(items=items, total=total, limit=limit, offset=offset)
 
-    async def get_history_detail(
-        self, history_id: UUID, user_id: str
-    ) -> AiHistoryDetail | None:
+    async def get_history_detail(self, history_id: UUID, user_id: str) -> AiHistoryDetail | None:
         """Get history entry detail.
 
         Args:
@@ -156,9 +150,7 @@ class HistoryService:
 
         # Extract metadata
         metadata = entry.metadata_ or {}
-        provider = metadata.get("provider") or (
-            entry.model.split("/")[0] if "/" in entry.model else "unknown"
-        )
+        provider = metadata.get("provider") or (entry.model.split("/")[0] if "/" in entry.model else "unknown")
         duration_ms = metadata.get("duration_ms")
         used_own_token = metadata.get("used_own_token", False)
 
@@ -177,21 +169,13 @@ class HistoryService:
             model_config = get_model_by_id(entry.model)
             if model_config:
                 # Calculate costs based on token counts
-                cost_input = (entry.prompt_tokens / 1_000_000) * model_config[
-                    "cost_per_1m_input"
-                ]
-                cost_output = (entry.completion_tokens / 1_000_000) * model_config[
-                    "cost_per_1m_output"
-                ]
+                cost_input = (entry.prompt_tokens / 1_000_000) * model_config["cost_per_1m_input"]
+                cost_output = (entry.completion_tokens / 1_000_000) * model_config["cost_per_1m_output"]
             else:
                 # Fallback: split total cost proportionally
                 if entry.total_tokens > 0:
-                    cost_input = entry.cost_usd * (
-                        entry.prompt_tokens / entry.total_tokens
-                    )
-                    cost_output = entry.cost_usd * (
-                        entry.completion_tokens / entry.total_tokens
-                    )
+                    cost_input = entry.cost_usd * (entry.prompt_tokens / entry.total_tokens)
+                    cost_output = entry.cost_usd * (entry.completion_tokens / entry.total_tokens)
 
         cost = {
             "input": float(round(cost_input, 6)),

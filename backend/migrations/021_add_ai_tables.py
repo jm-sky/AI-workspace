@@ -18,21 +18,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     """Check if a table exists in the database."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -55,9 +54,7 @@ async def upgrade() -> None:
         # Create ai_user_settings table
         if not settings_exist:
             print("Creating ai_user_settings table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE ai_user_settings (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         user_id VARCHAR(36) NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -70,25 +67,17 @@ async def upgrade() -> None:
                         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                         updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
                     );
-                """
-                )
-            )
+                """))
             print("✓ Created ai_user_settings table")
 
             # Create index on user_id
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_ai_user_settings_user_id ON ai_user_settings(user_id);"
-                )
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_user_settings_user_id ON ai_user_settings(user_id);"))
             print("✓ Created index on ai_user_settings.user_id")
 
         # Create ai_history table
         if not history_exist:
             print("Creating ai_history table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE ai_history (
                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -103,37 +92,23 @@ async def upgrade() -> None:
                         metadata JSONB,
                         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
                     );
-                """
-                )
-            )
+                """))
             print("✓ Created ai_history table")
 
             # Create indexes
-            await conn.execute(
-                text("CREATE INDEX idx_ai_history_user_id ON ai_history(user_id);")
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_history_user_id ON ai_history(user_id);"))
             print("✓ Created index on ai_history.user_id")
 
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_ai_history_created_at ON ai_history(created_at);"
-                )
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_history_created_at ON ai_history(created_at);"))
             print("✓ Created index on ai_history.created_at")
 
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_ai_history_operation_type ON ai_history(operation_type);"
-                )
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_history_operation_type ON ai_history(operation_type);"))
             print("✓ Created index on ai_history.operation_type")
 
         # Create ai_cache table
         if not cache_exist:
             print("Creating ai_cache table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE ai_cache (
                         cache_key VARCHAR(64) PRIMARY KEY,
                         operation_type VARCHAR(50) NOT NULL,
@@ -143,22 +118,14 @@ async def upgrade() -> None:
                         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                         expires_at TIMESTAMP WITH TIME ZONE NOT NULL
                     );
-                """
-                )
-            )
+                """))
             print("✓ Created ai_cache table")
 
             # Create indexes
-            await conn.execute(
-                text("CREATE INDEX idx_ai_cache_expires_at ON ai_cache(expires_at);")
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_cache_expires_at ON ai_cache(expires_at);"))
             print("✓ Created index on ai_cache.expires_at")
 
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_ai_cache_operation_type ON ai_cache(operation_type);"
-                )
-            )
+            await conn.execute(text("CREATE INDEX idx_ai_cache_operation_type ON ai_cache(operation_type);"))
             print("✓ Created index on ai_cache.operation_type")
 
     print("✓ Migration completed successfully")
