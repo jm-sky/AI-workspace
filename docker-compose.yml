@@ -62,7 +62,7 @@ services:
   # Application
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     image: ai-workspace-backend:latest
     container_name: ai-workspace-app
@@ -73,7 +73,7 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - PROJECT_NAME=${PROJECT_NAME:-ai-workspace}

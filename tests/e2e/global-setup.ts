@@ -68,7 +68,7 @@ async function globalSetup() {
     console.log('✓ Backend is available')
   } catch {
     await context.dispose()
-    throw new Error('Backend not available. Start with: docker compose -f backend/docker-compose.dev.yml up -d')
+    throw new Error('Backend not available. Start with: docker compose -f docker-compose.dev.yml up -d')
   }
 
   // Try login

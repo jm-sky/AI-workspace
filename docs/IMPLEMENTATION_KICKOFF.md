@@ -100,7 +100,7 @@ restraint**, **tylko Inter**, **light-first / dark równorzędny** (ChatGPT stru
 ## Praktyki pracy
 
 - Pracuj na gałęzi; **commituj i pushuj regularnie**. `docs/` pozostaje źródłem prawdy — aktualizuj „Otwarte punkty" w `MVP.md`, gdy je rozstrzygasz.
-- Frontend: **pnpm**. Backend: docker compose (`backend/docker-compose.dev.yml`). **Zasada bezpieczeństwa: NIGDY nie uruchamiaj Dockera, jeśli katalog projektu zaczyna się od podkreślenia** (`_`).
+- Frontend: **pnpm**. Backend: docker compose (`docker compose -f docker-compose.dev.yml`). **Zasada bezpieczeństwa: NIGDY nie uruchamiaj Dockera, jeśli katalog projektu zaczyna się od podkreślenia** (`_`).
 - **Zweryfikuj pionowy plaster end-to-end** na realnych Jira+GitLab, zanim uznasz go za gotowy.
 - **Pytaj przed** dużymi/nieodwracalnymi lub „na zewnątrz" działaniami. Nie twórz PR-a, dopóki użytkownik nie poprosi.
 
