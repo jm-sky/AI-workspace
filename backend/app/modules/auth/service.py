@@ -221,36 +221,21 @@ class AuthService:
             old_tfa_verified = payload.get("tfaVerified", False)
             old_tfa_method = payload.get("tfaMethod")
 
-            # Generate new tokens with preserved 2FA state
             # Ensure tfaVerified is bool (not None)
             tfa_verified_bool = old_tfa_verified if old_tfa_verified is not None else False
-            workspace_claims = await self._workspace_claims_for_user(user)
-            access_data: CreateAccessTokenOptions = {
-                "sub": user_id,
-                "email": user.email,
-                "tfaVerified": tfa_verified_bool,
-                "tfaMethod": old_tfa_method,
-                "emailVerified": user.isEmailVerified,
-                "tv": user.tokenVersion,
-            }
-            access_data.update(workspace_claims)
-            new_access_token = create_access_token(data=access_data)
-            refresh_data: CreateRefreshTokenOptions = {
-                "sub": user_id,
-                "email": user.email,
-                "tfaVerified": tfa_verified_bool,
-                "tfaMethod": old_tfa_method,
-                "emailVerified": user.isEmailVerified,
-                "tv": user.tokenVersion,
-                "jti": payload.get("jti"),
-            }
-            new_refresh_token = create_refresh_token(data=refresh_data)
+
+            # Reissue via _issue_login_tokens (same as login) so refreshed
+            # tokens keep carrying `tv`/`jti` (and workspace claims) instead
+            # of silently dropping them — without `tv`, _verify_user_token
+            # rejects the refreshed token for any user whose tokenVersion
+            # isn't 0.
+            login_response = await self._issue_login_tokens(user, tfa_verified=tfa_verified_bool, tfa_method=old_tfa_method)
 
             return {
-                "accessToken": new_access_token,
-                "refreshToken": new_refresh_token,
-                "tokenType": "bearer",
-                "expiresIn": settings.security.access_token_expires_minutes * 60,
+                "accessToken": login_response.accessToken,
+                "refreshToken": login_response.refreshToken,
+                "tokenType": login_response.tokenType,
+                "expiresIn": login_response.expiresIn,
             }
 
         except InvalidTokenError:
