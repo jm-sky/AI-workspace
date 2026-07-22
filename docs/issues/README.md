@@ -33,5 +33,6 @@ Błędy, usprawnienia i dług techniczny — elementy do naprawy.
 | 021 | [2026-07-08--021--backport-2fa-shared-core.md](2026-07-08--021--backport-2fa-shared-core.md) | Backport 2FA i shared-core UX z gear-stack | `done` |
 | 022 | [2026-07-11--022--chat-tool-memory-step-disappears.md](2026-07-11--022--chat-tool-memory-step-disappears.md) | Chat — krok narzędzia (memory) znika po zakończeniu runu | `todo` |
 | 023 | [2026-07-20--023--backport-shared-core-security-fixes.md](2026-07-20--023--backport-shared-core-security-fixes.md) | Backport: rate limiting, admin auth bypass, WebAuthn login (shared core) | `done` |
+| 024 | [2026-07-22--024--oauth-session-and-state-backport.md](2026-07-22--024--oauth-session-and-state-backport.md) | Backport: OAuth session/2FA parity + CSRF state store (gear-stack 036+037) | `done` |
 
 When adding a new issue: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.
