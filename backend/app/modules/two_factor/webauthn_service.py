@@ -18,14 +18,20 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import jwt
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 
 from app.core.config import settings
 
-from .crypto_utils import encrypt_secret
+from .crypto_utils import decrypt_secret, encrypt_secret
 from .exceptions import SetupTokenError
 from .types.jwt import PasskeyRegistrationTokenPayload
 from .types.repository import TwoFactorRepositoryInterface
-from .webauthn_utils import create_registration_options, verify_registration
+from .webauthn_utils import (
+    create_authentication_options,
+    create_registration_options,
+    verify_authentication,
+    verify_registration,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +95,7 @@ def _verify_passkey_registration_token(
 class WebAuthnService:
     """Service for WebAuthn/Passkey operations using composition pattern."""
 
-    def __init__(
-        self, repository: TwoFactorRepositoryInterface, challenge_store: Any = None
-    ):
+    def __init__(self, repository: TwoFactorRepositoryInterface, challenge_store: Any = None):
         """Initialize with repository dependency.
 
         Args:
@@ -120,9 +124,7 @@ class WebAuthnService:
             Dict with options, registrationToken, expiresAt
         """
         # Generate registration options and challenge
-        options_json, challenge = create_registration_options(
-            user_id, user_email, user_name
-        )
+        options_json, challenge = create_registration_options(user_id, user_email, user_name)
 
         # options_to_json returns a JSON string; API schema expects a dict
         options = json.loads(options_json)
@@ -170,11 +172,9 @@ class WebAuthnService:
 
         # Get origin from settings if not provided
         if not origin:
-            origin = getattr(
-                getattr(settings, "two_factor", object()),
-                "webauthn_origin",
-                "http://localhost:3000",
-            )
+            from .webauthn_utils import _get_origin
+
+            origin = _get_origin()
 
         # Verify WebAuthn credential
         verified_data = verify_registration(
@@ -191,11 +191,7 @@ class WebAuthnService:
             name = self._generate_passkey_name(user_agent)
 
         # Save transports as JSON
-        transports_json = (
-            json.dumps(verified_data.get("transports", []))
-            if verified_data.get("transports")
-            else None
-        )
+        transports_json = json.dumps(verified_data.get("transports", [])) if verified_data.get("transports") else None
 
         # Create passkey in database
         passkey_id = await self.repository.create_passkey(
@@ -234,29 +230,25 @@ class WebAuthnService:
         Raises:
             ValueError: If user has no passkeys registered
         """
-        # Get user's passkeys
+        # Get user's enabled passkeys
         passkeys = await self.repository.get_passkeys(user_id)
+        enabled_passkeys = [pk for pk in passkeys if pk.is_enabled]
 
-        if not passkeys:
+        if not enabled_passkeys:
             raise ValueError("No passkeys registered for this user")
 
-        # Generate challenge
-        challenge = secrets.token_urlsafe(32)
+        # Build allow-list of (credential_id_bytes, transports) for the library
+        allow_credentials: list[tuple[bytes, list[str]]] = []
+        for pk in enabled_passkeys:
+            credential_id_bytes = base64url_to_bytes(pk.credential_id)
+            transports = json.loads(pk.transports) if pk.transports else []
+            allow_credentials.append((credential_id_bytes, transports))
 
-        # Create credential IDs list
-        allow_credentials = []
-        for pk in passkeys:
-            if pk.is_enabled:
-                credential_id_bytes = base64.b64decode(pk.credential_id)
-                transports = json.loads(pk.transports) if pk.transports else []
-
-                allow_credentials.append(
-                    {
-                        "id": base64.b64encode(credential_id_bytes).decode(),
-                        "type": "public-key",
-                        "transports": transports,
-                    }
-                )
+        # Generate options + challenge via the webauthn library (same pattern
+        # as registration) instead of hand-building the options dict, so the
+        # challenge bytes are guaranteed to round-trip correctly for verification.
+        options_json, challenge = create_authentication_options(allow_credentials)
+        options = json.loads(options_json)
 
         # Create challenge token
         challenge_token = secrets.token_urlsafe(32)
@@ -267,32 +259,13 @@ class WebAuthnService:
             await self.challenge_store.store_challenge(
                 challenge_token=challenge_token,
                 user_id=user_id,
-                challenge=challenge.encode("utf-8"),
+                challenge=challenge,
                 challenge_type="authentication",
                 ttl=300,  # 5 minutes
             )
             logger.info(f"Challenge stored in Redis for user_id={user_id}")
         else:
-            logger.warning(
-                "Challenge store not available - challenge NOT stored server-side (INSECURE)"
-            )
-
-        # Create authentication options
-        # Get domain from frontend URL or default to localhost
-        frontend_url = settings.frontend_url
-        # Extract domain from URL (e.g., "http://localhost:3000" -> "localhost")
-        from urllib.parse import urlparse
-
-        parsed = urlparse(frontend_url)
-        rp_id = parsed.hostname or "localhost"
-
-        options = {
-            "challenge": challenge,
-            "timeout": 300000,  # 5 minutes in milliseconds
-            "rpId": rp_id,
-            "allowCredentials": allow_credentials,
-            "userVerification": "required",
-        }
+            logger.warning("Challenge store not available - challenge NOT stored server-side (INSECURE)")
 
         return {
             "options": options,
@@ -305,6 +278,7 @@ class WebAuthnService:
         challenge_token: str,
         credential_json: dict,
         challenge_data: dict | None = None,
+        expected_user_id: str | None = None,
     ) -> dict[str, Any]:
         """Complete passkey authentication verification.
 
@@ -312,6 +286,10 @@ class WebAuthnService:
             challenge_token: Challenge token from initiation
             credential_json: PublicKeyCredential from WebAuthn API
             challenge_data: Challenge data (deprecated - use Redis)
+            expected_user_id: If provided (e.g. resolved from the caller's own
+                2FA-pending token), must match the challenge's user — binds
+                the whole ceremony to one identity instead of trusting the
+                credential lookup alone to catch a mismatched session.
 
         Returns:
             Dict with success, userId, passkeyId
@@ -321,30 +299,29 @@ class WebAuthnService:
         """
         # Retrieve challenge_data from Redis using challenge_token
         if self.challenge_store:
-            challenge_data_from_redis = (
-                await self.challenge_store.get_and_delete_challenge(challenge_token)
-            )
+            challenge_data_from_redis = await self.challenge_store.get_and_delete_challenge(challenge_token)
             if not challenge_data_from_redis:
                 raise ValueError("Challenge not found or expired")
             challenge_data = challenge_data_from_redis
             logger.info("Challenge retrieved and consumed from Redis")
         elif not challenge_data:
-            raise ValueError(
-                "Challenge data not found or expired - Redis not configured"
-            )
+            raise ValueError("Challenge data not found or expired - Redis not configured")
 
         # Verify challenge type
         if challenge_data.get("challenge_type") != "authentication":
             raise ValueError("Invalid challenge type")
+
+        if expected_user_id is not None and challenge_data["user_id"] != expected_user_id:
+            raise ValueError("Challenge does not belong to this user")
 
         # Get credential ID from response
         raw_id = credential_json.get("rawId")
         if not raw_id:
             raise ValueError("Missing credential rawId")
 
-        # Decode credential ID
-        credential_id = base64.b64decode(raw_id)
-        credential_id_b64 = base64.b64encode(credential_id).decode()
+        # Decode credential ID (stored / transmitted as unpadded base64url)
+        credential_id = base64url_to_bytes(raw_id)
+        credential_id_b64 = bytes_to_base64url(credential_id)
 
         # Find passkey by credential ID
         passkey = await self.repository.get_passkey_by_credential_id(credential_id_b64)
@@ -359,21 +336,25 @@ class WebAuthnService:
         if passkey.user_id != challenge_data["user_id"]:
             raise ValueError("Passkey does not belong to user")
 
-        # TODO: Full WebAuthn verification using webauthn library
-        # For now, basic check (implement full verification in production)
+        # Full WebAuthn verification: signature (against the stored public
+        # key), challenge match, origin/RP-ID match, and counter-regression
+        # (clone detection) — via the webauthn library. Raises on failure.
+        from .webauthn_utils import _get_origin
 
-        # Update passkey usage
+        public_key_bytes = base64url_to_bytes(decrypt_secret(passkey.public_key))
+        expected_challenge = base64.b64decode(challenge_data["challenge"])
+
+        verification = verify_authentication(
+            credential_json=credential_json,
+            expected_challenge=expected_challenge,
+            expected_origin=_get_origin(),
+            credential_public_key=public_key_bytes,
+            credential_current_sign_count=passkey.counter,
+        )
+
+        # Update passkey usage and persist the verified signature counter
         await self.repository.update_passkey_last_used(passkey.id)
-
-        # Extract and update counter from authenticator data
-        response = credential_json.get("response", {})
-        authenticator_data = response.get("authenticatorData")
-        if authenticator_data:
-            auth_data_bytes = base64.b64decode(authenticator_data)
-            if len(auth_data_bytes) >= 37:
-                # Counter is at bytes 33-37
-                counter = int.from_bytes(auth_data_bytes[33:37], "big")
-                await self.repository.update_passkey_counter(passkey.id, counter)
+        await self.repository.update_passkey_counter(passkey.id, verification["new_sign_count"])
 
         return {
             "success": True,

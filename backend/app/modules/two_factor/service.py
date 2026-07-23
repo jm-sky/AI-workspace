@@ -17,8 +17,9 @@ from sqlalchemy import select
 from app.modules.settings.db_models import UserSettingsDB
 
 from .totp_service import TotpService
-from .webauthn_service import WebAuthnService
 from .types.repository import TwoFactorRepositoryInterface
+from .types.tokens import LoginTokens, TwoFactorLoginResult
+from .webauthn_service import WebAuthnService
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +32,58 @@ class TwoFactorService:
     """
 
     def __init__(
-        self, repository: TwoFactorRepositoryInterface, challenge_store: Any = None
+        self,
+        repository: TwoFactorRepositoryInterface,
+        challenge_store: Any = None,
+        user_repository: Any = None,
+        token_blacklist_service: Any = None,
     ):
         """Initialize with repository and create service dependencies.
 
         Args:
             repository: Two-factor repository interface
             challenge_store: WebAuthn challenge store (optional)
+            user_repository: User repository, required by verify_totp_login /
+                complete_passkey_authentication to mint full-claim login tokens
+            token_blacklist_service: Session tracking service (optional)
         """
         self.repository = repository
         # Composition: create specialized services
         self.totp = TotpService(repository)
         self.webauthn = WebAuthnService(repository, challenge_store)
+        self.user_repository = user_repository
+        self.token_blacklist_service = token_blacklist_service
+
+    async def _issue_login_tokens(self, user_id: str, tfa_method: str) -> LoginTokens:
+        """Mint access/refresh tokens for a completed 2FA login.
+
+        Delegates to ``AuthService._issue_login_tokens`` (the same helper the
+        password/OAuth login paths use) so these tokens carry the same `tv`
+        (token version) and `jti` (session id) claims — and, in ai-workspace,
+        workspace claims. Without `tv`/`jti`, `_verify_user_token` rejects
+        every request from a user whose `tokenVersion` isn't 0 (e.g. anyone
+        who ever reset their password) with 401 "Token has been revoked"
+        right after a successful 2FA check.
+        """
+        from app.modules.auth.exceptions import UserNotFoundError
+        from app.modules.auth.service import AuthService
+
+        if self.user_repository is None:
+            raise RuntimeError("TwoFactorService requires user_repository to issue login tokens")
+
+        user = await self.user_repository.get_user_by_id(user_id)
+        if user is None:
+            raise UserNotFoundError("User not found")
+
+        auth_service = AuthService(user_repository=self.user_repository, token_blacklist_service=self.token_blacklist_service)
+        login_response = await auth_service._issue_login_tokens(user, tfa_verified=True, tfa_method=tfa_method)
+
+        return {
+            "accessToken": login_response.accessToken,
+            "refreshToken": login_response.refreshToken,
+            "tokenType": login_response.tokenType,
+            "expiresIn": login_response.expiresIn,
+        }
 
     async def _get_or_create_user_settings(self, user_id: str) -> UserSettingsDB:
         """Get or create user settings.
@@ -54,9 +95,7 @@ class TwoFactorService:
             User settings entity
         """
         db = self.repository.db
-        result = await db.execute(
-            select(UserSettingsDB).where(UserSettingsDB.user_id == user_id)
-        )
+        result = await db.execute(select(UserSettingsDB).where(UserSettingsDB.user_id == user_id))
         settings = result.scalars().first()
         if settings is None:
             settings = UserSettingsDB(user_id=user_id)
@@ -89,9 +128,7 @@ class TwoFactorService:
         user_repository: Any = None,
     ) -> dict[str, Any]:
         """Regenerate backup codes. Delegates to TotpService."""
-        return await self.totp.regenerate_backup_codes(
-            user_id, password, totp_code, user_repository
-        )
+        return await self.totp.regenerate_backup_codes(user_id, password, totp_code, user_repository)
 
     async def disable_totp(
         self,
@@ -103,18 +140,12 @@ class TwoFactorService:
         """Disable TOTP. Delegates to TotpService."""
         return await self.totp.disable(user_id, password, backup_code, user_repository)
 
-    async def verify_totp_login(
-        self, two_factor_token: str, code: str
-    ) -> dict[str, Any]:
+    async def verify_totp_login(self, two_factor_token: str, code: str) -> TwoFactorLoginResult:
         """Verify TOTP code during login and return JWT tokens.
 
         This method combines TOTP verification with token generation.
         """
         from .auth_utils import verify_two_factor_token
-        from app.modules.auth.auth_utils import (
-            create_access_token,
-            create_refresh_token,
-        )
 
         # Verify 2FA token
         payload = verify_two_factor_token(two_factor_token)
@@ -128,14 +159,12 @@ class TwoFactorService:
 
             raise InvalidTwoFactorCodeError("Invalid verification code")
 
-        # Create access and refresh tokens
-        access_token = create_access_token(data={"sub": user_id})
-        refresh_token = create_refresh_token(data={"sub": user_id})
+        tokens = await self._issue_login_tokens(user_id, tfa_method="totp")
 
         return {
-            "accessToken": access_token,
-            "refreshToken": refresh_token,
-            "tokenType": "bearer",
+            "verified": True,
+            "method": "totp",
+            **tokens,
         }
 
     # ==================================================================
@@ -150,9 +179,7 @@ class TwoFactorService:
         name: str | None = None,
     ) -> dict[str, Any]:
         """Initiate passkey registration. Delegates to WebAuthnService."""
-        return await self.webauthn.initiate_registration(
-            user_id, user_email, user_name, name
-        )
+        return await self.webauthn.initiate_registration(user_id, user_email, user_name, name)
 
     async def complete_passkey_registration(
         self,
@@ -163,9 +190,7 @@ class TwoFactorService:
         origin: str | None = None,
     ) -> dict[str, Any]:
         """Complete passkey registration. Delegates to WebAuthnService."""
-        return await self.webauthn.complete_registration(
-            registration_token, credential_json, name, user_agent, origin
-        )
+        return await self.webauthn.complete_registration(registration_token, credential_json, name, user_agent, origin)
 
     async def get_webauthn_status(self, user_id: str) -> dict[str, Any]:
         """Get WebAuthn status. Delegates to WebAuthnService."""
@@ -184,11 +209,26 @@ class TwoFactorService:
         challenge_token: str,
         credential_json: dict,
         challenge_data: dict | None = None,
-    ) -> dict[str, Any]:
-        """Complete passkey authentication. Delegates to WebAuthnService."""
-        return await self.webauthn.complete_authentication(
-            challenge_token, credential_json, challenge_data
-        )
+        expected_user_id: str | None = None,
+    ) -> TwoFactorLoginResult:
+        """Complete passkey authentication during login and return JWT tokens.
+
+        Delegates credential verification to WebAuthnService, then mints
+        tokens the same way verify_totp_login does — this endpoint is part
+        of the login flow, so its response must match TwoFactorVerifyResponse
+        (verified/method/accessToken/...), not WebAuthnService's internal
+        {success, userId, passkeyId} shape.
+        """
+        result = await self.webauthn.complete_authentication(challenge_token, credential_json, challenge_data, expected_user_id)
+        user_id = result["userId"]
+
+        tokens = await self._issue_login_tokens(user_id, tfa_method="webauthn")
+
+        return {
+            "verified": True,
+            "method": "webauthn",
+            **tokens,
+        }
 
     # ==================================================================
     # Combined 2FA Methods - use both services
@@ -205,12 +245,7 @@ class TwoFactorService:
         webauthn_status = await self.webauthn.get_status(user_id)
         has_passkeys = bool(webauthn_status.get("enabled", False))
 
-        logger.info(
-            f"2FA check for user {user_id}: "
-            f"TOTP enabled={has_totp}, "
-            f"Passkeys enabled={has_passkeys}, "
-            f"Has 2FA={has_totp or has_passkeys}"
-        )
+        logger.info(f"2FA check for user {user_id}: " f"TOTP enabled={has_totp}, " f"Passkeys enabled={has_passkeys}, " f"Has 2FA={has_totp or has_passkeys}")
 
         return has_totp or has_passkeys
 

@@ -1,32 +1,24 @@
 """Pydantic schemas for user management endpoints."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.common.pagination import PaginatedResponse
+
 from .validators import validate_avatar_url
-
-
-class UserCreate(BaseModel):
-    """User creation request schema with camelCase."""
-
-    email: EmailStr
-    name: str = Field(..., min_length=1, max_length=100)
-    role: str = Field(default="user", pattern="^(user|admin|moderator)$")
 
 
 class UserUpdate(BaseModel):
     """User update request schema with camelCase."""
 
-    email: Optional[EmailStr] = None
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    role: Optional[str] = Field(None, pattern="^(user|admin|moderator|owner|premium)$")
-    isActive: Optional[bool] = None
-    isAdmin: Optional[bool] = None
-    isOwner: Optional[bool] = None
-    isPremium: Optional[bool] = None
+    email: EmailStr | None = None
+    name: str | None = Field(None, min_length=1, max_length=100)
+    role: str | None = Field(None, pattern="^(user|admin|moderator|owner|premium)$")
+    isActive: bool | None = None
+    isAdmin: bool | None = None
+    isOwner: bool | None = None
+    isPremium: bool | None = None
 
 
 class UserProfileUpdate(BaseModel):
@@ -35,19 +27,15 @@ class UserProfileUpdate(BaseModel):
     Note: Email cannot be updated through this endpoint for security reasons.
     """
 
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    avatarUrl: Optional[str] = Field(
-        None, description="Avatar URL (only allowed providers like Gravatar)"
-    )
+    name: str | None = Field(None, min_length=1, max_length=100)
+    avatarUrl: str | None = Field(None, description="Avatar URL (only allowed providers like Gravatar)")
 
     @field_validator("avatarUrl")
     @classmethod
     def validate_avatar_url(cls, v: str | None) -> str | None:
         """Validate avatar URL against allowed providers."""
         if v is not None and not validate_avatar_url(v):
-            raise ValueError(
-                "Avatar URL must be from an allowed provider (e.g., Gravatar)"
-            )
+            raise ValueError("Avatar URL must be from an allowed provider (e.g., Gravatar)")
         return v
 
 
@@ -55,9 +43,7 @@ class AiFeatures(BaseModel):
     """AI features configuration."""
 
     enabled: bool = Field(..., description="Whether AI features are enabled for user")
-    limit: Optional[float] = Field(
-        None, description="AI usage limit in USD (null = unlimited)"
-    )
+    limit: float | None = Field(None, description="AI usage limit in USD (null = unlimited)")
 
 
 class StorageFeatures(BaseModel):
@@ -81,12 +67,10 @@ class UserResponse(BaseModel):
     name: str
     role: str
     isActive: bool
-    avatarUrl: Optional[str] = None
+    avatarUrl: str | None = None
     createdAt: datetime
     updatedAt: datetime
-    features: Optional[UserFeatures] = Field(
-        None, description="User features and limits (only included in /me endpoint)"
-    )
+    features: UserFeatures | None = Field(None, description="User features and limits (only included in /me endpoint)")
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
@@ -115,11 +99,11 @@ class PublicUserResponse(BaseModel):
 
     id: str
     name: str
-    avatarUrl: Optional[str] = None
+    avatarUrl: str | None = None
     isAdmin: bool = False
     isOwner: bool = False
     isPremium: bool = False
-    email: Optional[EmailStr] = None  # Only included if emailPublic is True
+    email: EmailStr | None = None  # Only included if emailPublic is True
     emailPublic: bool = False  # Indicates if email is included
 
     model_config = {"from_attributes": True, "populate_by_name": True}

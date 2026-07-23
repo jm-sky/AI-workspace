@@ -30,9 +30,7 @@ def get_gear_settings_repository(
 
 
 def get_gear_settings_service(
-    repository: Annotated[
-        GearSettingsRepository, Depends(get_gear_settings_repository)
-    ],
+    repository: Annotated[GearSettingsRepository, Depends(get_gear_settings_repository)],
 ) -> GearSettingsService:
     """Dependency to get gear settings service instance.
 

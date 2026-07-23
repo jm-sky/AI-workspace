@@ -14,14 +14,15 @@ Test Coverage:
 
 import pytest
 import pytest_asyncio
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.db_models import UserDB
 from app.modules.gear.db_models_v2 import GearItemDBV2
 from app.modules.gear.repository_v2 import GearRepositoryV2
-from app.modules.gear.service_v2 import GearServiceV2
 from app.modules.gear.schemas_v2 import GearItemCreateV2, GearItemUpdateV2
+from app.modules.gear.service_v2 import GearServiceV2
 
 
 @pytest_asyncio.fixture
@@ -36,9 +37,7 @@ async def gear_service_v2(gear_repository_v2: GearRepositoryV2) -> GearServiceV2
     return GearServiceV2(gear_repository_v2)
 
 
-async def get_item_count(
-    db: AsyncSession, user_id: str, item_type: str | None = None
-) -> int:
+async def get_item_count(db: AsyncSession, user_id: str, item_type: str | None = None) -> int:
     """Helper to get item count for a user."""
     stmt = select(GearItemDBV2).where(GearItemDBV2.user_id == user_id)
     if item_type:
@@ -161,7 +160,7 @@ class TestContainerCreateV2:
         """Test that validation prevents invalid container creation."""
         # Arrange: Try to create container without containerType
         # This should be caught by Pydantic validation
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(ValidationError):
             GearItemCreateV2(
                 itemType="container",
                 name="Invalid Container",
@@ -325,9 +324,7 @@ class TestReadOperationsV2:
         await gear_service_v2.create_item(test_user.id, container2_data)
 
         # Act
-        containers = await gear_service_v2.get_items(
-            test_user.id, item_type="container"
-        )
+        containers = await gear_service_v2.get_items(test_user.id, item_type="container")
 
         # Assert
         assert len(containers) == 2
@@ -425,9 +422,7 @@ class TestUpdateOperationsV2:
             name="New Name",
             favorite=True,
         )
-        updated = await gear_service_v2.update_item(
-            container.id, test_user.id, update_data
-        )
+        updated = await gear_service_v2.update_item(container.id, test_user.id, update_data)
 
         # Assert
         assert updated.name == "New Name"
@@ -508,9 +503,7 @@ class TestUpdateOperationsV2:
             {"id": item1.id, "orderIndex": 1},
             {"id": item2.id, "orderIndex": 0},
         ]
-        updated_items = await gear_service_v2.batch_update_order(
-            batch_updates, test_user.id
-        )
+        updated_items = await gear_service_v2.batch_update_order(batch_updates, test_user.id)
 
         # Assert
         assert len(updated_items) == 2

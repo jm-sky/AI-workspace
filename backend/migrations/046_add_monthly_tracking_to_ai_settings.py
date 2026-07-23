@@ -29,8 +29,7 @@ from app.core.database import engine
 async def column_exists(conn, table_name: str, column_name: str) -> bool:
     """Check if a column exists in a table."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.columns
@@ -38,8 +37,7 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -61,11 +59,7 @@ async def upgrade() -> None:
             exists = await column_exists(conn, "ai_user_settings", column_name)
             if not exists:
                 print(f"Adding column {column_name}...")
-                await conn.execute(
-                    text(
-                        f"ALTER TABLE ai_user_settings ADD COLUMN {column_name} {column_def}"
-                    )
-                )
+                await conn.execute(text(f"ALTER TABLE ai_user_settings ADD COLUMN {column_name} {column_def}"))
                 print(f"✓ Added column {column_name}")
             else:
                 print(f"Column {column_name} already exists, skipping...")
@@ -89,9 +83,7 @@ async def downgrade() -> None:
             exists = await column_exists(conn, "ai_user_settings", column_name)
             if exists:
                 print(f"Dropping column {column_name}...")
-                await conn.execute(
-                    text(f"ALTER TABLE ai_user_settings DROP COLUMN {column_name}")
-                )
+                await conn.execute(text(f"ALTER TABLE ai_user_settings DROP COLUMN {column_name}"))
                 print(f"✓ Dropped column {column_name}")
             else:
                 print(f"Column {column_name} does not exist, skipping...")
@@ -103,9 +95,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add monthly tracking to ai_user_settings migration"
-    )
+    parser = argparse.ArgumentParser(description="Add monthly tracking to ai_user_settings migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

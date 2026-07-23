@@ -1,6 +1,6 @@
 """Application configuration using Pydantic Settings with modular structure."""
 
-from enum import Enum
+from enum import StrEnum
 from functools import lru_cache
 from typing import Literal
 
@@ -10,12 +10,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.core.helpers import parse_bool_value, parse_list_value
 
 # Shared config for all nested settings
-_base_config = SettingsConfigDict(
-    env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
-)
+_base_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     """Application environment."""
 
     LOCAL = "local"
@@ -29,9 +27,7 @@ class AppSettings(BaseSettings):
 
     model_config = _base_config
 
-    name: str = Field(
-        default="backend", validation_alias="APP_NAME", description="Application name"
-    )
+    name: str = Field(default="backend", validation_alias="APP_NAME", description="Application name")
     display_name: str = Field(
         default="AI Workspace",
         validation_alias="APP_DISPLAY_NAME",
@@ -42,9 +38,7 @@ class AppSettings(BaseSettings):
         validation_alias="APP_VERSION",
         description="Application version",
     )
-    debug: bool = Field(
-        default=False, validation_alias="DEBUG", description="Debug mode"
-    )
+    debug: bool = Field(default=False, validation_alias="DEBUG", description="Debug mode")
     environment: Environment = Field(
         default=Environment.DEVELOPMENT,
         validation_alias="ENVIRONMENT",
@@ -73,9 +67,7 @@ class ServerSettings(BaseSettings):
 
     model_config = _base_config
 
-    host: str = Field(
-        default="0.0.0.0", validation_alias="HOST", description="Server host"
-    )
+    host: str = Field(default="0.0.0.0", validation_alias="HOST", description="Server host")
     port: int = Field(default=8000, validation_alias="PORT", description="Server port")
     reload: bool = Field(
         default=True,
@@ -108,9 +100,7 @@ class ServerSettings(BaseSettings):
         description="Allowed hosts for TrustedHostMiddleware (production security)",
     )
 
-    @field_validator(
-        "cors_origins", "cors_methods", "cors_headers", "allowed_hosts", mode="after"
-    )
+    @field_validator("cors_origins", "cors_methods", "cors_headers", "allowed_hosts", mode="after")
     @classmethod
     def parse_list_fields(cls, v: str | list[str]) -> list[str]:
         """Parse list fields from JSON array or comma-separated string."""
@@ -150,9 +140,7 @@ class DatabaseSettings(BaseSettings):
         validation_alias="DATABASE_POOL_RECYCLE",
         description="Database pool recycle time (seconds)",
     )
-    echo: bool = Field(
-        default=False, validation_alias="DATABASE_ECHO", description="Echo SQL queries"
-    )
+    echo: bool = Field(default=False, validation_alias="DATABASE_ECHO", description="Echo SQL queries")
 
     @field_validator("url")
     @classmethod
@@ -227,23 +215,14 @@ class SecuritySettings(BaseSettings):
     def validate_secret_key(cls, v: str) -> str:
         """Validate secret key strength and security."""
         if "change-me" in v.lower() or "change-this" in v.lower():
-            raise ValueError(
-                "Secret key must be changed from default value in production. "
-                "Set SECRET_KEY environment variable with a secure random string."
-            )
+            raise ValueError("Secret key must be changed from default value in production. " "Set SECRET_KEY environment variable with a secure random string.")
 
         if len(v) < 32:
-            raise ValueError(
-                "Secret key must be at least 32 characters long for security. "
-                "Use a cryptographically secure random string."
-            )
+            raise ValueError("Secret key must be at least 32 characters long for security. " "Use a cryptographically secure random string.")
 
         # Check for basic entropy (not all same character)
         if len(set(v)) < 8:
-            raise ValueError(
-                "Secret key must have sufficient entropy. "
-                "Use a truly random string with varied characters."
-            )
+            raise ValueError("Secret key must have sufficient entropy. " "Use a truly random string with varied characters.")
 
         return v
 
@@ -295,17 +274,13 @@ class LoggingSettings(BaseSettings):
 
     model_config = _base_config
 
-    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
-        default="INFO", validation_alias="LOG_LEVEL", description="Logging level"
-    )
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO", validation_alias="LOG_LEVEL", description="Logging level")
     format: str = Field(
         default="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
         validation_alias="LOG_FORMAT",
         description="Log format",
     )
-    file: str | None = Field(
-        default=None, validation_alias="LOG_FILE", description="Log file path"
-    )
+    file: str | None = Field(default=None, validation_alias="LOG_FILE", description="Log file path")
 
 
 class RecaptchaSettings(BaseSettings):
@@ -350,9 +325,7 @@ class RecaptchaSettings(BaseSettings):
     def validate_min_score(cls, v: float) -> float:
         """Validate reCAPTCHA score is in valid range."""
         if not 0.0 <= v <= 1.0:
-            raise ValueError(
-                f"reCAPTCHA min_score must be between 0.0 and 1.0, got: {v}"
-            )
+            raise ValueError(f"reCAPTCHA min_score must be between 0.0 and 1.0, got: {v}")
         return v
 
 
@@ -409,7 +382,7 @@ class OAuthSettings(BaseSettings):
     github_redirect_uri: str = Field(
         default="",
         validation_alias="GITHUB_OAUTH_REDIRECT_URI",
-        description="GitHub login callback URL (e.g. /auth/github)",
+        description="GitHub login callback URL (e.g. /auth/callback/github)",
     )
 
 
@@ -438,15 +411,9 @@ class EmailSettings(BaseSettings):
         validation_alias="SMTP_HOST",
         description="SMTP server host",
     )
-    smtp_port: int = Field(
-        default=587, validation_alias="SMTP_PORT", description="SMTP server port"
-    )
-    smtp_user: str = Field(
-        default="", validation_alias="SMTP_USER", description="SMTP username"
-    )
-    smtp_password: str = Field(
-        default="", validation_alias="SMTP_PASSWORD", description="SMTP password"
-    )
+    smtp_port: int = Field(default=587, validation_alias="SMTP_PORT", description="SMTP server port")
+    smtp_user: str = Field(default="", validation_alias="SMTP_USER", description="SMTP username")
+    smtp_password: str = Field(default="", validation_alias="SMTP_PASSWORD", description="SMTP password")
     smtp_from: str = Field(
         default="noreply@example.com",
         validation_alias="SMTP_FROM",
@@ -594,6 +561,66 @@ class StorageSettings(BaseSettings):
         return v
 
 
+class AttachmentSettings(BaseSettings):
+    """Chat attachment upload limits and processing."""
+
+    model_config = _base_config
+
+    max_file_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        validation_alias="ATTACHMENT_MAX_FILE_BYTES",
+        description="Max bytes per chat attachment (stream-enforced)",
+        gt=0,
+    )
+    max_per_message: int = Field(
+        default=5,
+        validation_alias="ATTACHMENT_MAX_PER_MESSAGE",
+        description="Max attachments per chat message",
+        gt=0,
+    )
+    max_total_bytes: int = Field(
+        default=25 * 1024 * 1024,
+        validation_alias="ATTACHMENT_MAX_TOTAL_BYTES",
+        description="Max total attachment bytes per chat message",
+        gt=0,
+    )
+    max_text_chars: int = Field(
+        default=100_000,
+        validation_alias="ATTACHMENT_MAX_TEXT_CHARS",
+        description="Max extracted text characters kept for model context",
+        gt=0,
+    )
+    pdf_max_pages: int = Field(
+        default=50,
+        validation_alias="ATTACHMENT_PDF_MAX_PAGES",
+        description="Max PDF pages to extract",
+        gt=0,
+    )
+    model_max_edge: int = Field(
+        default=1536,
+        validation_alias="ATTACHMENT_MODEL_MAX_EDGE",
+        description="Max image edge length sent to the model",
+        gt=0,
+    )
+    thumbnail_max_edge: int = Field(
+        default=320,
+        validation_alias="ATTACHMENT_THUMBNAIL_MAX_EDGE",
+        description="Max thumbnail edge length",
+        gt=0,
+    )
+    upload_rate_limit: str = Field(
+        default="30/minute",
+        validation_alias="ATTACHMENT_UPLOAD_RATE_LIMIT",
+        description="SlowAPI rate limit string for attachment upload",
+    )
+    orphan_ttl_hours: int = Field(
+        default=24,
+        validation_alias="ATTACHMENT_ORPHAN_TTL_HOURS",
+        description="Hours before unbound (run_id NULL) attachments are purged",
+        gt=0,
+    )
+
+
 class SentrySettings(BaseSettings):
     """Sentry error monitoring configuration."""
 
@@ -650,9 +677,7 @@ class AISettings(BaseSettings):
 
     model_config = _base_config
 
-    enabled: bool = Field(
-        default=True, validation_alias="AI_ENABLED", description="Enable AI features"
-    )
+    enabled: bool = Field(default=True, validation_alias="AI_ENABLED", description="Enable AI features")
     openrouter_api_key: str = Field(
         default="",
         validation_alias="OPENROUTER_API_KEY",
@@ -701,6 +726,23 @@ class AISettings(BaseSettings):
         description="Maximum tool-calling loop iterations per agent run",
         gt=0,
     )
+    tool_search_enabled: bool = Field(
+        default=True,
+        validation_alias="TOOL_SEARCH_ENABLED",
+        description="Enable dynamic tool search when the catalog exceeds the threshold",
+    )
+    tool_search_threshold: int = Field(
+        default=15,
+        validation_alias="TOOL_SEARCH_THRESHOLD",
+        description="Above this tool count, only core tools + tool_search are loaded initially",
+        gt=0,
+    )
+    tool_search_top_k: int = Field(
+        default=5,
+        validation_alias="TOOL_SEARCH_TOP_K",
+        description="Max tools activated per tool_search call",
+        gt=0,
+    )
     memory_enabled: bool = Field(
         default=True,
         validation_alias="AI_MEMORY_ENABLED",
@@ -731,6 +773,38 @@ class AISettings(BaseSettings):
         ge=0,
         le=20,
     )
+    rag_chunk_size: int = Field(
+        default=1200,
+        validation_alias="AI_RAG_CHUNK_SIZE",
+        description="Character window size for RAG document chunking",
+        gt=0,
+    )
+    rag_chunk_overlap: int = Field(
+        default=150,
+        validation_alias="AI_RAG_CHUNK_OVERLAP",
+        description="Character overlap between consecutive RAG chunks",
+        ge=0,
+    )
+    rag_max_chunks_per_document: int = Field(
+        default=200,
+        validation_alias="AI_RAG_MAX_CHUNKS_PER_DOCUMENT",
+        description="Hard cap on chunks created per ingested document",
+        gt=0,
+    )
+    rag_similarity_threshold: float = Field(
+        default=0.5,
+        validation_alias="AI_RAG_SIMILARITY_THRESHOLD",
+        description="Minimum cosine similarity for RAG chunk retrieval",
+        ge=0.0,
+        le=1.0,
+    )
+    rag_search_limit: int = Field(
+        default=8,
+        validation_alias="AI_RAG_SEARCH_LIMIT",
+        description="Default max chunks returned by rag_search",
+        ge=1,
+        le=50,
+    )
     audit_raw_enabled: bool = Field(
         default=True,
         validation_alias="AI_AUDIT_RAW_ENABLED",
@@ -744,7 +818,12 @@ class AISettings(BaseSettings):
     )
 
     @field_validator(
-        "enabled", "cache_enabled", "memory_enabled", "audit_raw_enabled", mode="before"
+        "enabled",
+        "cache_enabled",
+        "memory_enabled",
+        "audit_raw_enabled",
+        "tool_search_enabled",
+        mode="before",
     )
     @classmethod
     def parse_bool_field(cls, v: str | bool) -> bool:
@@ -864,10 +943,7 @@ class WorkspaceSettings(BaseSettings):
     default_allowed_models: str | list[str] = Field(
         default_factory=list,
         validation_alias="WORKSPACE_DEFAULT_ALLOWED_MODELS",
-        description=(
-            "App-level allow-list of LLM model IDs. Empty means no ceiling: the "
-            "whole catalog is available and only tenant/team/user narrow it."
-        ),
+        description=("App-level allow-list of LLM model IDs. Empty means no ceiling: the " "whole catalog is available and only tenant/team/user narrow it."),
     )
     default_model: str = Field(
         default="qwen/qwen3.7-plus",
@@ -946,6 +1022,33 @@ class IntegrationSettings(BaseSettings):
         validation_alias="GITHUB_APP_ID",
         description="GitHub App ID (numeric) — enables App-specific OAuth behavior",
     )
+    gmail_oauth_client_id: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_CLIENT_ID",
+        description="Google OAuth client ID for Gmail integration",
+    )
+    gmail_oauth_client_secret: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_CLIENT_SECRET",
+        description="Google OAuth client secret for Gmail integration",
+    )
+    gmail_oauth_redirect_uri: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_REDIRECT_URI",
+        description="Gmail integration OAuth callback URL (frontend route)",
+    )
+
+
+class HealthSettings(BaseSettings):
+    """Health/monitoring configuration (Ops Monitor integration)."""
+
+    model_config = _base_config
+
+    details_token: str = Field(
+        default="",
+        validation_alias="HEALTH_DETAILS_TOKEN",
+        description="Bearer token required to access GET /api/health/details (Ops Monitor)",
+    )
 
 
 class Settings(BaseSettings):
@@ -969,11 +1072,13 @@ class Settings(BaseSettings):
     oauth: OAuthSettings = Field(default_factory=OAuthSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
+    attachments: AttachmentSettings = Field(default_factory=AttachmentSettings)
     sentry: SentrySettings = Field(default_factory=SentrySettings)
     ai: AISettings = Field(default_factory=AISettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     webauthn: WebAuthnSettings = Field(default_factory=WebAuthnSettings)
     stripe: StripeSettings = Field(default_factory=StripeSettings)
+    health: HealthSettings = Field(default_factory=HealthSettings)
     workspace: WorkspaceSettings = Field(default_factory=WorkspaceSettings)
     integrations: IntegrationSettings = Field(default_factory=IntegrationSettings)
 
@@ -1021,24 +1126,16 @@ class Settings(BaseSettings):
         # allowed_hosts / cors_origins are parsed to lists by their validators.
         allowed_hosts = self.server.allowed_hosts
         if not allowed_hosts or "*" in allowed_hosts:
-            errors.append(
-                "ALLOWED_HOSTS must be a non-empty explicit allow-list "
-                "(no '*') in production."
-            )
+            errors.append("ALLOWED_HOSTS must be a non-empty explicit allow-list " "(no '*') in production.")
 
         cors_origins = self.server.cors_origins
         if not cors_origins:
             errors.append("CORS_ORIGINS must be set to an explicit allow-list.")
         elif "*" in cors_origins:
-            errors.append(
-                "CORS_ORIGINS must not contain '*' in production "
-                "(wildcard origins with credentials are unsafe)."
-            )
+            errors.append("CORS_ORIGINS must not contain '*' in production " "(wildcard origins with credentials are unsafe).")
 
         if errors:
-            raise ValueError(
-                "Insecure production configuration detected:\n- " + "\n- ".join(errors)
-            )
+            raise ValueError("Insecure production configuration detected:\n- " + "\n- ".join(errors))
 
 
 @lru_cache

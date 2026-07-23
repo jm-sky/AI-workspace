@@ -76,9 +76,7 @@ async def get_history_detail(
     """
     detail = await service.get_history_detail(history_id, current_user.id)
     if not detail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found")
     return detail
 
 
@@ -103,9 +101,7 @@ async def delete_history_entry(
     """
     deleted = await service.delete_entry(history_id, current_user.id)
     if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found")
     return {"message": "History entry deleted successfully"}
 
 

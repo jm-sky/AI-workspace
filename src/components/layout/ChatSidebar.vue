@@ -50,7 +50,7 @@ const handleNewChat = async () => {
 </script>
 
 <template>
-  <Sidebar collapsible="offcanvas">
+  <Sidebar collapsible="offcanvas" class="bg-sidebar-mist">
     <SidebarContent class="flex min-h-0 flex-col overflow-hidden p-0">
       <SidebarGroup class="flex min-h-0 flex-1 flex-col p-0">
         <SidebarGroupContent class="flex min-h-0 flex-1 flex-col">

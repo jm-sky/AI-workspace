@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.modules.tenants.dependencies import CurrentTenantContext
+from app.modules.workspace_config.db_models import WorkspaceConfigEntryDB
 from app.modules.workspace_config.repositories import (
     WorkspaceConfigRepository,
     get_workspace_config_repository,
@@ -91,7 +92,7 @@ def _normalize_value(value: Any) -> Any:
     return str(value)
 
 
-def _to_response(entry) -> ConfigEntryResponse:
+def _to_response(entry: WorkspaceConfigEntryDB) -> ConfigEntryResponse:
     return ConfigEntryResponse(
         scope=ConfigScope(entry.scope),
         scopeId=entry.scope_id,

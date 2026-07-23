@@ -65,9 +65,7 @@ class TestItemCreate:
         container = await create_test_container(gear_service, test_user.id, "Backpack")
 
         # Act
-        item = await gear_service.create_item(
-            container["id"], test_user.id, sample_item_data
-        )
+        item = await gear_service.create_item(container["id"], test_user.id, sample_item_data)
 
         # Assert
         assert item is not None
@@ -95,15 +93,9 @@ class TestItemCreate:
         container = await create_test_container(gear_service, test_user.id, "Backpack")
 
         # Act
-        item1 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1", category="water"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2", category="food"
-        )
-        item3 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 3", category="tools"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container["id"], "Item 1", category="water")
+        item2 = await create_test_item(gear_service, test_user.id, container["id"], "Item 2", category="food")
+        item3 = await create_test_item(gear_service, test_user.id, container["id"], "Item 3", category="tools")
 
         # Assert
         assert item1["id"] != item2["id"] != item3["id"]
@@ -117,20 +109,12 @@ class TestItemCreate:
     ) -> None:
         """Test creating items in different containers."""
         # Arrange
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
 
         # Act
-        item1 = await create_test_item(
-            gear_service, test_user.id, container1["id"], "Item in Container 1"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container2["id"], "Item in Container 2"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container1["id"], "Item in Container 1")
+        item2 = await create_test_item(gear_service, test_user.id, container2["id"], "Item in Container 2")
 
         # Assert
         assert item1["container"]["id"] == container1["id"]
@@ -173,9 +157,7 @@ class TestItemRead:
         """Test retrieving an item by its ID."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "Test Item"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "Test Item")
 
         # Act
         item = await gear_service.get_item(created["id"], test_user.id)
@@ -196,15 +178,9 @@ class TestItemRead:
         """Test retrieving all items in a specific container."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1", category="water"
-        )
-        await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2", category="food"
-        )
-        await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 3", category="tools"
-        )
+        await create_test_item(gear_service, test_user.id, container["id"], "Item 1", category="water")
+        await create_test_item(gear_service, test_user.id, container["id"], "Item 2", category="food")
+        await create_test_item(gear_service, test_user.id, container["id"], "Item 3", category="tools")
 
         # Act
         items = await gear_service.get_items(container["id"], test_user.id)
@@ -226,12 +202,8 @@ class TestItemRead:
     ) -> None:
         """Test retrieving all items across all containers for a user."""
         # Arrange
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
         await create_test_item(gear_service, test_user.id, container1["id"], "Item 1")
         await create_test_item(gear_service, test_user.id, container1["id"], "Item 2")
         await create_test_item(gear_service, test_user.id, container2["id"], "Item 3")
@@ -266,9 +238,7 @@ class TestItemRead:
         """Test that user cannot access another user's item."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "User Item"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "User Item")
 
         # Act - Try to access with different user ID
         item = await gear_service.get_item(created["id"], "different-user-id")
@@ -289,15 +259,11 @@ class TestItemUpdate:
         """Test updating an item's name."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "Original Name"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "Original Name")
         update_data = ItemUpdate(name="Updated Name")
 
         # Act
-        updated = await gear_service.update_item(
-            created["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_item(created["id"], test_user.id, update_data)
 
         # Assert
         assert updated is not None
@@ -313,9 +279,7 @@ class TestItemUpdate:
         """Test updating multiple fields of an item."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "Test Item"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "Test Item")
         update_data = ItemUpdate(
             name="Updated Item",
             category="shelter",
@@ -326,9 +290,7 @@ class TestItemUpdate:
         )
 
         # Act
-        updated = await gear_service.update_item(
-            created["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_item(created["id"], test_user.id, update_data)
 
         # Assert
         assert updated is not None
@@ -384,21 +346,13 @@ class TestItemUpdate:
         Items remain in their original container even if containerId is passed in update.
         """
         # Arrange
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
-        created = await create_test_item(
-            gear_service, test_user.id, container1["id"], "Immovable Item"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
+        created = await create_test_item(gear_service, test_user.id, container1["id"], "Immovable Item")
         update_data = ItemUpdate(containerId=container2["id"])
 
         # Act
-        updated = await gear_service.update_item(
-            created["id"], test_user.id, update_data
-        )
+        updated = await gear_service.update_item(created["id"], test_user.id, update_data)
 
         # Refetch to verify actual container
         refetched = await gear_service.get_item(created["id"], test_user.id)
@@ -425,9 +379,7 @@ class TestItemDelete:
         """Test deleting an item."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "To Delete"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "To Delete")
         initial_count = await get_item_count(async_db_session, container["id"])
 
         # Act
@@ -451,15 +403,9 @@ class TestItemDelete:
         """Test deleting multiple items from a container."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        item1 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2"
-        )
-        item3 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 3"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container["id"], "Item 1")
+        item2 = await create_test_item(gear_service, test_user.id, container["id"], "Item 2")
+        item3 = await create_test_item(gear_service, test_user.id, container["id"], "Item 3")
         assert await get_item_count(async_db_session, container["id"]) == 3
 
         # Act
@@ -495,9 +441,7 @@ class TestItemDelete:
         """Test that user cannot delete another user's item."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        created = await create_test_item(
-            gear_service, test_user.id, container["id"], "User Item"
-        )
+        created = await create_test_item(gear_service, test_user.id, container["id"], "User Item")
 
         # Act - Try to delete with different user ID
         result = await gear_service.delete_item(created["id"], "different-user-id")
@@ -518,12 +462,8 @@ class TestItemDelete:
         """Test that deleting a container also deletes its items (cascade)."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        item1 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 1"
-        )
-        item2 = await create_test_item(
-            gear_service, test_user.id, container["id"], "Item 2"
-        )
+        item1 = await create_test_item(gear_service, test_user.id, container["id"], "Item 1")
+        item2 = await create_test_item(gear_service, test_user.id, container["id"], "Item 2")
 
         # Act
         await gear_service.delete_container(container["id"], test_user.id)
@@ -612,9 +552,7 @@ class TestItemValidation:
         )
 
         # Act
-        item = await gear_service.create_item(
-            "non-existent-container", test_user.id, data
-        )
+        item = await gear_service.create_item("non-existent-container", test_user.id, data)
 
         # Assert
         assert item is None  # Service should return None for invalid container
@@ -631,20 +569,12 @@ class TestItemMove:
     ) -> None:
         """Test moving an item from one container to another."""
         # Arrange - Create two containers and an item in first container
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
-        item = await create_test_item(
-            gear_service, test_user.id, container1["id"], "Water Bottle"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
+        item = await create_test_item(gear_service, test_user.id, container1["id"], "Water Bottle")
 
         # Act - Move item to second container
-        moved_item = await gear_service.move_item(
-            item["id"], test_user.id, container2["id"]
-        )
+        moved_item = await gear_service.move_item(item["id"], test_user.id, container2["id"])
 
         # Assert
         assert moved_item is not None
@@ -652,15 +582,11 @@ class TestItemMove:
         assert moved_item.container.id == container2["id"]
 
         # Verify item is no longer in first container
-        items_in_container1 = await gear_service.get_items(
-            container1["id"], test_user.id
-        )
+        items_in_container1 = await gear_service.get_items(container1["id"], test_user.id)
         assert len(items_in_container1) == 0
 
         # Verify item is in second container
-        items_in_container2 = await gear_service.get_items(
-            container2["id"], test_user.id
-        )
+        items_in_container2 = await gear_service.get_items(container2["id"], test_user.id)
         assert len(items_in_container2) == 1
         assert items_in_container2[0].id == item["id"]
 
@@ -673,15 +599,11 @@ class TestItemMove:
         """Test moving item to non-existent container raises ValueError."""
         # Arrange
         container = await create_test_container(gear_service, test_user.id, "Backpack")
-        item = await create_test_item(
-            gear_service, test_user.id, container["id"], "Water Bottle"
-        )
+        item = await create_test_item(gear_service, test_user.id, container["id"], "Water Bottle")
 
         # Act & Assert
         with pytest.raises(ValueError, match="Target container not found"):
-            await gear_service.move_item(
-                item["id"], test_user.id, "non-existent-container-id"
-            )
+            await gear_service.move_item(item["id"], test_user.id, "non-existent-container-id")
 
     @pytest.mark.asyncio
     async def test_move_item_not_found(
@@ -694,9 +616,7 @@ class TestItemMove:
         container = await create_test_container(gear_service, test_user.id, "Backpack")
 
         # Act
-        result = await gear_service.move_item(
-            "non-existent-item-id", test_user.id, container["id"]
-        )
+        result = await gear_service.move_item("non-existent-item-id", test_user.id, container["id"])
 
         # Assert
         assert result is None
@@ -709,15 +629,9 @@ class TestItemMove:
     ) -> None:
         """Test that moving item preserves linked_item_id relationship."""
         # Arrange - Create master item and linked item in different containers
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
-        container3 = await create_test_container(
-            gear_service, test_user.id, "Backpack 3"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
+        container3 = await create_test_container(gear_service, test_user.id, "Backpack 3")
 
         # Create master item
         master_data = ItemCreate(
@@ -725,9 +639,7 @@ class TestItemMove:
             category="water",
             weight=500.0,
         )
-        master_item = await gear_service.create_item(
-            container1["id"], test_user.id, master_data
-        )
+        master_item = await gear_service.create_item(container1["id"], test_user.id, master_data)
 
         # Create linked item
         linked_data = ItemCreate(
@@ -736,17 +648,13 @@ class TestItemMove:
             weight=500.0,
             linkedItemId=master_item.id,
         )
-        linked_item = await gear_service.create_item(
-            container2["id"], test_user.id, linked_data
-        )
+        linked_item = await gear_service.create_item(container2["id"], test_user.id, linked_data)
 
         # Verify initial setup
         assert linked_item.linkedItemId == master_item.id
 
         # Act - Move linked item to third container
-        moved_item = await gear_service.move_item(
-            linked_item.id, test_user.id, container3["id"]
-        )
+        moved_item = await gear_service.move_item(linked_item.id, test_user.id, container3["id"])
 
         # Assert - linked_item_id is preserved
         assert moved_item is not None
@@ -762,18 +670,10 @@ class TestItemMove:
     ) -> None:
         """Test that moving item only moves that specific item, not linked items."""
         # Arrange - Create master item and two linked items in different containers
-        container1 = await create_test_container(
-            gear_service, test_user.id, "Backpack 1"
-        )
-        container2 = await create_test_container(
-            gear_service, test_user.id, "Backpack 2"
-        )
-        container3 = await create_test_container(
-            gear_service, test_user.id, "Backpack 3"
-        )
-        container4 = await create_test_container(
-            gear_service, test_user.id, "Backpack 4"
-        )
+        container1 = await create_test_container(gear_service, test_user.id, "Backpack 1")
+        container2 = await create_test_container(gear_service, test_user.id, "Backpack 2")
+        container3 = await create_test_container(gear_service, test_user.id, "Backpack 3")
+        container4 = await create_test_container(gear_service, test_user.id, "Backpack 4")
 
         # Create master item
         master_data = ItemCreate(
@@ -781,9 +681,7 @@ class TestItemMove:
             category="tools",
             weight=100.0,
         )
-        master_item = await gear_service.create_item(
-            container1["id"], test_user.id, master_data
-        )
+        master_item = await gear_service.create_item(container1["id"], test_user.id, master_data)
 
         # Create two linked items in different containers
         linked_data1 = ItemCreate(
@@ -792,9 +690,7 @@ class TestItemMove:
             weight=100.0,
             linkedItemId=master_item.id,
         )
-        linked_item1 = await gear_service.create_item(
-            container2["id"], test_user.id, linked_data1
-        )
+        linked_item1 = await gear_service.create_item(container2["id"], test_user.id, linked_data1)
 
         linked_data2 = ItemCreate(
             name="Linked Item 2",
@@ -802,14 +698,10 @@ class TestItemMove:
             weight=100.0,
             linkedItemId=master_item.id,
         )
-        linked_item2 = await gear_service.create_item(
-            container3["id"], test_user.id, linked_data2
-        )
+        linked_item2 = await gear_service.create_item(container3["id"], test_user.id, linked_data2)
 
         # Act - Move master item to fourth container
-        moved_item = await gear_service.move_item(
-            master_item.id, test_user.id, container4["id"]
-        )
+        moved_item = await gear_service.move_item(master_item.id, test_user.id, container4["id"])
 
         # Assert - Only master item moved
         assert moved_item is not None

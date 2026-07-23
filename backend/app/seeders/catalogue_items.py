@@ -10,5 +10,5 @@ from pathlib import Path
 # Load catalogue items from JSON file
 _json_path = Path(__file__).parent / "catalogue_items.json"
 
-with open(_json_path, "r", encoding="utf-8") as f:
+with open(_json_path, encoding="utf-8") as f:
     CATALOGUE_ITEMS = json.load(f)

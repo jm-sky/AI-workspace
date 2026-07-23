@@ -71,25 +71,17 @@ class CatalogueItemImageUploadService:
         self.repository = CatalogueItemImageRepository(db)
 
     async def _ensure_catalogue_item_exists(self, catalogue_item_id: str) -> None:
-        result = await self.db.execute(
-            select(GlobalCatalogueItemDB).where(
-                GlobalCatalogueItemDB.id == catalogue_item_id
-            )
-        )
+        result = await self.db.execute(select(GlobalCatalogueItemDB).where(GlobalCatalogueItemDB.id == catalogue_item_id))
         item = result.scalars().first()
         if not item:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Catalogue item not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Catalogue item not found")
 
     def _validate_url_for_ssrf(self, url: str) -> None:
         """Validate URL to prevent SSRF (copy of ImageUploadService logic)."""
         try:
             parsed = urlparse(url)
         except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid URL format"
-            ) from exc
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid URL format") from exc
 
         if parsed.scheme not in ("http", "https"):
             raise HTTPException(
@@ -119,9 +111,7 @@ class CatalogueItemImageUploadService:
             )
 
         try:
-            addr_info = socket.getaddrinfo(
-                hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM
-            )
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
             if not addr_info:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -195,16 +185,10 @@ class CatalogueItemImageUploadService:
         return settings.storage.max_file_size
 
     async def _get_user_image_processor(self, user_id: str) -> ImageProcessor:
-        result = await self.db.execute(
-            select(UserSettingsDB).where(UserSettingsDB.user_id == user_id)
-        )
+        result = await self.db.execute(select(UserSettingsDB).where(UserSettingsDB.user_id == user_id))
         user_settings = result.scalars().first()
-        processing_mode = (
-            user_settings.image_processing_mode if user_settings else None
-        ) or "balanced"
-        mode_config = IMAGE_PROCESSING_MODES.get(
-            processing_mode, IMAGE_PROCESSING_MODES["balanced"]
-        )
+        processing_mode = (user_settings.image_processing_mode if user_settings else None) or "balanced"
+        mode_config = IMAGE_PROCESSING_MODES.get(processing_mode, IMAGE_PROCESSING_MODES["balanced"])
         return ImageProcessor(
             max_width=mode_config["max_width"],
             max_height=mode_config["max_height"],
@@ -212,9 +196,7 @@ class CatalogueItemImageUploadService:
             convert_to_webp=settings.storage.convert_to_webp,
         )
 
-    async def validate_upload(
-        self, file: UploadFile, catalogue_item_id: str, user_id: str
-    ) -> None:
+    async def validate_upload(self, file: UploadFile, catalogue_item_id: str, user_id: str) -> None:
         await self._ensure_catalogue_item_exists(catalogue_item_id)
 
         file.file.seek(0, 2)
@@ -234,9 +216,7 @@ class CatalogueItemImageUploadService:
                 detail=f"File type {file.content_type} not allowed. Allowed types: {', '.join(self.allowed_mime_types)}",
             )
 
-        existing_count = await self.repository.count_by_catalogue_item(
-            catalogue_item_id
-        )
+        existing_count = await self.repository.count_by_catalogue_item(catalogue_item_id)
         if existing_count >= settings.storage.max_files_per_item:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -306,23 +286,17 @@ class CatalogueItemImageUploadService:
             )
         return result
 
-    async def reorder_images(
-        self, catalogue_item_id: str, image_orders: list[dict]
-    ) -> None:
+    async def reorder_images(self, catalogue_item_id: str, image_orders: list[dict]) -> None:
         await self._ensure_catalogue_item_exists(catalogue_item_id)
         for order_update in image_orders:
-            await self.repository.update(
-                order_update["id"], {"order": order_update["order"]}
-            )
+            await self.repository.update(order_update["id"], {"order": order_update["order"]})
 
     async def toggle_primary_image(self, catalogue_item_id: str, image_id: str) -> bool:
         await self._ensure_catalogue_item_exists(catalogue_item_id)
 
         image = await self.repository.get_by_id(image_id)
         if not image:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
         if image.is_primary:
             await self.repository.update(image_id, {"is_primary": False})
@@ -342,9 +316,7 @@ class CatalogueItemImageUploadService:
     ) -> dict:
         await self._ensure_catalogue_item_exists(catalogue_item_id)
 
-        existing_count = await self.repository.count_by_catalogue_item(
-            catalogue_item_id
-        )
+        existing_count = await self.repository.count_by_catalogue_item(catalogue_item_id)
         if existing_count >= settings.storage.max_files_per_item:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -366,9 +338,7 @@ class CatalogueItemImageUploadService:
         if is_primary:
             await self.repository.unset_primary_for_catalogue_item(catalogue_item_id)
         else:
-            existing_primary = await self.repository.get_primary_image(
-                catalogue_item_id
-            )
+            existing_primary = await self.repository.get_primary_image(catalogue_item_id)
             if not existing_primary:
                 is_primary = True
 
@@ -434,9 +404,7 @@ class CatalogueItemImageUploadService:
                     "webp": "image/webp",
                     "gif": "image/gif",
                 }
-                detected_mime = (
-                    format_to_mime.get(format_lower) if format_lower else None
-                )
+                detected_mime = format_to_mime.get(format_lower) if format_lower else None
                 if not detected_mime:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -467,9 +435,7 @@ class CatalogueItemImageUploadService:
 
         if settings.storage.enable_processing:
             try:
-                content, detected_mime, width, height = await processor.process_image(
-                    content, detected_mime
-                )
+                content, detected_mime, width, height = await processor.process_image(content, detected_mime)
                 processed_size = len(content)
             except CorruptedImageError as e:
                 # Handle corrupted/truncated images gracefully
@@ -516,13 +482,9 @@ class CatalogueItemImageUploadService:
             )
 
             if is_primary:
-                await self.repository.unset_primary_for_catalogue_item(
-                    catalogue_item_id
-                )
+                await self.repository.unset_primary_for_catalogue_item(catalogue_item_id)
             else:
-                existing_primary = await self.repository.get_primary_image(
-                    catalogue_item_id
-                )
+                existing_primary = await self.repository.get_primary_image(catalogue_item_id)
                 if not existing_primary:
                     is_primary = True
 
@@ -540,9 +502,7 @@ class CatalogueItemImageUploadService:
                     "is_primary": is_primary,
                     "order": await self.repository.get_next_order(catalogue_item_id),
                     "is_processed": settings.storage.enable_processing,
-                    "original_file_size": (
-                        original_size if settings.storage.enable_processing else None
-                    ),
+                    "original_file_size": (original_size if settings.storage.enable_processing else None),
                     "external_url": None,
                 }
             )

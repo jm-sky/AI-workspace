@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.modules.admin.authorization import enforce_user_mutation_permissions
 from app.modules.auth.repositories import UserRepository as AuthUserRepository
 from app.modules.auth.repositories import (
     get_user_repository as get_auth_user_repository,
@@ -24,7 +25,6 @@ from .schemas import (
     PublicUserResponse,
     StorageFeatures,
     StorageUsageResponse,
-    UserCreate,
     UserFeatures,
     UserListResponse,
     UserProfileUpdate,
@@ -35,27 +35,13 @@ from .schemas import (
 # Create router
 router = APIRouter()
 
-
-@router.post(
-    "/",
-    response_model=UserResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create new user",
-    description="Create a new user (admin only)",
-)
-async def create_user(
-    user_data: UserCreate,
-    _: AdminUser,
-    repo: Annotated[UserRepository, Depends(get_user_repository)],
-) -> UserResponse:
-    """Create a new user."""
-    try:
-        user = await repo.create_user(
-            email=user_data.email, name=user_data.name, role=user_data.role
-        )
-        return UserResponse(**user.to_response())
-    except UserAlreadyExistsError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+# Note: there is intentionally no POST "/" (create user) endpoint here.
+# User creation requires password handling and is only done through the
+# auth module's registration endpoint (POST /auth/register). A previous
+# version of this endpoint called UserRepository.create_user(), which
+# unconditionally raised NotImplementedError — it was dead, untested code
+# that always 500'd. See docs/reviews/2026-07-20-code-quality.md (ops-monitor
+# review, which found the identical stub copy-pasted from this repo).
 
 
 @router.get(
@@ -70,18 +56,14 @@ async def list_users(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=1000, description="Max records to return"),
     include_inactive: bool = Query(default=False, description="Include inactive users"),
-    search: str | None = Query(
-        default=None, description="Search in name, email, and role"
-    ),
+    search: str | None = Query(default=None, description="Search in name, email, and role"),
 ) -> UserListResponse:
     """Get list of users with optional search.
 
     Search is performed across name, email, and role fields.
     Example: ?search=john will find users with 'john' in name, email, or role.
     """
-    users = await repo.get_all_users(
-        skip=skip, limit=limit, include_inactive=include_inactive, search=search
-    )
+    users = await repo.get_all_users(skip=skip, limit=limit, include_inactive=include_inactive, search=search)
     total = await repo.count_users(include_inactive=include_inactive, search=search)
 
     user_responses = [UserResponse(**u.to_response()) for u in users]
@@ -114,9 +96,7 @@ async def get_current_user_info(
     # Check if user has own AI token
     ai_settings_repo = SettingsRepository(db)
     ai_settings = await ai_settings_repo.get_by_user_id(current_user.id)
-    has_own_token = (
-        ai_settings and ai_settings.use_own_token and ai_settings.encrypted_api_token
-    )
+    has_own_token = ai_settings and ai_settings.use_own_token and ai_settings.encrypted_api_token
 
     # Determine user role for limit lookup
     # CurrentUser from users module has role as string
@@ -135,11 +115,7 @@ async def get_current_user_info(
         ai_limit = None
     elif feature_limit:
         # Use limit from database
-        ai_limit = (
-            float(feature_limit.ai_limit)
-            if feature_limit.ai_limit is not None
-            else None
-        )
+        ai_limit = float(feature_limit.ai_limit) if feature_limit.ai_limit is not None else None
     else:
         # Fallback to defaults if limit not found in database
         if role == "premium":
@@ -188,9 +164,7 @@ async def update_current_user_profile(
         avatar_url=user_data.avatarUrl,
     )
     if not updated_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return UserResponse(**updated_user.to_response())
 
 
@@ -218,14 +192,10 @@ async def get_public_user_profile(
     # Get user directly from auth repository to access all role fields
     auth_user = await auth_repo.get_user_by_id(user_id)
     if not auth_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
 
     # Check if profile is public
-    result = await db.execute(
-        select(UserSettingsDB).where(UserSettingsDB.user_id == user_id)
-    )
+    result = await db.execute(select(UserSettingsDB).where(UserSettingsDB.user_id == user_id))
     settings = result.scalars().first()
 
     # If no settings exist, profile is not public (default is False)
@@ -262,9 +232,7 @@ async def get_user(
     """Get user by ID."""
     user = await repo.get_user_by_id(user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
     return UserResponse(**user.to_response())
 
 
@@ -277,10 +245,30 @@ async def get_user(
 async def update_user(
     user_id: str,
     user_data: UserUpdate,
-    _: AdminUser,
+    current_user: AdminUser,
     repo: Annotated[UserRepository, Depends(get_user_repository)],
+    auth_repo: Annotated[AuthUserRepository, Depends(get_auth_user_repository)],
 ) -> UserResponse:
     """Update user information."""
+    target_user = await auth_repo.get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {user_id} not found",
+        )
+    enforce_user_mutation_permissions(
+        # This module's own User model uses a single `role` string (not the
+        # auth module's independent isAdmin/isOwner booleans) — "owner" is
+        # treated as admin-plus, matching how AdminService's role mapping
+        # already collapses isOwner=True to role="owner" regardless of isAdmin.
+        actor_is_admin=current_user.role in ("admin", "owner"),
+        actor_is_owner=current_user.role == "owner",
+        target_email=target_user.email,
+        target_is_owner=target_user.isOwner,
+        target_is_admin=target_user.isAdmin,
+        new_role=user_data.role,
+        new_is_owner=user_data.isOwner,
+    )
     try:
         user = await repo.update_user(
             user_id=user_id,
@@ -307,15 +295,29 @@ async def update_user(
 )
 async def delete_user(
     user_id: str,
-    _: AdminUser,
+    current_user: AdminUser,
     repo: Annotated[UserRepository, Depends(get_user_repository)],
+    auth_repo: Annotated[AuthUserRepository, Depends(get_auth_user_repository)],
 ) -> MessageResponse:
     """Soft delete user."""
+    target_user = await auth_repo.get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
+    enforce_user_mutation_permissions(
+        # This module's own User model uses a single `role` string (not the
+        # auth module's independent isAdmin/isOwner booleans) — "owner" is
+        # treated as admin-plus, matching how AdminService's role mapping
+        # already collapses isOwner=True to role="owner" regardless of isAdmin.
+        actor_is_admin=current_user.role in ("admin", "owner"),
+        actor_is_owner=current_user.role == "owner",
+        target_email=target_user.email,
+        target_is_owner=target_user.isOwner,
+        target_is_admin=target_user.isAdmin,
+        is_delete=True,
+    )
     success = await repo.delete_user(user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
     return MessageResponse(message=f"User {user_id} deactivated successfully")
 
 
@@ -327,15 +329,30 @@ async def delete_user(
 )
 async def hard_delete_user(
     user_id: str,
-    _: AdminUser,
+    current_user: AdminUser,
     repo: Annotated[UserRepository, Depends(get_user_repository)],
+    auth_repo: Annotated[AuthUserRepository, Depends(get_auth_user_repository)],
 ) -> MessageResponse:
     """Permanently delete user."""
+    target_user = await auth_repo.get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
+    enforce_user_mutation_permissions(
+        # This module's own User model uses a single `role` string (not the
+        # auth module's independent isAdmin/isOwner booleans) — "owner" is
+        # treated as admin-plus, matching how AdminService's role mapping
+        # already collapses isOwner=True to role="owner" regardless of isAdmin.
+        actor_is_admin=current_user.role in ("admin", "owner"),
+        actor_is_owner=current_user.role == "owner",
+        target_email=target_user.email,
+        target_is_owner=target_user.isOwner,
+        target_is_admin=target_user.isAdmin,
+        is_delete=True,
+        is_hard_delete=True,
+    )
     success = await repo.hard_delete_user(user_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
     return MessageResponse(message=f"User {user_id} permanently deleted")
 
 
@@ -354,10 +371,13 @@ async def get_storage_usage(
     Returns:
         Storage usage information including used bytes, limit bytes, and usage percentage
     """
+    from app.modules.agent.services.chat_attachment_service import ChatAttachmentService
     from app.modules.feature_limits.repository import FeatureLimitRepository
 
     image_repo = ItemImageRepository(db)
+    attachment_service = ChatAttachmentService(db)
     used_bytes = await image_repo.get_user_storage_usage(current_user.id)
+    used_bytes += await attachment_service.sum_user_storage_bytes(current_user.id)
 
     # Determine user role for limit lookup
     # CurrentUser from users module has role as string

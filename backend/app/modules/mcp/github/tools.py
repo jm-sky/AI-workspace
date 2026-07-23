@@ -8,10 +8,7 @@ from app.modules.mcp.github.client import GitHubApiClient
 GITHUB_MCP_TOOLS: list[dict[str, Any]] = [
     {
         "name": "github_search_repositories",
-        "description": (
-            "Search GitHub repositories accessible to the user. "
-            "Use GitHub search syntax (e.g. 'org:myorg language:python')."
-        ),
+        "description": ("Search GitHub repositories accessible to the user. " "Use GitHub search syntax (e.g. 'org:myorg language:python')."),
         "parameters": {
             "type": "object",
             "properties": {
@@ -33,7 +30,10 @@ GITHUB_MCP_TOOLS: list[dict[str, Any]] = [
         "parameters": {
             "type": "object",
             "properties": {
-                "owner": {"type": "string", "description": "Repository owner (user or org)"},
+                "owner": {
+                    "type": "string",
+                    "description": "Repository owner (user or org)",
+                },
                 "repo": {"type": "string", "description": "Repository name"},
             },
             "required": ["owner", "repo"],
@@ -41,10 +41,7 @@ GITHUB_MCP_TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "github_search_issues",
-        "description": (
-            "Search GitHub issues and pull requests. "
-            "Supports GitHub search qualifiers (repo:, is:pr, is:issue, author:, label:)."
-        ),
+        "description": ("Search GitHub issues and pull requests. " "Supports GitHub search qualifiers (repo:, is:pr, is:issue, author:, label:)."),
         "parameters": {
             "type": "object",
             "properties": {
@@ -93,10 +90,7 @@ GITHUB_MCP_TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "github_search_code",
-        "description": (
-            "Search code in GitHub repositories. Requires repo scope. "
-            "Include repo:owner/name in query for best results."
-        ),
+        "description": ("Search code in GitHub repositories. Requires repo scope. " "Include repo:owner/name in query for best results."),
         "parameters": {
             "type": "object",
             "properties": {
@@ -161,10 +155,14 @@ async def execute_github_tool(
         limit = int(arguments.get("limit") or 15)
         if not owner or not repo:
             raise AgentToolError("owner and repo are required")
-        issues = await client.list_repository_issues(
-            owner, repo, state=state, per_page=min(limit, 30)
-        )
-        return {"owner": owner, "repo": repo, "state": state, "total": len(issues), "issues": issues}
+        issues = await client.list_repository_issues(owner, repo, state=state, per_page=min(limit, 30))
+        return {
+            "owner": owner,
+            "repo": repo,
+            "state": state,
+            "total": len(issues),
+            "issues": issues,
+        }
 
     if tool_name == "github_search_code":
         query = str(arguments.get("query", "")).strip()

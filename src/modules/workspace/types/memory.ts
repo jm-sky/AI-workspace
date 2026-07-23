@@ -25,6 +25,14 @@ export interface IMemoryCreateRequest {
   sessionId?: string
 }
 
+export interface IMemoryUpdateRequest {
+  content?: string
+  scope?: MemoryScope
+  agentKey?: string
+  sessionId?: string
+  metadata?: Record<string, unknown> | null
+}
+
 export interface IMemorySearchRequest {
   query: string
   scope?: MemoryScope

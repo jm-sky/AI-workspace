@@ -68,6 +68,12 @@ COMMAND_GROUPS = {
             "ai": "Test AI module (OpenRouter)",
         },
     },
+    "agent": {
+        "name": "Agent & Chat",
+        "commands": {
+            "purge-orphans": "Delete unbound chat attachments older than TTL",
+        },
+    },
 }
 
 # Commands that require arguments (command_path -> list of argument prompts)

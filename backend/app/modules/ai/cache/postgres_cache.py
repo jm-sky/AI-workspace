@@ -29,9 +29,7 @@ class PostgresCacheService:
         self.db = db
 
     @staticmethod
-    def generate_cache_key(
-        operation_type: str, input_data: dict[str, Any], model: str
-    ) -> str:
+    def generate_cache_key(operation_type: str, input_data: dict[str, Any], model: str) -> str:
         """Generate cache key from operation and input data.
 
         Args:
@@ -61,9 +59,7 @@ class PostgresCacheService:
         """
         try:
             # Get cache entry
-            result = await self.db.execute(
-                select(AICacheDB).where(AICacheDB.cache_key == key)
-            )
+            result = await self.db.execute(select(AICacheDB).where(AICacheDB.cache_key == key))
             cache_entry = result.scalar_one_or_none()
 
             if not cache_entry:
@@ -143,9 +139,7 @@ class PostgresCacheService:
             Number of entries deleted
         """
         try:
-            result = await self.db.execute(
-                delete(AICacheDB).where(AICacheDB.expires_at < datetime.now(UTC))
-            )
+            result = await self.db.execute(delete(AICacheDB).where(AICacheDB.expires_at < datetime.now(UTC)))
             await self.db.commit()
             return result.rowcount or 0  # type: ignore[attr-defined]
 
@@ -165,9 +159,7 @@ class PostgresCacheService:
             total_entries = len(total_result.all())
 
             # Expired entries
-            expired_result = await self.db.execute(
-                select(AICacheDB).where(AICacheDB.expires_at < datetime.now(UTC))
-            )
+            expired_result = await self.db.execute(select(AICacheDB).where(AICacheDB.expires_at < datetime.now(UTC)))
             expired_entries = len(expired_result.all())
 
             # Total hits

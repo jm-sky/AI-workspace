@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -30,15 +31,13 @@ async def table_exists(conn, table_name: str) -> bool:
         True if table exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -57,8 +56,7 @@ async def upgrade() -> None:
 
         print("Creating catalogue_item_images table...")
         await conn.execute(
-            text(
-                """
+            text("""
                 CREATE TABLE catalogue_item_images (
                     id VARCHAR(36) PRIMARY KEY,
                     catalogue_item_id VARCHAR(36) NOT NULL,
@@ -85,22 +83,13 @@ async def upgrade() -> None:
                         FOREIGN KEY (user_id)
                         REFERENCES users(id)
                 );
-            """
-            ),
+            """),
         )
 
         # Create indexes
         print("Creating indexes...")
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_catalogue_item_images_catalogue_item_id ON catalogue_item_images(catalogue_item_id);"
-            )
-        )
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_catalogue_item_images_user_id ON catalogue_item_images(user_id);"
-            )
-        )
+        await conn.execute(text("CREATE INDEX ix_catalogue_item_images_catalogue_item_id ON catalogue_item_images(catalogue_item_id);"))
+        await conn.execute(text("CREATE INDEX ix_catalogue_item_images_user_id ON catalogue_item_images(user_id);"))
 
         print("✓ Created catalogue_item_images table with indexes")
 
@@ -121,12 +110,8 @@ async def downgrade() -> None:
         print("catalogue_item_images table exists, removing it...")
         # Drop indexes
         print("Dropping indexes...")
-        await conn.execute(
-            text("DROP INDEX IF EXISTS ix_catalogue_item_images_user_id;")
-        )
-        await conn.execute(
-            text("DROP INDEX IF EXISTS ix_catalogue_item_images_catalogue_item_id;")
-        )
+        await conn.execute(text("DROP INDEX IF EXISTS ix_catalogue_item_images_user_id;"))
+        await conn.execute(text("DROP INDEX IF EXISTS ix_catalogue_item_images_catalogue_item_id;"))
 
         # Drop table
         print("Dropping table...")
@@ -141,9 +126,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add catalogue_item_images table migration"
-    )
+    parser = argparse.ArgumentParser(description="Add catalogue_item_images table migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

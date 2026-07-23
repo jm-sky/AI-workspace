@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HardDrive, Link2, Shield, User } from 'lucide-vue-next'
+import { Bot, HardDrive, Link2, Shield, User } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
@@ -25,6 +25,11 @@ const navItems = computed(() => [
     to: SettingsRoutePaths.connections,
     label: t('settings.nav.connections'),
     icon: Link2,
+  },
+  {
+    to: SettingsRoutePaths.agents,
+    label: t('settings.nav.agents'),
+    icon: Bot,
   },
   {
     to: SettingsRoutePaths.storage,

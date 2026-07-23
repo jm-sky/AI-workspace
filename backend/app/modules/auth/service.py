@@ -9,7 +9,7 @@ from uuid import uuid4
 from ...core.auth.token_blacklist import TokenBlacklistService
 from ...core.config import settings
 from ...core.email import get_email_service
-from ...core.email.i18n import SupportedLocale, get_translations
+from ...core.email.i18n import SupportedLocale
 from .auth_utils import (
     create_access_token,
     create_email_verification_token,
@@ -24,9 +24,11 @@ from .exceptions import (
 )
 from .models import User
 from .schemas import LoginResponse, UserResponse
+from .types.jwt import CreateAccessTokenOptions, CreateRefreshTokenOptions
 from .types.repository import UserRepositoryInterface
 
 if TYPE_CHECKING:
+    from app.modules.tenants.service import TenantWorkspaceService
     from app.modules.two_factor.types.repository import TwoFactorRepositoryInterface
 
 logger = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ class AuthService:
         user_repository: UserRepositoryInterface,
         token_blacklist_service: TokenBlacklistService | None = None,
         two_factor_repository: object | None = None,
-        tenant_workspace_service: object | None = None,
+        tenant_workspace_service: "TenantWorkspaceService | None" = None,
     ):
         self.user_repository = user_repository
         self.token_blacklist_service = token_blacklist_service
@@ -75,12 +77,8 @@ class AuthService:
             user = await self.user_repository.create_user(email, password, name)
 
             # Generate verification token and send verification email
-            verification_token = create_email_verification_token(
-                {"sub": user.id, "email": email}
-            )
-            stored_user = await self.user_repository.store_email_verification_token(
-                user.id, verification_token, datetime.now(UTC)
-            )
+            verification_token = create_email_verification_token({"sub": user.id, "email": email})
+            stored_user = await self.user_repository.store_email_verification_token(user.id, verification_token, datetime.now(UTC))
             if stored_user:
                 user = stored_user
 
@@ -133,7 +131,7 @@ class AuthService:
 
         return await self._issue_login_tokens(user)
 
-    async def _workspace_claims_for_user(self, user: User) -> dict[str, str]:
+    async def _workspace_claims_for_user(self, user: User) -> CreateAccessTokenOptions:
         if self.tenant_workspace_service is None:
             return {}
         workspace = await self.tenant_workspace_service.resolve_workspace_for_user(user)
@@ -150,37 +148,33 @@ class AuthService:
         token_version = user.tokenVersion
         workspace_claims = await self._workspace_claims_for_user(user)
 
-        access_token = create_access_token(
-            data={
-                "sub": user.id,
-                "email": user.email,
-                "tfaVerified": tfa_verified,
-                "tfaMethod": tfa_method,
-                "emailVerified": user.isEmailVerified,
-                "jti": session_jti,
-                "tv": token_version,
-                **workspace_claims,
-            }
-        )
-        refresh_token = create_refresh_token(
-            data={
-                "sub": user.id,
-                "email": user.email,
-                "tfaVerified": tfa_verified,
-                "tfaMethod": tfa_method,
-                "emailVerified": user.isEmailVerified,
-                "jti": session_jti,
-                "tv": token_version,
-            }
-        )
+        access_data: CreateAccessTokenOptions = {
+            "sub": user.id,
+            "email": user.email,
+            "tfaVerified": tfa_verified,
+            "tfaMethod": tfa_method,
+            "emailVerified": user.isEmailVerified,
+            "jti": session_jti,
+            "tv": token_version,
+        }
+        access_data.update(workspace_claims)
+        access_token = create_access_token(data=access_data)
+        refresh_data: CreateRefreshTokenOptions = {
+            "sub": user.id,
+            "email": user.email,
+            "tfaVerified": tfa_verified,
+            "tfaMethod": tfa_method,
+            "emailVerified": user.isEmailVerified,
+            "jti": session_jti,
+            "tv": token_version,
+        }
+        refresh_token = create_refresh_token(data=refresh_data)
 
         if self.token_blacklist_service:
             try:
                 refresh_payload = verify_token(refresh_token)
                 refresh_exp = refresh_payload.get("exp", 0)
-                await self.token_blacklist_service.track_user_session(
-                    user_id=user.id, jti=session_jti, expires_at=refresh_exp
-                )
+                await self.token_blacklist_service.track_user_session(user_id=user.id, jti=session_jti, expires_at=refresh_exp)
             except Exception as e:
                 logger.warning(f"Failed to track user session in Redis: {e}")
 
@@ -227,40 +221,21 @@ class AuthService:
             old_tfa_verified = payload.get("tfaVerified", False)
             old_tfa_method = payload.get("tfaMethod")
 
-            # Generate new tokens with preserved 2FA state
             # Ensure tfaVerified is bool (not None)
-            tfa_verified_bool = (
-                old_tfa_verified if old_tfa_verified is not None else False
-            )
-            workspace_claims = await self._workspace_claims_for_user(user)
-            new_access_token = create_access_token(
-                data={
-                    "sub": user_id,
-                    "email": user.email,
-                    "tfaVerified": tfa_verified_bool,
-                    "tfaMethod": old_tfa_method,
-                    "emailVerified": user.isEmailVerified,
-                    "tv": user.tokenVersion,
-                    **workspace_claims,
-                }
-            )
-            new_refresh_token = create_refresh_token(
-                data={
-                    "sub": user_id,
-                    "email": user.email,
-                    "tfaVerified": tfa_verified_bool,
-                    "tfaMethod": old_tfa_method,
-                    "emailVerified": user.isEmailVerified,
-                    "tv": user.tokenVersion,
-                    "jti": payload.get("jti"),
-                }
-            )
+            tfa_verified_bool = old_tfa_verified if old_tfa_verified is not None else False
+
+            # Reissue via _issue_login_tokens (same as login) so refreshed
+            # tokens keep carrying `tv`/`jti` (and workspace claims) instead
+            # of silently dropping them — without `tv`, _verify_user_token
+            # rejects the refreshed token for any user whose tokenVersion
+            # isn't 0.
+            login_response = await self._issue_login_tokens(user, tfa_verified=tfa_verified_bool, tfa_method=old_tfa_method)
 
             return {
-                "accessToken": new_access_token,
-                "refreshToken": new_refresh_token,
-                "tokenType": "bearer",
-                "expiresIn": settings.security.access_token_expires_minutes * 60,
+                "accessToken": login_response.accessToken,
+                "refreshToken": login_response.refreshToken,
+                "tokenType": login_response.tokenType,
+                "expiresIn": login_response.expiresIn,
             }
 
         except InvalidTokenError:
@@ -269,7 +244,7 @@ class AuthService:
         except Exception as e:
             # Log unexpected errors for debugging
             logger.error(f"Unexpected error during token refresh: {e}", exc_info=True)
-            raise InvalidTokenError("Invalid or expired refresh token")
+            raise InvalidTokenError("Invalid or expired refresh token") from e
 
     async def request_password_reset(
         self,
@@ -314,10 +289,7 @@ class AuthService:
             # In development mode only, also log the token (NEVER in production!)
             environment = os.getenv("ENVIRONMENT", "production").lower()
             if environment == "development":
-                logger.warning(
-                    f"DEV MODE: Password reset token for {email}: {token}\n"
-                    f"Reset link: /reset-password?token={token}"
-                )
+                logger.warning(f"DEV MODE: Password reset token for {email}: {token}\n" f"Reset link: /reset-password?token={token}")
             else:
                 # In production, just log that email was sent without exposing token
                 logger.info(f"Password reset email sent to {email}")
@@ -345,18 +317,14 @@ class AuthService:
         except Exception:
             pass
 
-        success = await self.user_repository.reset_password_with_token(
-            token, new_password
-        )
+        success = await self.user_repository.reset_password_with_token(token, new_password)
         if not success:
             raise InvalidTokenError("Invalid or expired reset token")
 
         if user_id:
             await self.user_repository.increment_token_version(user_id)
             if self.token_blacklist_service:
-                await self.token_blacklist_service.blacklist_all_user_tokens(
-                    user_id, reason="password_reset"
-                )
+                await self.token_blacklist_service.blacklist_all_user_tokens(user_id, reason="password_reset")
 
         return True
 
@@ -375,9 +343,7 @@ class AuthService:
             return True
 
         token = create_email_verification_token({"sub": user.id, "email": user.email})
-        await self.user_repository.store_email_verification_token(
-            user.id, token, datetime.now(UTC)
-        )
+        await self.user_repository.store_email_verification_token(user.id, token, datetime.now(UTC))
 
         try:
             email_service = get_email_service()
@@ -445,9 +411,7 @@ class AuthService:
             InvalidCredentialsError: If current password is incorrect
             UserNotFoundError: If user not found
         """
-        success = await self.user_repository.change_password(
-            user_id, current_password, new_password
-        )
+        success = await self.user_repository.change_password(user_id, current_password, new_password)
         if not success:
             user = await self.user_repository.get_user_by_id(user_id)
             if not user:
@@ -472,9 +436,7 @@ class AuthService:
 
         await self.user_repository.increment_token_version(user_id)
         if self.token_blacklist_service:
-            await self.token_blacklist_service.blacklist_all_user_tokens(
-                user_id, reason="password_changed"
-            )
+            await self.token_blacklist_service.blacklist_all_user_tokens(user_id, reason="password_changed")
 
         return True
 
@@ -514,10 +476,7 @@ class AuthService:
                 raise InvalidCredentialsError("Password is incorrect")
 
         # Verify confirmation phrase (should be 'DELETE' or user email)
-        if (
-            confirmation.upper() != "DELETE"
-            and confirmation.lower() != user.email.lower()
-        ):
+        if confirmation.upper() != "DELETE" and confirmation.lower() != user.email.lower():
             raise InvalidCredentialsError("Confirmation phrase is incorrect")
 
         # Store user email and name before deletion for email notification
@@ -526,9 +485,7 @@ class AuthService:
 
         # Delete user account
         if self.two_factor_repository:
-            two_factor_repository = cast(
-                "TwoFactorRepositoryInterface", self.two_factor_repository
-            )
+            two_factor_repository = cast("TwoFactorRepositoryInterface", self.two_factor_repository)
             try:
                 await two_factor_repository.disable_totp(user_id)
                 await two_factor_repository.delete_all_passkeys(user_id)
@@ -537,9 +494,7 @@ class AuthService:
                     "Failed to cleanup 2FA artifacts during account deletion",
                     exc_info=True,
                 )
-        success = await self.user_repository.delete_user(
-            user_id, soft_delete=soft_delete
-        )
+        success = await self.user_repository.delete_user(user_id, soft_delete=soft_delete)
         if not success:
             raise UserNotFoundError("Failed to delete user account")
 
@@ -558,22 +513,20 @@ class AuthService:
             logger.warning(f"Failed to send account deletion email: {e}")
 
         if self.token_blacklist_service:
-            await self.token_blacklist_service.blacklist_all_user_tokens(
-                user_id, reason="account_deleted"
-            )
+            await self.token_blacklist_service.blacklist_all_user_tokens(user_id, reason="account_deleted")
 
         return True
 
-    async def login_with_oauth(self, provider: str, user_info: dict) -> LoginResponse:
+    async def _resolve_oauth_user(self, provider: str, user_info: dict) -> User:
         """
-        Login or register user via OAuth.
+        Look up, link, or create the user for an OAuth login, without issuing tokens.
 
         Args:
             provider: OAuth provider name (google, github, etc.)
             user_info: User information from OAuth provider (camelCase format from OAuthUserInfo)
 
         Returns:
-            LoginResponse with tokens and user info
+            The resolved user
 
         Raises:
             ValueError: If provider or user_info is invalid
@@ -586,28 +539,16 @@ class AuthService:
             raise ValueError("Email is required from OAuth provider")
 
         # Extract provider_id - support both camelCase (providerId) and snake_case (provider_id, id, sub)
-        provider_id = (
-            user_info.get("providerId")
-            or user_info.get("provider_id")
-            or user_info.get("id")
-            or user_info.get("sub")
-            or ""
-        )
+        provider_id = user_info.get("providerId") or user_info.get("provider_id") or user_info.get("id") or user_info.get("sub") or ""
 
         # Extract avatar URL - support both camelCase (avatarUrl) and snake_case (avatar_url, picture)
-        avatar_url = (
-            user_info.get("avatarUrl")
-            or user_info.get("avatar_url")
-            or user_info.get("picture")
-        )
+        avatar_url = user_info.get("avatarUrl") or user_info.get("avatar_url") or user_info.get("picture")
 
         # Extract name
         name = user_info.get("name", email.split("@")[0])
 
         # Check if user already exists by OAuth provider
-        existing_user_by_provider = (
-            await self.user_repository.get_user_by_oauth_provider(provider, provider_id)
-        )
+        existing_user_by_provider = await self.user_repository.get_user_by_oauth_provider(provider, provider_id)
 
         if existing_user_by_provider:
             # User exists with this OAuth provider - use existing user
@@ -647,8 +588,27 @@ class AuthService:
         if self.tenant_workspace_service is not None:
             await self.tenant_workspace_service.ensure_personal_workspace(user)
 
-        return await self._issue_login_tokens(
-            user,
-            tfa_verified=False,
-            tfa_method=None,
-        )
+        return user
+
+    async def login_with_oauth(self, provider: str, user_info: dict) -> LoginResponse:
+        """
+        Login or register user via OAuth.
+
+        Routes through ``_issue_login_tokens`` (same as password login) so OAuth
+        sessions get a tracked `jti`, `tv`, workspace claims, and `emailVerified`
+        claim like every other login path.
+
+        Args:
+            provider: OAuth provider name (google, github, etc.)
+            user_info: User information from OAuth provider (camelCase format from OAuthUserInfo)
+
+        Returns:
+            LoginResponse with tokens and user info
+
+        Raises:
+            ValueError: If provider or user_info is invalid
+        """
+        user = await self._resolve_oauth_user(provider, user_info)
+        response = await self._issue_login_tokens(user)
+        response.requiresEmailVerification = False  # OAuth emails are pre-verified
+        return response

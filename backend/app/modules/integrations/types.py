@@ -15,6 +15,7 @@ class IntegrationProvider(StrEnum):
     """Supported integration providers."""
 
     GITHUB = "github"
+    GMAIL = "gmail"
     JIRA = "jira"
     GITLAB = "gitlab"
 
@@ -34,8 +35,42 @@ GITHUB_OAUTH_SCOPES: list[dict[str, str | bool]] = [
     },
 ]
 
+GMAIL_OAUTH_SCOPES: list[dict[str, str | bool]] = [
+    {
+        "id": "openid",
+        "labelKey": "settings.integrations.scopes.gmail.openid",
+        "descriptionKey": "settings.integrations.scopes.gmail.openid_desc",
+        "required": True,
+    },
+    {
+        "id": "https://www.googleapis.com/auth/userinfo.email",
+        "labelKey": "settings.integrations.scopes.gmail.email",
+        "descriptionKey": "settings.integrations.scopes.gmail.email_desc",
+        "required": True,
+    },
+    {
+        "id": "https://www.googleapis.com/auth/userinfo.profile",
+        "labelKey": "settings.integrations.scopes.gmail.profile",
+        "descriptionKey": "settings.integrations.scopes.gmail.profile_desc",
+        "required": True,
+    },
+    {
+        "id": "https://www.googleapis.com/auth/gmail.readonly",
+        "labelKey": "settings.integrations.scopes.gmail.readonly",
+        "descriptionKey": "settings.integrations.scopes.gmail.readonly_desc",
+        "required": True,
+    },
+]
+
 INTEGRATION_PROVIDER_SCOPES: dict[str, list[dict[str, str | bool]]] = {
     IntegrationProvider.GITHUB.value: GITHUB_OAUTH_SCOPES,
+    IntegrationProvider.GMAIL.value: GMAIL_OAUTH_SCOPES,
 }
 
 DEFAULT_GITHUB_SCOPES = ["read:user", "repo"]
+DEFAULT_GMAIL_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/gmail.readonly",
+]

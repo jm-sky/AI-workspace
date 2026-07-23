@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -30,15 +31,13 @@ async def table_exists(conn, table_name: str) -> bool:
         True if table exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -57,8 +56,7 @@ async def upgrade() -> None:
 
         print("Creating global_catalogue_items table...")
         await conn.execute(
-            text(
-                """
+            text("""
                 CREATE TABLE global_catalogue_items (
                     id VARCHAR(36) PRIMARY KEY,
                     version INTEGER NOT NULL DEFAULT 1,
@@ -82,32 +80,15 @@ async def upgrade() -> None:
                         REFERENCES users(id)
                         ON DELETE SET NULL
                 );
-            """
-            ),
+            """),
         )
 
         # Create indexes
         print("Creating indexes...")
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_global_catalogue_items_name ON global_catalogue_items(name);"
-            )
-        )
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_global_catalogue_items_category ON global_catalogue_items(category);"
-            )
-        )
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_global_catalogue_items_brand ON global_catalogue_items(brand);"
-            )
-        )
-        await conn.execute(
-            text(
-                "CREATE INDEX ix_global_catalogue_items_is_active ON global_catalogue_items(is_active);"
-            )
-        )
+        await conn.execute(text("CREATE INDEX ix_global_catalogue_items_name ON global_catalogue_items(name);"))
+        await conn.execute(text("CREATE INDEX ix_global_catalogue_items_category ON global_catalogue_items(category);"))
+        await conn.execute(text("CREATE INDEX ix_global_catalogue_items_brand ON global_catalogue_items(brand);"))
+        await conn.execute(text("CREATE INDEX ix_global_catalogue_items_is_active ON global_catalogue_items(is_active);"))
 
         print("✓ Created global_catalogue_items table with indexes")
 
@@ -128,15 +109,9 @@ async def downgrade() -> None:
         print("global_catalogue_items table exists, removing it...")
         # Drop indexes
         print("Dropping indexes...")
-        await conn.execute(
-            text("DROP INDEX IF EXISTS ix_global_catalogue_items_is_active;")
-        )
-        await conn.execute(
-            text("DROP INDEX IF EXISTS ix_global_catalogue_items_brand;")
-        )
-        await conn.execute(
-            text("DROP INDEX IF EXISTS ix_global_catalogue_items_category;")
-        )
+        await conn.execute(text("DROP INDEX IF EXISTS ix_global_catalogue_items_is_active;"))
+        await conn.execute(text("DROP INDEX IF EXISTS ix_global_catalogue_items_brand;"))
+        await conn.execute(text("DROP INDEX IF EXISTS ix_global_catalogue_items_category;"))
         await conn.execute(text("DROP INDEX IF EXISTS ix_global_catalogue_items_name;"))
 
         # Drop table
@@ -152,9 +127,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add global_catalogue_items table migration"
-    )
+    parser = argparse.ArgumentParser(description="Add global_catalogue_items table migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

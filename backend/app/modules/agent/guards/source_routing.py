@@ -58,10 +58,7 @@ def check_source_mismatch(
                 SourceRoutingWarning(
                     provider=provider,
                     reason="not_used",
-                    message=(
-                        f"You asked about {provider}, but the agent answered "
-                        f"without querying it. The {provider} data may be missing."
-                    ),
+                    message=(f"You asked about {provider}, but the agent answered " f"without querying it. The {provider} data may be missing."),
                 )
             )
         else:
@@ -69,10 +66,7 @@ def check_source_mismatch(
                 SourceRoutingWarning(
                     provider=provider,
                     reason="unavailable",
-                    message=(
-                        f"You asked about {provider}, but that integration is not "
-                        f"available for this agent yet."
-                    ),
+                    message=(f"You asked about {provider}, but that integration is not " f"available for this agent yet."),
                 )
             )
     return warnings

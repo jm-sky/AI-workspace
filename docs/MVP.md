@@ -17,7 +17,7 @@ Bez sztywnego przepływu krok-po-kroku jak w Jira 360° — agent ma dostęp do 
 
 - **GitHub** — przeglądanie repo/issues/PR (już zaimplementowane, `github-workspace`).
 - **Pamięć** — fakty/preferencje między sesjami (już zaimplementowane, pgvector — patrz Faza 4).
-- **Gmail** — kolejny aktywny cel integracji (Faza 2), bez wymuszonego fan-outu z innego systemu.
+- **Gmail** — readonly MCP + OAuth (Faza 2) — search/list/get messages w `github-workspace`.
 - **Tenant/team scopes** — te same zakresy co wcześniej (dec. #8, #15), teraz też z sensownym trybem dla pojedynczego developera (jeden tenant „ja").
 
 ## Systemy
@@ -25,7 +25,7 @@ Bez sztywnego przepływu krok-po-kroku jak w Jira 360° — agent ma dostęp do 
 | System | Status |
 |---|---|
 | GitHub | ✅ aktywny — narzędzia + OAuth zaimplementowane |
-| Gmail | 🎯 aktywny cel — Faza 2 |
+| Gmail | ✅ aktywny — OAuth + `gmail_*` tools (readonly) |
 | Jira | ⏸️ odłożone — brak dostępu do instancji |
 | GitLab | ⏸️ odłożone — narzędzie istnieje (`GitLabSearchByJiraKeyTool`), ale zależy od klucza Jiry; do przeprojektowania jeśli wraca do zakresu |
 | Microsoft Teams | ⏸️ odłożone — brak dostępu |
@@ -103,9 +103,9 @@ Zasada: **pionowy plaster najpierw** (jedna ścieżka end-to-end), potem general
 - **Faza 0 — Fundament (reuse gear-stack):** auth, użytkownicy, model danych Tenant/Zespół/Użytkownik + izolacja, RBAC, kaskada konfiguracji, plumbing per-user OAuth (magazyn tokenów).
 - **Faza 1 — Pionowy plaster:** rdzeń agenta + trace/audyt, czat (reuse Vue `ai`) + SSE, pierwsze integracje MCP → działający agent na wąskim zakresie. Zrealizowane pierwotnie jako **Jira 360° end-to-end** (Jira + GitLab); scenariusz-nośnik odłożony 2026-07-11 (brak dostępu do Jiry), zastąpiony przez **GitHub Developer Workspace** (agent `github-workspace` — GitHub + memory), zbudowany przy tej samej okazji.
 - **Faza 1.5 — Design pass:** wdrożenie języka wizualnego z `DESIGN.md` (ChatGPT + Linear) na czat i widok 360° + inline tool steps + bogate bloki dopięte do systemu wizualnego. Jeden spójny przebieg na żywym szkielecie Fazy 1 (żeby nie przerabiać UI dwa razy). Szczegóły: `docs/IMPLEMENTATION_KICKOFF.md`.
-- **Faza 2 — Gmail:** własny cienki serwer MCP dla Gmail (per-user token injection). Teams odłożony (brak dostępu). GitHub już gotowy z Fazy 1.
+- **Faza 2 — Gmail:** własny cienki MCP Gmail (per-user token injection) — ✅ v1 readonly (`gmail_search_messages` / `gmail_list_messages` / `gmail_get_message`). Teams odłożony (brak dostępu). GitHub już gotowy z Fazy 1.
 - **Faza 3 — Konfigurowalność:** edytor agentów (admin), abstrakcja routera (jawny wybór), tools injection, bogate bloki (karty/tabele/wykresy).
-- **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG. Pamięć (embeddingi + `memory_search`/`memory_save`) już częściowo zaimplementowana przy okazji Fazy 1 — patrz `docs/reviews/2026-07-11--001--docs-consistency-check.md` pkt B.
+- **Faza 4 — Pamięć + RAG:** magazyn wektorowy, memory injection (semantic + tool), RAG. Pamięć (embeddingi + `memory_search`/`memory_save`/`memory_update`) + document RAG (`rag_documents`/`document_chunks`, `rag_search`, ACL tenant/user) — patrz plany [005](plans/2026-07-23--005--memory-update.md), [006](plans/2026-07-23--006--rag-retrieval-chunks.md). Reranker / RAGAS / wiki chunks — nadal open.
 - **Faza 5 — Rozszerzenia:** auto-router LLM, tool search, onboarding tenantów (multi-tenancy B), więcej bloków.
 - **Faza 6 (kandydat, nierozplanowana) — Zdalne agenty wykonawcze:** orkiestracja agentów kodujących na własnych serwerach użytkownika (np. Claude Code na VPS, wiele projektów) — planowanie/dispatch pracy z poziomu Workspace + tracking statusu. Rozszerza ideę „Control Tower" (patrz Otwarte punkty) o realną egzekucję, nie tylko audyt. Wymaga osobnego researchu/decyzji przed wejściem do sekwencji faz.
 

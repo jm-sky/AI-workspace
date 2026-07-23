@@ -13,7 +13,6 @@ Current System:
 import pytest
 
 from app.modules.auth.db_models import UserDB
-from app.modules.gear.schemas import ItemCreate
 from app.modules.gear.service import GearService
 
 from .conftest import create_test_container, create_test_item
@@ -30,9 +29,7 @@ class TestBasicWeightCalculations:
     ) -> None:
         """Test weight calculation for empty container."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "Empty Backpack", weight=500.0, weight_unit="g"
-        )
+        container = await create_test_container(gear_service, test_user.id, "Empty Backpack", weight=500.0, weight_unit="g")
 
         # Act
         fetched = await gear_service.get_container(container["id"], test_user.id)
@@ -408,9 +405,7 @@ class TestWeightCalculationLimitations:
         LIMITATION: No recursive weight calculation through nesting hierarchy.
         """
         # Arrange - Create nested structure
-        main_backpack = await create_test_container(
-            gear_service, test_user.id, "Main Backpack"
-        )
+        main_backpack = await create_test_container(gear_service, test_user.id, "Main Backpack")
 
         # Nested pouch with items
         pouch = await create_test_container(
@@ -443,9 +438,7 @@ class TestWeightCalculationLimitations:
         )
 
         # Act
-        fetched_main = await gear_service.get_container(
-            main_backpack["id"], test_user.id
-        )
+        fetched_main = await gear_service.get_container(main_backpack["id"], test_user.id)
         assert fetched_main is not None
         main_weights = gear_service.calculate_container_weight(fetched_main)
 
@@ -473,9 +466,7 @@ class TestWeightCalculationLimitations:
         LIMITATION: Each container's weight is calculated independently.
         """
         # Arrange - Create 3-level nesting
-        level1 = await create_test_container(
-            gear_service, test_user.id, "Level 1", weight=100.0, weight_unit="g"
-        )
+        level1 = await create_test_container(gear_service, test_user.id, "Level 1", weight=100.0, weight_unit="g")
         level2 = await create_test_container(
             gear_service,
             test_user.id,
@@ -558,9 +549,7 @@ class TestWeightCalculationEdgeCases:
     ) -> None:
         """Test weight calculation with no items returns zero."""
         # Arrange
-        container = await create_test_container(
-            gear_service, test_user.id, "Empty Backpack"
-        )
+        container = await create_test_container(gear_service, test_user.id, "Empty Backpack")
 
         # Act
         fetched = await gear_service.get_container(container["id"], test_user.id)

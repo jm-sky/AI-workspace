@@ -69,9 +69,8 @@ def init_database(force: bool = typer.Option(False, "--force", "-f", help="Recre
         _import_model_modules()
 
         # Import SchemaMigration model to ensure it's included in metadata
-        from app.core.migrations import SchemaMigration  # noqa: F401
-
         from app.core.database import Base, engine, init_db
+        from app.core.migrations import SchemaMigration  # noqa: F401
 
         if force:
             async with engine.begin() as conn:
@@ -116,9 +115,10 @@ def init_test_database(
         _import_model_modules()
 
         # Import SchemaMigration model to ensure it's included in metadata
-        from app.core.migrations import SchemaMigration  # noqa: F401
-        from app.core.database import Base
         from sqlalchemy.ext.asyncio import create_async_engine
+
+        from app.core.database import Base
+        from app.core.migrations import SchemaMigration  # noqa: F401
 
         # Get database password from environment
         db_password = os.getenv("POSTGRES_PASSWORD", "changeme")
@@ -136,6 +136,7 @@ def init_test_database(
             async with engine.begin() as conn:
                 if force:
                     from sqlalchemy import text
+
                     console.print("[yellow]Dropping existing test database tables...[/yellow]")
                     # Drop all tables with CASCADE to handle foreign keys
                     await conn.execute(text("DROP SCHEMA public CASCADE"))
@@ -182,8 +183,8 @@ def migrate_database(
                 console.print("[yellow]Database is not initialized. Running 'db init' first...[/yellow]")
                 # Run init logic
                 _import_model_modules()
+                from app.core.database import init_db
                 from app.core.migrations import SchemaMigration  # noqa: F401
-                from app.core.database import Base, engine, init_db
 
                 await init_db()
 
@@ -256,7 +257,7 @@ def migrate_database(
 
             except Exception as e:
                 console.print(f"[red]✗ Migration {version} failed:[/red] {e}")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
         console.print("\n[bold green]✓ All pending migrations completed[/bold green]")
 
@@ -354,8 +355,8 @@ def migrate_graceful(
                 console.print("[yellow]Database is not initialized. Running 'db init' first...[/yellow]")
                 # Run init logic
                 _import_model_modules()
+                from app.core.database import init_db
                 from app.core.migrations import SchemaMigration  # noqa: F401
-                from app.core.database import Base, engine, init_db
 
                 await init_db()
 
@@ -488,7 +489,7 @@ def migrate_graceful(
             console.print(f"  [yellow]⚠ Errors (ignored): {error_count}[/yellow]")
         if skipped_count > 0:
             console.print(f"  [yellow]○ Skipped (already applied): {skipped_count}[/yellow]")
-        console.print(f"\n[bold green]✓ Graceful migration completed[/bold green]")
+        console.print("\n[bold green]✓ Graceful migration completed[/bold green]")
 
     asyncio.run(_migrate_graceful())
 
@@ -561,12 +562,14 @@ def seed_database(
 
 async def _seed_catalogue(db: "AsyncSession") -> None:
     """Seed catalogue items, updating existing items by id."""
+    from pathlib import Path
+
+    from sqlalchemy import select
+    from ulid import ULID
+
     from app.common.id_utils import generate_id
     from app.modules.gear.db_models import CatalogueItemImageDB, GlobalCatalogueItemDB
     from app.seeders import CATALOGUE_ITEMS
-    from sqlalchemy import select
-    from pathlib import Path
-    from ulid import ULID
 
     console.print("[bold cyan]Seeding catalogue items...[/bold cyan]")
 
@@ -574,12 +577,12 @@ async def _seed_catalogue(db: "AsyncSession") -> None:
     from app.modules.auth.db_models import UserDB
 
     # First try to find an owner
-    result = await db.execute(select(UserDB).where(UserDB.is_owner == True).limit(1))
+    result = await db.execute(select(UserDB).where(UserDB.is_owner).limit(1))
     user = result.scalar_one_or_none()
 
     # If no owner, fall back to admin
     if not user:
-        result = await db.execute(select(UserDB).where(UserDB.is_admin == True).limit(1))
+        result = await db.execute(select(UserDB).where(UserDB.is_admin).limit(1))
         user = result.scalar_one_or_none()
 
     if not user:
@@ -661,7 +664,7 @@ async def _seed_catalogue(db: "AsyncSession") -> None:
             result = await db.execute(
                 select(CatalogueItemImageDB).where(
                     CatalogueItemImageDB.catalogue_item_id == item_id,
-                    CatalogueItemImageDB.is_primary == True,
+                    CatalogueItemImageDB.is_primary,
                 )
             )
             existing_image = result.scalar_one_or_none()
@@ -745,8 +748,9 @@ def remove_seeder(
 
 async def _remove_catalogue(db: "AsyncSession") -> None:
     """Remove all catalogue items and their images."""
-    from app.modules.gear.db_models import CatalogueItemImageDB, GlobalCatalogueItemDB
     from sqlalchemy import delete, select
+
+    from app.modules.gear.db_models import CatalogueItemImageDB, GlobalCatalogueItemDB
 
     # Count items before deletion
     result = await db.execute(select(GlobalCatalogueItemDB))

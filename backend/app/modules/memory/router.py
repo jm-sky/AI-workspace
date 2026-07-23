@@ -11,6 +11,7 @@ from app.modules.auth.dependencies import CurrentUser
 from app.modules.memory.schemas import (
     MemoryEntryCreate,
     MemoryEntryResponse,
+    MemoryEntryUpdate,
     MemoryListResponse,
     MemorySearchRequest,
 )
@@ -84,6 +85,34 @@ async def create_memory(
         session_id=payload.sessionId,
         metadata=payload.metadata,
     )
+
+
+@router.patch("/{entry_id}", response_model=MemoryEntryResponse)
+async def update_memory(
+    entry_id: str,
+    payload: MemoryEntryUpdate,
+    current_user: CurrentUser,
+    tenant_ctx: AgentTenantContext,
+    service: Annotated[MemoryService, Depends(_get_memory_service)],
+) -> MemoryEntryResponse:
+    _ = current_user
+    try:
+        updated = await service.update_entry(
+            tenant_ctx=tenant_ctx,
+            entry_id=entry_id,
+            content=payload.content,
+            scope=payload.scope,
+            agent_key=payload.agentKey,
+            session_id=payload.sessionId,
+            metadata=payload.metadata,
+            update_metadata="metadata" in payload.model_fields_set,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found")
+    return updated
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)

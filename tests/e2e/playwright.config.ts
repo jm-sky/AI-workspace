@@ -41,5 +41,5 @@ export default defineConfig({
   globalSetup: resolve(__dirname, 'global-setup.ts'),
   // Note: Frontend and backend must be started manually before running tests
   // Frontend: pnpm dev
-  // Backend: docker compose -f backend/docker-compose.dev.yml up -d
+  // Backend: docker compose -f docker compose -f docker-compose.dev.yml up -d
 })

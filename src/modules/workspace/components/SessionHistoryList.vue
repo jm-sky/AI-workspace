@@ -41,10 +41,10 @@ const title = (session: IAgentSessionSummary): string => {
 
 <template>
   <div class="flex min-h-0 flex-1 flex-col">
-    <div class="flex shrink-0 flex-col gap-2 border-b p-3">
+    <div class="flex shrink-0 flex-col gap-2 border-b border-hairline p-3">
       <Button
-        variant="outline"
-        class="w-full justify-start"
+        variant="ghost"
+        class="hover-veil w-full justify-start rounded-lg border border-hairline bg-surface-canvas font-medium shadow-soft"
         @click="emit('newChat')"
       >
         <MessageSquarePlus class="size-4" />
@@ -56,7 +56,7 @@ const title = (session: IAgentSessionSummary): string => {
         <Input
           v-model="searchModel"
           :placeholder="t('workspace.sessions.search')"
-          class="pl-8"
+          class="border-hairline bg-surface-canvas pl-8 shadow-none"
         />
       </div>
     </div>
@@ -76,22 +76,22 @@ const title = (session: IAgentSessionSummary): string => {
         {{ searchQuery ? t('workspace.sessions.noResults') : t('workspace.sessions.empty') }}
       </div>
 
-      <div v-else class="space-y-1">
+      <div v-else class="space-y-0.5">
         <button
           v-for="session in sessions"
           :key="session.id"
           type="button"
           :class="cn(
-            'w-full rounded-md border px-3 py-2 text-left transition-colors hover:bg-accent',
-            activeSessionId === session.id && 'border-primary bg-accent',
+            'hover-veil w-full rounded-lg px-3 py-2.5 text-left transition-colors',
+            activeSessionId === session.id && 'bg-hover-veil font-medium',
           )"
           @click="emit('select', session.id)"
         >
-          <div class="mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{{ formatDate(session.lastMessageAt) }}</span>
-          </div>
-          <div class="line-clamp-2 text-sm">
+          <div class="mb-0.5 line-clamp-2 text-sm text-foreground">
             {{ title(session) }}
+          </div>
+          <div class="text-xs text-muted-foreground">
+            {{ formatDate(session.lastMessageAt) }}
           </div>
         </button>
       </div>

@@ -92,9 +92,7 @@ class GoogleOAuthProvider(OAuthProvider):
             data = response.json()
 
             if "error" in data:
-                raise ValueError(
-                    f"Google OAuth error: {data.get('error_description', data['error'])}"
-                )
+                raise ValueError(f"Google OAuth error: {data.get('error_description', data['error'])}")
 
             return OAuthTokenResponse(
                 accessToken=data["access_token"],
@@ -172,9 +170,7 @@ class FacebookOAuthProvider(OAuthProvider):
 
             if "error" in data:
                 error_info = data.get("error", {})
-                error_message = error_info.get(
-                    "message", error_info.get("error_description", "Unknown error")
-                )
+                error_message = error_info.get("message", error_info.get("error_description", "Unknown error"))
                 raise ValueError(f"Facebook OAuth error: {error_message}")
 
             return OAuthTokenResponse(
@@ -268,9 +264,7 @@ class GitHubOAuthProvider(OAuthProvider):
             data = response.json()
 
             if "error" in data:
-                raise ValueError(
-                    data.get("error_description") or data.get("error", "GitHub OAuth error")
-                )
+                raise ValueError(data.get("error_description") or data.get("error", "GitHub OAuth error"))
 
             return OAuthTokenResponse(
                 accessToken=data["access_token"],
@@ -308,10 +302,7 @@ class GitHubOAuthProvider(OAuthProvider):
                             break
 
             if not email:
-                raise ValueError(
-                    "GitHub account email is required — enable Email read permission "
-                    "on the GitHub App or make your email public"
-                )
+                raise ValueError("GitHub account email is required — enable Email read permission " "on the GitHub App or make your email public")
 
             return OAuthUserInfo(
                 provider="github",
@@ -347,23 +338,17 @@ class OAuthService:
         provider = self.get_provider(provider_name)
         return provider.get_authorization_url(state)
 
-    async def exchange_code_for_token(
-        self, provider_name: str, code: str
-    ) -> OAuthTokenResponse:
+    async def exchange_code_for_token(self, provider_name: str, code: str) -> OAuthTokenResponse:
         """Exchange authorization code for access token."""
         provider = self.get_provider(provider_name)
         return await provider.exchange_code_for_token(code)
 
-    async def get_user_info(
-        self, provider_name: str, access_token: str
-    ) -> OAuthUserInfo:
+    async def get_user_info(self, provider_name: str, access_token: str) -> OAuthUserInfo:
         """Get user information from provider."""
         provider = self.get_provider(provider_name)
         return await provider.get_user_info(access_token)
 
-    async def complete_oauth_flow(
-        self, provider_name: str, code: str
-    ) -> tuple[OAuthUserInfo, OAuthTokenResponse]:
+    async def complete_oauth_flow(self, provider_name: str, code: str) -> tuple[OAuthUserInfo, OAuthTokenResponse]:
         """Complete OAuth flow: exchange code for token and get user info."""
         token_response = await self.exchange_code_for_token(provider_name, code)
         user_info = await self.get_user_info(provider_name, token_response.accessToken)

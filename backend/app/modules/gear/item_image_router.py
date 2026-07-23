@@ -20,9 +20,7 @@ async def upload_item_image(
     item_id: str,
     current_user: PremiumOrHigherUser,
     file: UploadFile = File(...),
-    is_primary: bool = Query(
-        False, description="Whether this should be the primary image"
-    ),
+    is_primary: bool = Query(False, description="Whether this should be the primary image"),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -50,9 +48,7 @@ async def upload_item_image(
 
 
 @router.get("/{item_id}/images", response_model=list[ItemImageResponse])
-async def get_item_images(
-    item_id: str, db: AsyncSession = Depends(get_db)
-) -> list[ItemImageResponse]:
+async def get_item_images(item_id: str, db: AsyncSession = Depends(get_db)) -> list[ItemImageResponse]:
     """
     Get all images for an item.
 
@@ -89,9 +85,7 @@ async def delete_item_image(
     success = await service.delete_image(image_id, current_user.id)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
     return {"message": "Image deleted successfully"}
 
@@ -168,7 +162,5 @@ async def upload_item_image_from_url(
         Image metadata
     """
     service = ImageUploadService(db)
-    result = await service.upload_image_from_url(
-        data.url, item_id, current_user.id, data.is_primary, data.host_locally
-    )
+    result = await service.upload_image_from_url(data.url, item_id, current_user.id, data.is_primary, data.host_locally)
     return result

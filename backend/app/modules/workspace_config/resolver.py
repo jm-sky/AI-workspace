@@ -15,9 +15,7 @@ def _entries_to_map(entries: list) -> dict[str, Any]:
     return {entry.config_key: entry.config_value for entry in entries}
 
 
-def _intersect_models(
-    base: list[str] | None, override: list[str] | None
-) -> list[str] | None:
+def _intersect_models(base: list[str] | None, override: list[str] | None) -> list[str] | None:
     """Narrow an allow-list by one cascade level.
 
     `None` means "no ceiling at this level yet" — the first level that declares
@@ -68,17 +66,11 @@ class WorkspaceConfigResolver:
         tenant_id: str,
         team_id: str | None = None,
     ) -> EffectiveWorkspaceConfig:
-        app_entries = await self.repo.get_entries_for_scope(
-            scope=ConfigScope.APP, scope_id=None
-        )
-        tenant_entries = await self.repo.get_entries_for_scope(
-            scope=ConfigScope.TENANT, scope_id=tenant_id
-        )
+        app_entries = await self.repo.get_entries_for_scope(scope=ConfigScope.APP, scope_id=None)
+        tenant_entries = await self.repo.get_entries_for_scope(scope=ConfigScope.TENANT, scope_id=tenant_id)
         team_entries: list = []
         if team_id:
-            team_entries = await self.repo.get_entries_for_scope(
-                scope=ConfigScope.TEAM, scope_id=team_id
-            )
+            team_entries = await self.repo.get_entries_for_scope(scope=ConfigScope.TEAM, scope_id=team_id)
         user_entries = await self.repo.get_entries_for_scope(
             scope=ConfigScope.USER,
             scope_id=user_id,
@@ -95,50 +87,28 @@ class WorkspaceConfigResolver:
         # An empty app-level allow-list means "no ceiling": the whole catalog is
         # available unless a tenant/team/user narrows it.
         allowed: list[str] | None = base.allowedModels or None
-        allowed = _intersect_models(
-            allowed, tenant_map.get(ConfigKey.ALLOWED_MODELS.value)
-        )
-        allowed = _intersect_models(
-            allowed, team_map.get(ConfigKey.ALLOWED_MODELS.value)
-        )
-        allowed = _intersect_models(
-            allowed, user_map.get(ConfigKey.ALLOWED_MODELS.value)
-        )
+        allowed = _intersect_models(allowed, tenant_map.get(ConfigKey.ALLOWED_MODELS.value))
+        allowed = _intersect_models(allowed, team_map.get(ConfigKey.ALLOWED_MODELS.value))
+        allowed = _intersect_models(allowed, user_map.get(ConfigKey.ALLOWED_MODELS.value))
 
-        default_model = (
-            user_map.get(ConfigKey.DEFAULT_MODEL.value)
-            or team_map.get(ConfigKey.DEFAULT_MODEL.value)
-            or tenant_map.get(ConfigKey.DEFAULT_MODEL.value)
-            or app_map.get(ConfigKey.DEFAULT_MODEL.value)
-            or base.defaultModel
-        )
+        default_model = user_map.get(ConfigKey.DEFAULT_MODEL.value) or team_map.get(ConfigKey.DEFAULT_MODEL.value) or tenant_map.get(ConfigKey.DEFAULT_MODEL.value) or app_map.get(ConfigKey.DEFAULT_MODEL.value) or base.defaultModel
         if allowed is not None and default_model and default_model not in allowed:
             default_model = allowed[0] if allowed else None
 
         max_tokens = base.maxTokens
-        max_tokens = _min_int(
-            max_tokens, tenant_map.get(ConfigKey.MAX_TOKENS.value)
-        )
+        max_tokens = _min_int(max_tokens, tenant_map.get(ConfigKey.MAX_TOKENS.value))
         max_tokens = _min_int(max_tokens, team_map.get(ConfigKey.MAX_TOKENS.value))
         max_tokens = _min_int(max_tokens, user_map.get(ConfigKey.MAX_TOKENS.value))
 
         rag_enabled = base.ragEnabled
-        rag_enabled = _and_bool(
-            rag_enabled, tenant_map.get(ConfigKey.RAG_ENABLED.value)
-        )
+        rag_enabled = _and_bool(rag_enabled, tenant_map.get(ConfigKey.RAG_ENABLED.value))
         rag_enabled = _and_bool(rag_enabled, team_map.get(ConfigKey.RAG_ENABLED.value))
         rag_enabled = _and_bool(rag_enabled, user_map.get(ConfigKey.RAG_ENABLED.value))
 
         tools_enabled = base.toolsEnabled
-        tools_enabled = _and_bool(
-            tools_enabled, tenant_map.get(ConfigKey.TOOLS_ENABLED.value)
-        )
-        tools_enabled = _and_bool(
-            tools_enabled, team_map.get(ConfigKey.TOOLS_ENABLED.value)
-        )
-        tools_enabled = _and_bool(
-            tools_enabled, user_map.get(ConfigKey.TOOLS_ENABLED.value)
-        )
+        tools_enabled = _and_bool(tools_enabled, tenant_map.get(ConfigKey.TOOLS_ENABLED.value))
+        tools_enabled = _and_bool(tools_enabled, team_map.get(ConfigKey.TOOLS_ENABLED.value))
+        tools_enabled = _and_bool(tools_enabled, user_map.get(ConfigKey.TOOLS_ENABLED.value))
 
         return EffectiveWorkspaceConfig(
             allowedModels=allowed or [],

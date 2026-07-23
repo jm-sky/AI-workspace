@@ -9,19 +9,16 @@ a base class, we wrap and adapt the auth repository to our needs.
 """
 
 import logging
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.common.repository_utils import normalize_email
 from app.modules.auth.repositories import UserRepository as AuthUserRepository
 from app.modules.auth.repositories import get_user_repository as get_auth_repository
 
-from .models import User
 from .exceptions import UserAlreadyExistsError
+from .models import User
 
 if TYPE_CHECKING:
     from app.modules.auth.models import User as AuthUser
@@ -68,19 +65,6 @@ class UserRepository:
             avatarUrl=auth_user.avatarUrl,
             createdAt=auth_user.createdAt,
             updatedAt=auth_user.createdAt,  # users model requires this
-        )
-
-    async def create_user(self, email: str, name: str, role: str = "user") -> User:
-        """Create a new user in database.
-
-        Note:
-            This method is not implemented because user creation requires
-            password handling which should only be done through auth endpoints.
-            Admin users can create users through the auth module's endpoints.
-        """
-        raise NotImplementedError(
-            "User creation with password must be done through auth module endpoints. "
-            "Use POST /auth/register for new user registration."
         )
 
     async def get_user_by_email(self, email: str) -> User | None:
@@ -177,9 +161,7 @@ class UserRepository:
             # Legacy support: map role string to flags
             auth_user.isAdmin = role == "admin"
             auth_user.isOwner = role == "owner"
-            auth_user.isPremium = (
-                role == "premium" or role == "admin" or role == "owner"
-            )
+            auth_user.isPremium = role == "premium" or role == "admin" or role == "owner"
         else:
             # Use explicit flags if provided
             if is_admin is not None:
@@ -207,9 +189,7 @@ class UserRepository:
         """Permanently delete user from database."""
         return await self._auth_repo.delete_user(user_id, soft_delete=False)
 
-    async def count_users(
-        self, include_inactive: bool = False, search: str | None = None
-    ) -> int:
+    async def count_users(self, include_inactive: bool = False, search: str | None = None) -> int:
         """Count total users in database with optional search.
 
         Args:
@@ -219,9 +199,7 @@ class UserRepository:
         Returns:
             Total count of users matching criteria
         """
-        return await self._auth_repo.count_users(
-            include_inactive=include_inactive, search=search
-        )
+        return await self._auth_repo.count_users(include_inactive=include_inactive, search=search)
 
 
 def get_user_repository(

@@ -10,12 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.exceptions import (
     AgentError,
     AgentNotConfiguredError,
     AgentToolsDisabledError,
+    AgentVisionRequiredError,
 )
-from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.schemas import AgentChatRequest
 from app.modules.agent.services.agent_run_service import AgentRunService
 from app.modules.auth.dependencies import CurrentUser
@@ -30,9 +31,7 @@ router = APIRouter(prefix="/chat", tags=["agent-chat"])
 
 def _get_agent_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_repo: Annotated[
-        IntegrationTokenRepository, Depends(get_integration_token_repository)
-    ],
+    token_repo: Annotated[IntegrationTokenRepository, Depends(get_integration_token_repository)],
 ) -> AgentRunService:
     return AgentRunService(db, IntegrationTokenService(token_repo))
 
@@ -64,10 +63,11 @@ async def agent_chat_stream(
                 agent_key=request.agentKey,
                 model=request.model,
                 session_id=request.sessionId,
+                attachment_ids=request.attachmentIds,
             ):
                 payload = json.dumps(event.data, default=str)
                 yield f"event: {event.event}\ndata: {payload}\n\n"
-        except (AgentNotConfiguredError, AgentToolsDisabledError) as exc:
+        except (AgentNotConfiguredError, AgentToolsDisabledError, AgentVisionRequiredError) as exc:
             payload = json.dumps({"message": str(exc)})
             yield f"event: error\ndata: {payload}\n\n"
         except AgentError as exc:

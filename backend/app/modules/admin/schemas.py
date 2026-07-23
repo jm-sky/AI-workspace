@@ -1,7 +1,5 @@
 """Pydantic schemas for admin endpoints."""
 
-from datetime import datetime
-
 from pydantic import BaseModel
 
 

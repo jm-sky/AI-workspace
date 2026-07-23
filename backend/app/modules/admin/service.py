@@ -6,17 +6,16 @@ including user, container, and item management across the platform.
 
 import logging
 
-from app.core.config import get_settings
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository as AuthUserRepository
 from app.modules.users.repositories import UserRepository
 from app.modules.users.schemas import UserUpdate
 
+from .authorization import enforce_user_mutation_permissions
 from .repository import AdminRepository
-from .schemas import AdminUserResponse, AdminContainerResponse, AdminItemResponse
+from .schemas import AdminContainerResponse, AdminItemResponse, AdminUserResponse
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 class AdminService:
@@ -59,9 +58,7 @@ class AdminService:
         return str(dt)
 
     # User operations
-    async def get_all_users(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[AdminUserResponse]:
+    async def get_all_users(self, skip: int = 0, limit: int = 100) -> list[AdminUserResponse]:
         """Get all users with admin metadata.
 
         Args:
@@ -86,11 +83,9 @@ class AdminService:
                     isOwner=user.is_owner,
                     isPremium=user.is_premium,
                     isEmailVerified=user.is_email_verified,
-                    emailVerifiedAt=self._serialize_datetime(user.email_verified_at)
-                    or "",
+                    emailVerifiedAt=self._serialize_datetime(user.email_verified_at) or "",
                     createdAt=self._serialize_datetime(user.created_at) or "",
-                    updatedAt=self._serialize_datetime(user.created_at)
-                    or "",  # UserDB doesn't have updated_at
+                    updatedAt=self._serialize_datetime(user.created_at) or "",  # UserDB doesn't have updated_at
                 )
             )
 
@@ -122,13 +117,10 @@ class AdminService:
             isEmailVerified=user.is_email_verified,
             emailVerifiedAt=self._serialize_datetime(user.email_verified_at) or "",
             createdAt=self._serialize_datetime(user.created_at) or "",
-            updatedAt=self._serialize_datetime(user.created_at)
-            or "",  # UserDB doesn't have updated_at
+            updatedAt=self._serialize_datetime(user.created_at) or "",  # UserDB doesn't have updated_at
         )
 
-    async def update_user(
-        self, user_id: str, user_data: UserUpdate, current_user: "User"
-    ) -> AdminUserResponse | None:
+    async def update_user(self, user_id: str, user_data: UserUpdate, current_user: "User") -> AdminUserResponse | None:
         """Update user information.
 
         Args:
@@ -142,32 +134,20 @@ class AdminService:
         Raises:
             HTTPException: If admin tries to assign Owner role or delete Owner user
         """
-        from fastapi import HTTPException, status
-
         # Get target user to check their current role
         target_user, _ = await self.repository.get_user_by_id(user_id)
         if not target_user:
             return None
 
-        # Protection: Admin cannot assign Owner role
-        if current_user.isAdmin and not current_user.isOwner:
-            # Check if trying to set isOwner to True
-            if user_data.isOwner is True or (
-                user_data.role and user_data.role == "owner"
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Administrators cannot assign Owner role",
-                )
-            # Check if target user is Owner and trying to change their Owner status
-            if target_user.is_owner and (
-                user_data.isOwner is False
-                or (user_data.role and user_data.role != "owner")
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Administrators cannot modify Owner users",
-                )
+        enforce_user_mutation_permissions(
+            actor_is_admin=current_user.isAdmin,
+            actor_is_owner=current_user.isOwner,
+            target_email=target_user.email,
+            target_is_owner=target_user.is_owner,
+            target_is_admin=target_user.is_admin,
+            new_role=user_data.role,
+            new_is_owner=user_data.isOwner,
+        )
 
         # Determine role flags from user_data
         is_admin = user_data.isAdmin
@@ -220,11 +200,9 @@ class AdminService:
             isActive=updated_user.is_active,
             isAdmin=updated_user.is_admin,
             isEmailVerified=updated_user.is_email_verified,
-            emailVerifiedAt=self._serialize_datetime(updated_user.email_verified_at)
-            or "",
+            emailVerifiedAt=self._serialize_datetime(updated_user.email_verified_at) or "",
             createdAt=self._serialize_datetime(updated_user.created_at) or "",
-            updatedAt=self._serialize_datetime(updated_user.created_at)
-            or "",  # UserDB doesn't have updated_at
+            updatedAt=self._serialize_datetime(updated_user.created_at) or "",  # UserDB doesn't have updated_at
         )
 
     async def delete_user(self, user_id: str, current_user: "User") -> bool:
@@ -240,45 +218,24 @@ class AdminService:
         Raises:
             HTTPException: If trying to delete protected or Owner user
         """
-        from fastapi import HTTPException, status
-
         # Get target user to check their role
         target_user, _ = await self.repository.get_user_by_id(user_id)
         if not target_user:
             return False
 
-        # Protection 1: Cannot delete protected user email
-        if settings.security.protected_user_email:
-            if (
-                target_user.email.lower()
-                == settings.security.protected_user_email.lower()
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Cannot delete protected user",
-                )
-
-        # Protection 2: Admin cannot delete Owner users
-        if current_user.isAdmin and not current_user.isOwner:
-            if target_user.is_owner:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Administrators cannot delete Owner users",
-                )
-
-        # Protection 3: Admin users can only be deleted by Owners
-        if target_user.is_admin and not current_user.isOwner:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only Owners can delete admin users",
-            )
+        enforce_user_mutation_permissions(
+            actor_is_admin=current_user.isAdmin,
+            actor_is_owner=current_user.isOwner,
+            target_email=target_user.email,
+            target_is_owner=target_user.is_owner,
+            target_is_admin=target_user.is_admin,
+            is_delete=True,
+        )
 
         return await self.user_repository.delete_user(user_id)
 
     # Container operations
-    async def get_all_containers(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[AdminContainerResponse]:
+    async def get_all_containers(self, skip: int = 0, limit: int = 100) -> list[AdminContainerResponse]:
         """Get all containers with metadata.
 
         Args:
@@ -288,22 +245,12 @@ class AdminService:
         Returns:
             List of admin container responses
         """
-        containers_with_counts = await self.repository.get_all_containers(
-            skip=skip, limit=limit
-        )
+        containers_with_counts = await self.repository.get_all_containers(skip=skip, limit=limit)
 
         result = []
         for container_db, item_count in containers_with_counts:
-            author_name = (
-                container_db.user.name
-                if hasattr(container_db, "user") and container_db.user
-                else None
-            )
-            author_id = (
-                container_db.user.id
-                if hasattr(container_db, "user") and container_db.user
-                else None
-            )
+            author_name = container_db.user.name if hasattr(container_db, "user") and container_db.user else None
+            author_id = container_db.user.id if hasattr(container_db, "user") and container_db.user else None
 
             result.append(
                 AdminContainerResponse(
@@ -323,9 +270,7 @@ class AdminService:
 
         return result
 
-    async def get_container_by_id(
-        self, container_id: str
-    ) -> AdminContainerResponse | None:
+    async def get_container_by_id(self, container_id: str) -> AdminContainerResponse | None:
         """Get container by ID with metadata.
 
         Args:
@@ -339,16 +284,8 @@ class AdminService:
         if not container_db:
             return None
 
-        author_name = (
-            container_db.user.name
-            if hasattr(container_db, "user") and container_db.user
-            else None
-        )
-        author_id = (
-            container_db.user.id
-            if hasattr(container_db, "user") and container_db.user
-            else None
-        )
+        author_name = container_db.user.name if hasattr(container_db, "user") and container_db.user else None
+        author_id = container_db.user.id if hasattr(container_db, "user") and container_db.user else None
         items_count = len(container_db.items) if hasattr(container_db, "items") else 0
 
         return AdminContainerResponse(
@@ -365,9 +302,7 @@ class AdminService:
             updatedAt=container_db.updated_at.isoformat(),
         )
 
-    async def update_container(
-        self, container_id: str, data: dict
-    ) -> AdminContainerResponse | None:
+    async def update_container(self, container_id: str, data: dict) -> AdminContainerResponse | None:
         """Update container by ID (admin only).
 
         Args:
@@ -398,16 +333,8 @@ class AdminService:
         if not container_db:
             return None
 
-        author_name = (
-            container_db.user.name
-            if hasattr(container_db, "user") and container_db.user
-            else None
-        )
-        author_id = (
-            container_db.user.id
-            if hasattr(container_db, "user") and container_db.user
-            else None
-        )
+        author_name = container_db.user.name if hasattr(container_db, "user") and container_db.user else None
+        author_id = container_db.user.id if hasattr(container_db, "user") and container_db.user else None
         items_count = len(container_db.items) if hasattr(container_db, "items") else 0
 
         return AdminContainerResponse(
@@ -436,9 +363,7 @@ class AdminService:
         return await self.repository.delete_container(container_id)
 
     # Item operations
-    async def get_all_items(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[AdminItemResponse]:
+    async def get_all_items(self, skip: int = 0, limit: int = 100) -> list[AdminItemResponse]:
         """Get all items with metadata.
 
         Args:
@@ -448,9 +373,7 @@ class AdminService:
         Returns:
             List of admin item responses
         """
-        items_with_metadata = await self.repository.get_all_items(
-            skip=skip, limit=limit
-        )
+        items_with_metadata = await self.repository.get_all_items(skip=skip, limit=limit)
 
         result = []
         for item_db, container_db, user_db in items_with_metadata:

@@ -4,13 +4,13 @@ import { filterAgentSessionsByQuery } from '@/modules/workspace/utils/sessionFil
 import { getApiErrorMessage } from '@/shared/utils/apiError'
 import type { IAgentSessionSummary } from '@/modules/workspace/types/agent'
 
-export function useAgentSessions() {
-  const sessions = ref<IAgentSessionSummary[]>([])
-  const total = ref(0)
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const searchQuery = ref('')
+const sessions = ref<IAgentSessionSummary[]>([])
+const total = ref(0)
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const searchQuery = ref('')
 
+export function useAgentSessions() {
   const filteredSessions = computed(() =>
     filterAgentSessionsByQuery(sessions.value, searchQuery.value),
   )

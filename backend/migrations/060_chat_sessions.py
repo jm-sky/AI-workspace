@@ -15,20 +15,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def table_exists(conn, table_name: str) -> bool:
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -36,16 +35,14 @@ async def table_exists(conn, table_name: str) -> bool:
 
 async def column_exists(conn, table_name: str, column_name: str) -> bool:
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -56,9 +53,7 @@ async def upgrade() -> None:
 
     async with engine.begin() as conn:
         if not await table_exists(conn, "chat_sessions"):
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     CREATE TABLE chat_sessions (
                         id VARCHAR(36) PRIMARY KEY,
                         tenant_id VARCHAR(36) NOT NULL
@@ -70,38 +65,16 @@ async def upgrade() -> None:
                         created_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
                         last_message_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC')
                     )
-                """
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_chat_sessions_tenant_user "
-                    "ON chat_sessions(tenant_id, user_id)"
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_chat_sessions_last_message_at "
-                    "ON chat_sessions(last_message_at DESC)"
-                )
-            )
+                """))
+            await conn.execute(text("CREATE INDEX idx_chat_sessions_tenant_user " "ON chat_sessions(tenant_id, user_id)"))
+            await conn.execute(text("CREATE INDEX idx_chat_sessions_last_message_at " "ON chat_sessions(last_message_at DESC)"))
             print("✓ Created chat_sessions table")
         else:
             print("✓ chat_sessions table already exists")
 
         if not await column_exists(conn, "agent_runs", "session_id"):
-            await conn.execute(
-                text(
-                    "ALTER TABLE agent_runs ADD COLUMN session_id VARCHAR(36) "
-                    "REFERENCES chat_sessions(id) ON DELETE CASCADE"
-                )
-            )
-            await conn.execute(
-                text(
-                    "CREATE INDEX idx_agent_runs_session_id "
-                    "ON agent_runs(session_id, created_at)"
-                )
-            )
+            await conn.execute(text("ALTER TABLE agent_runs ADD COLUMN session_id VARCHAR(36) " "REFERENCES chat_sessions(id) ON DELETE CASCADE"))
+            await conn.execute(text("CREATE INDEX idx_agent_runs_session_id " "ON agent_runs(session_id, created_at)"))
             print("✓ Added agent_runs.session_id column")
         else:
             print("✓ agent_runs.session_id column already exists")
@@ -112,9 +85,7 @@ async def upgrade() -> None:
 async def downgrade() -> None:
     print("Reverting chat sessions migration...")
     async with engine.begin() as conn:
-        await conn.execute(
-            text("ALTER TABLE agent_runs DROP COLUMN IF EXISTS session_id;")
-        )
+        await conn.execute(text("ALTER TABLE agent_runs DROP COLUMN IF EXISTS session_id;"))
         await conn.execute(text("DROP TABLE IF EXISTS chat_sessions CASCADE;"))
     print("✓ Dropped chat sessions")
 

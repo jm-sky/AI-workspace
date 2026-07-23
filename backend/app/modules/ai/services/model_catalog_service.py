@@ -11,7 +11,7 @@ curated `MODELS` list, so the picker always has something to show.
 
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from redis.asyncio import Redis
@@ -132,9 +132,7 @@ def map_openrouter_model(raw: dict[str, Any]) -> dict[str, Any]:
 
     curated = _OVERLAY.get(model_id, {})
     provider = curated.get("provider") or _prettify_provider(model_id.split("/")[0])
-    name = curated.get("name") or _strip_provider_prefix(
-        raw.get("name") or model_id, provider
-    )
+    name = curated.get("name") or _strip_provider_prefix(raw.get("name") or model_id, provider)
 
     return {
         "id": model_id,
@@ -170,11 +168,7 @@ async def fetch_openrouter_models(timeout: float) -> list[dict[str, Any]]:
         response.raise_for_status()
         payload = response.json()
 
-    return [
-        map_openrouter_model(raw)
-        for raw in payload.get("data", [])
-        if is_importable(raw)
-    ]
+    return [map_openrouter_model(raw) for raw in payload.get("data", []) if is_importable(raw)]
 
 
 async def get_catalog(redis: Redis) -> list[dict[str, Any]]:
@@ -188,7 +182,7 @@ async def get_catalog(redis: Redis) -> list[dict[str, Any]]:
         try:
             cached = await redis.get(CATALOG_CACHE_KEY)
             if cached:
-                models = json.loads(cached)
+                models = cast(list[dict[str, Any]], json.loads(cached))
                 set_catalog_snapshot(models)
                 return models
         except Exception as exc:
@@ -197,9 +191,7 @@ async def get_catalog(redis: Redis) -> list[dict[str, Any]]:
     try:
         models = await fetch_openrouter_models(settings.ai.catalog_fetch_timeout)
     except Exception as exc:
-        logger.warning(
-            "OpenRouter catalog fetch failed, falling back to curated models: %s", exc
-        )
+        logger.warning("OpenRouter catalog fetch failed, falling back to curated models: %s", exc)
         return MODELS
 
     if not models:

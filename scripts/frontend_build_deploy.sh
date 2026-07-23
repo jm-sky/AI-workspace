@@ -19,13 +19,13 @@ DEPLOY_DIR="/var/www/ai-workspace"
 
 echo -e "${GREEN}🔨 Starting frontend build and deploy...${NC}"
 
-# Step 1: Install frontend dependencies
-echo -e "${YELLOW}📦 Step 1: Installing frontend dependencies...${NC}"
+# Install frontend dependencies
+echo -e "${YELLOW}📦 Installing frontend dependencies...${NC}"
 cd "$PROJECT_DIR"
 pnpm install --frozen-lockfile
 
-# Step 2: Build frontend
-echo -e "${YELLOW}🔨 Step 2: Building frontend...${NC}"
+# Build frontend
+echo -e "${YELLOW}🔨 Building frontend...${NC}"
 # Clean up dist directory to avoid permission issues
 rm -rf dist
 # Increase Node.js memory limit to avoid "Heap Limit Reached" errors on VPS
@@ -33,8 +33,8 @@ export NODE_OPTIONS="--max-old-space-size=4096"
 pnpm build
 echo -e "${GREEN}✅ Frontend build completed${NC}"
 
-# Step 3: Deploy to /var/www/ai-workspace
-echo -e "${YELLOW}📋 Step 3: Deploying to ${DEPLOY_DIR}...${NC}"
+# Deploy to /var/www/ai-workspace
+echo -e "${YELLOW}📋 Deploying to ${DEPLOY_DIR}...${NC}"
 
 # Remove old files
 sudo rm -rf "${DEPLOY_DIR:?}"/*

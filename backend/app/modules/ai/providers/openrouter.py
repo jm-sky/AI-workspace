@@ -76,9 +76,7 @@ class OpenRouterProvider(AIProvider):
             return ChatResponse(
                 message=message_content,
                 prompt_tokens=response.usage.prompt_tokens if response.usage else 0,
-                completion_tokens=(
-                    response.usage.completion_tokens if response.usage else 0
-                ),
+                completion_tokens=(response.usage.completion_tokens if response.usage else 0),
                 total_tokens=response.usage.total_tokens if response.usage else 0,
                 model=response.model,
                 finish_reason=choice.finish_reason,

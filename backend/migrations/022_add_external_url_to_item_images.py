@@ -16,22 +16,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
 async def column_exists(conn, table_name: str, column_name: str) -> bool:
     """Check if a column exists in a table."""
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.columns
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -48,14 +47,10 @@ async def upgrade() -> None:
             return
 
         # Add external_url column
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 ALTER TABLE item_images
                 ADD COLUMN external_url VARCHAR(1000) NULL;
-            """
-            )
-        )
+            """))
         print("✓ Added external_url column")
 
     print("✓ Migration completed successfully")
@@ -72,14 +67,10 @@ async def downgrade() -> None:
             return
 
         # Drop column
-        await conn.execute(
-            text(
-                """
+        await conn.execute(text("""
                 ALTER TABLE item_images
                 DROP COLUMN external_url;
-            """
-            )
-        )
+            """))
         print("✓ Removed external_url column")
 
     print("✓ Downgrade completed successfully")
@@ -89,9 +80,7 @@ async def main() -> None:
     """Run migration."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Add external_url to item_images migration"
-    )
+    parser = argparse.ArgumentParser(description="Add external_url to item_images migration")
     parser.add_argument(
         "action",
         choices=["upgrade", "downgrade"],

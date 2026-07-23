@@ -9,7 +9,10 @@ from app.core.database import get_db
 from app.modules.agent.dependencies import AgentTenantContext
 from app.modules.agent.repositories import AgentRunRepository
 from app.modules.agent.schemas import AgentRunResponse, AgentRunsListResponse
-from app.modules.agent.services.agent_run_service import AgentRunService, _to_run_response
+from app.modules.agent.services.agent_run_service import (
+    AgentRunService,
+    _to_run_response,
+)
 from app.modules.auth.dependencies import AdminUser, CurrentUser
 from app.modules.integrations.repositories import (
     IntegrationTokenRepository,
@@ -22,9 +25,7 @@ router = APIRouter(prefix="/runs", tags=["agent-runs"])
 
 def _get_agent_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    token_repo: Annotated[
-        IntegrationTokenRepository, Depends(get_integration_token_repository)
-    ],
+    token_repo: Annotated[IntegrationTokenRepository, Depends(get_integration_token_repository)],
 ) -> AgentRunService:
     return AgentRunService(db, IntegrationTokenService(token_repo))
 

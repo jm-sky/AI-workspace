@@ -1,25 +1,53 @@
 <script setup lang="ts">
 import { Send } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import ChatAttachmentChip from '@/modules/workspace/components/ChatAttachmentChip.vue'
+import ChatAttachmentPicker from '@/modules/workspace/components/ChatAttachmentPicker.vue'
+import ChatAttachmentPreview from '@/modules/workspace/components/ChatAttachmentPreview.vue'
+import type { IChatAttachment } from '@/modules/workspace/types/attachments'
 
 const input = defineModel<string>({ required: true })
 
-const { isLoading, isStreaming, canSubmit = true } = defineProps<{
+const {
+  isLoading,
+  isStreaming,
+  canSubmit = true,
+  attachments = [],
+  isUploading = false,
+  accept = 'image/jpeg,image/png,image/webp,image/gif',
+} = defineProps<{
   isLoading?: boolean
   isStreaming?: boolean
   canSubmit?: boolean
+  attachments?: IChatAttachment[]
+  isUploading?: boolean
+  accept?: string
 }>()
 
 const emit = defineEmits<{
   submit: []
+  pick: [files: FileList]
+  removeAttachment: [id: string]
 }>()
 
 const { t } = useI18n()
+const previewOpen = ref(false)
+const previewItem = ref<IChatAttachment | null>(null)
+const isDragging = ref(false)
+
+const canSend = computed(
+  () =>
+    canSubmit
+    && !isLoading
+    && !isUploading
+    && (input.value.trim().length > 0 || attachments.length > 0),
+)
 
 const handleSubmit = () => {
-  if (!canSubmit) return
+  if (!canSend.value) return
   emit('submit')
 }
 
@@ -29,32 +57,83 @@ const handleKeydown = (event: KeyboardEvent) => {
     handleSubmit()
   }
 }
+
+const openPreview = (item: IChatAttachment) => {
+  previewItem.value = item
+  previewOpen.value = true
+}
+
+const onPaste = (event: ClipboardEvent) => {
+  const files = event.clipboardData?.files
+  if (files?.length) {
+    event.preventDefault()
+    emit('pick', files)
+  }
+}
+
+const onDrop = (event: DragEvent) => {
+  isDragging.value = false
+  const files = event.dataTransfer?.files
+  if (files?.length) {
+    event.preventDefault()
+    emit('pick', files)
+  }
+}
 </script>
 
 <template>
-  <div class="sticky bottom-0 shrink-0 px-3 pb-4 pt-2 sm:px-4">
+  <div class="sticky bottom-0 shrink-0 bg-linear-to-t from-surface-canvas via-surface-canvas/95 to-transparent px-3 pb-4 pt-3 sm:px-4">
     <form
-      class="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-2xl border border-hairline bg-surface-raised/80 p-2 shadow-lg backdrop-blur transition-colors focus-within:border-ring/50"
+      class="shadow-composer mx-auto flex w-full max-w-3xl flex-col gap-2 rounded-3xl border border-hairline bg-surface-raised/90 p-2 backdrop-blur-md transition-[box-shadow,border-color] focus-within:border-ring/40"
+      :class="isDragging ? 'border-ring/60' : ''"
       @submit.prevent="handleSubmit"
+      @dragover.prevent="isDragging = true"
+      @dragleave.prevent="isDragging = false"
+      @drop.prevent="onDrop"
     >
-      <Textarea
-        v-model="input"
-        :placeholder="t('workspace.chat.placeholder')"
-        :disabled="isLoading"
-        rows="2"
-        class="min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
-        :aria-label="t('workspace.chat.placeholder')"
-        @keydown="handleKeydown"
-      />
-      <Button
-        type="submit"
-        class="shrink-0 rounded-xl"
-        :loading="isStreaming"
-        :disabled="isLoading || !input.trim() || !canSubmit"
+      <div
+        v-if="attachments.length"
+        class="flex flex-wrap gap-2 px-1 pt-1"
       >
-        <Send class="size-4" />
-        <span class="hidden sm:inline">{{ t('workspace.chat.send') }}</span>
-      </Button>
+        <ChatAttachmentChip
+          v-for="item in attachments"
+          :key="item.id"
+          :attachment="item"
+          @preview="openPreview(item)"
+          @remove="emit('removeAttachment', item.id)"
+        />
+      </div>
+      <div class="flex items-end gap-2">
+        <ChatAttachmentPicker
+          :accept="accept"
+          :disabled="isLoading || isUploading"
+          @pick="emit('pick', $event)"
+        />
+        <Textarea
+          id="chat-composer-input"
+          v-model="input"
+          :placeholder="t('workspace.chat.placeholder')"
+          :disabled="isLoading"
+          rows="2"
+          class="rounded-full min-w-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+          :aria-label="t('workspace.chat.placeholder')"
+          @keydown="handleKeydown"
+          @paste="onPaste"
+        />
+        <Button
+          type="submit"
+          class="shrink-0 rounded-xl aspect-square p-2"
+          :loading="isStreaming"
+          :disabled="!canSend"
+        >
+          <Send class="size-4" />
+          <span class="hidden sm:inline">{{ t('workspace.chat.send') }}</span>
+        </Button>
+      </div>
     </form>
+    <ChatAttachmentPreview
+      v-model:open="previewOpen"
+      :attachment="previewItem"
+    />
   </div>
 </template>

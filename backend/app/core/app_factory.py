@@ -1,14 +1,15 @@
 """Application factory for creating FastAPI app instances."""
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.limiter import setup_limiter
 from app.core.middleware import setup_middleware
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,7 @@ def is_expected_auth_error(exc: BaseException) -> bool:
         InvalidTokenError,
     )
 
-    return isinstance(
-        exc, (ExpiredTokenError, InvalidTokenError, InvalidCredentialsError)
-    )
+    return isinstance(exc, (ExpiredTokenError, InvalidTokenError, InvalidCredentialsError))
 
 
 def is_expected_image_error(exc: BaseException) -> bool:
@@ -101,10 +100,7 @@ def init_sentry() -> None:
                     # Filter out OSError for truncated images
                     if exc_type_name == "OSError":
                         exc_value_str = str(value.get("value", "")).lower()
-                        if (
-                            "truncated" in exc_value_str
-                            or "cannot identify" in exc_value_str
-                        ):
+                        if "truncated" in exc_value_str or "cannot identify" in exc_value_str:
                             return None
 
             return event
@@ -125,9 +121,7 @@ def init_sentry() -> None:
             before_send=before_send,  # Filter out expected errors
         )
     except ImportError:
-        logger.warning(
-            "Sentry SDK not installed. Install with: pip install sentry-sdk[fastapi]"
-        )
+        logger.warning("Sentry SDK not installed. Install with: pip install sentry-sdk[fastapi]")
     except Exception as e:
         logger.error(f"Failed to initialize Sentry: {e}", exc_info=True)
 
@@ -191,6 +185,9 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json" if settings.is_development() else None,
     )
 
+    # Setup rate limiting (must run before middleware/routers rely on app.state.limiter)
+    setup_limiter(app)
+
     # Setup middleware
     setup_middleware(app)
 
@@ -217,9 +214,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     """
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         """Handle validation errors."""
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -231,9 +226,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def general_exception_handler(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Handle unexpected errors."""
         # These are expected business logic errors, not bugs. Same policy the
         # Sentry before_send filter uses (see is_expected_error).
@@ -251,11 +244,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
         # Sentry will automatically capture exceptions, but we can add context
         # Skip Sentry for expected errors (they're filtered in before_send, but avoid unnecessary processing)
-        if (
-            settings.sentry.enabled
-            and not expected_auth_error
-            and not expected_image_error
-        ):
+        if settings.sentry.enabled and not expected_auth_error and not expected_image_error:
             try:
                 import sentry_sdk
 

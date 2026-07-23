@@ -32,16 +32,12 @@ class AIUserSettingsDB(Base):
     encrypted_api_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Model Configuration
-    selected_model: Mapped[str] = mapped_column(
-        String(255), default="openai/gpt-4o-mini", nullable=False
-    )
+    selected_model: Mapped[str] = mapped_column(String(255), default="openai/gpt-4o-mini", nullable=False)
     max_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     temperature: Mapped[float] = mapped_column(Float, default=1.0, nullable=False)
 
     # Context Configuration
-    context_fields: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, default=dict, nullable=False
-    )
+    context_fields: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Monthly Usage Tracking
     monthly_token_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -50,9 +46,7 @@ class AIUserSettingsDB(Base):
     monthly_cost_used: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
     # Metadata
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -90,9 +84,7 @@ class AIHistoryDB(Base):
     # Data
     input_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     output_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
-        "metadata", JSONB, nullable=True
-    )
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     container_ids: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     # Timestamps
@@ -125,9 +117,5 @@ class AICacheDB(Base):
     hit_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Metadata
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
-    )
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)

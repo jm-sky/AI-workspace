@@ -9,7 +9,10 @@ from app.modules.agent.exceptions import (
     AgentToolsDisabledError,
 )
 from app.modules.agent.services.agent_run_service import AgentRunService
-from app.modules.ai.utils.models_config import clear_catalog_snapshot, set_catalog_snapshot
+from app.modules.ai.utils.models_config import (
+    clear_catalog_snapshot,
+    set_catalog_snapshot,
+)
 from app.modules.workspace_config.types import EffectiveWorkspaceConfig
 
 CURATED = "openai/gpt-4o-mini"
@@ -31,11 +34,12 @@ def _service(effective: EffectiveWorkspaceConfig) -> AgentRunService:
 
 
 async def _resolve(effective: EffectiveWorkspaceConfig, requested: str | None) -> str:
-    return await _service(effective)._resolve_model(
+    model, _rag_enabled = await _service(effective)._resolve_model(
         user_id="user-1",
         tenant_ctx=MagicMock(tenant_id="tenant-1", team_id=None),
         requested_model=requested,
     )
+    return model
 
 
 class TestNoCeiling:
@@ -44,9 +48,7 @@ class TestNoCeiling:
     @pytest.mark.asyncio
     async def test_honours_requested_model_outside_curated_list(self):
         """The regression this change exists to fix: no silent substitution."""
-        set_catalog_snapshot(
-            [{"id": LIVE_ONLY, "cost_per_1m_input": 1.5, "cost_per_1m_output": 7.5}]
-        )
+        set_catalog_snapshot([{"id": LIVE_ONLY, "cost_per_1m_input": 1.5, "cost_per_1m_output": 7.5}])
         config = EffectiveWorkspaceConfig(allowedModels=[], defaultModel=CURATED)
 
         assert await _resolve(config, LIVE_ONLY) == LIVE_ONLY

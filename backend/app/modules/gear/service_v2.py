@@ -4,12 +4,11 @@ This module provides business logic for the unified gear model.
 """
 
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 from .db_models_v2 import GearItemDBV2
 from .repository_v2 import GearRepositoryV2
 from .schemas_v2 import GearItemCreateV2, GearItemUpdateV2
-
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,12 @@ class GearServiceV2:
             List of items matching filters
         """
         return await self.repository.get_items(
-            user_id, item_type, parent_item_id, is_public, favorite, filter_for_null_parent
+            user_id,
+            item_type,
+            parent_item_id,
+            is_public,
+            favorite,
+            filter_for_null_parent,
         )
 
     async def get_items_with_children(
@@ -112,13 +116,9 @@ class GearServiceV2:
         Returns:
             List of items with children loaded
         """
-        return await self.repository.get_items_with_children(
-            user_id, item_type, parent_item_id, filter_for_null_parent
-        )
+        return await self.repository.get_items_with_children(user_id, item_type, parent_item_id, filter_for_null_parent)
 
-    async def get_children(
-        self, parent_item_id: str, user_id: str
-    ) -> Sequence[GearItemDBV2]:
+    async def get_children(self, parent_item_id: str, user_id: str) -> Sequence[GearItemDBV2]:
         """Get all children of a parent item.
 
         Args:
@@ -132,9 +132,7 @@ class GearServiceV2:
 
     # Update operations
 
-    async def update_item(
-        self, item_id: str, user_id: str, data: GearItemUpdateV2
-    ) -> GearItemDBV2 | None:
+    async def update_item(self, item_id: str, user_id: str, data: GearItemUpdateV2) -> GearItemDBV2 | None:
         """Update a gear item.
 
         Args:
@@ -159,9 +157,7 @@ class GearServiceV2:
 
         return await self.repository.update_item(item_id, user_id, data)
 
-    async def batch_update_order(
-        self, items: list[dict], user_id: str
-    ) -> Sequence[GearItemDBV2]:
+    async def batch_update_order(self, items: list[dict], user_id: str) -> Sequence[GearItemDBV2]:
         """Batch update order_index for multiple items.
 
         Args:
@@ -191,9 +187,7 @@ class GearServiceV2:
 
     # Move operation
 
-    async def is_descendant(
-        self, potential_descendant_id: str, ancestor_id: str, user_id: str
-    ) -> bool:
+    async def is_descendant(self, potential_descendant_id: str, ancestor_id: str, user_id: str) -> bool:
         """Check if an item is a descendant of another item (recursive).
 
         Args:
@@ -217,9 +211,7 @@ class GearServiceV2:
 
         return False
 
-    async def move_item(
-        self, item_id: str, user_id: str, target_parent_id: str | None
-    ) -> GearItemDBV2 | None:
+    async def move_item(self, item_id: str, user_id: str, target_parent_id: str | None) -> GearItemDBV2 | None:
         """Move an item to a different parent.
 
         Args:
@@ -244,9 +236,7 @@ class GearServiceV2:
 
     # Content Reporting operations
 
-    async def hide_container_by_reports(
-        self, item_id: str, user_id: str
-    ) -> GearItemDBV2 | None:
+    async def hide_container_by_reports(self, item_id: str, user_id: str) -> GearItemDBV2 | None:
         """Hide a container due to content reports.
 
         Sets is_hidden_by_reports=True. Only applicable to containers.
@@ -271,9 +261,7 @@ class GearServiceV2:
         update_data = GearItemUpdateV2.model_construct(isHiddenByReports=True)
         return await self.repository.update_item(item_id, user_id, update_data)
 
-    async def unhide_container_by_reports(
-        self, item_id: str, user_id: str
-    ) -> GearItemDBV2 | None:
+    async def unhide_container_by_reports(self, item_id: str, user_id: str) -> GearItemDBV2 | None:
         """Unhide a container (clear report flag).
 
         Sets is_hidden_by_reports=False.
@@ -288,9 +276,7 @@ class GearServiceV2:
         update_data = GearItemUpdateV2.model_construct(isHiddenByReports=False)
         return await self.repository.update_item(item_id, user_id, update_data)
 
-    async def get_public_containers(
-        self, user_id: str | None = None, exclude_hidden: bool = True
-    ) -> Sequence[GearItemDBV2]:
+    async def get_public_containers(self, user_id: str | None = None, exclude_hidden: bool = True) -> Sequence[GearItemDBV2]:
         """Get public containers, optionally excluding hidden ones.
 
         Args:
@@ -304,9 +290,7 @@ class GearServiceV2:
 
     # Item Promotion operations
 
-    async def increment_promotion_count(
-        self, item_id: str, user_id: str
-    ) -> GearItemDBV2 | None:
+    async def increment_promotion_count(self, item_id: str, user_id: str) -> GearItemDBV2 | None:
         """Increment promotion count for an item.
 
         Only applicable to items (not containers).
@@ -333,9 +317,7 @@ class GearServiceV2:
         update_data = GearItemUpdateV2.model_construct(promoteCount=current_count + 1)
         return await self.repository.update_item(item_id, user_id, update_data)
 
-    async def get_promotable_items(
-        self, user_id: str, min_count: int = 10
-    ) -> Sequence[GearItemDBV2]:
+    async def get_promotable_items(self, user_id: str, min_count: int = 10) -> Sequence[GearItemDBV2]:
         """Get items that have reached the promotion threshold.
 
         Args:

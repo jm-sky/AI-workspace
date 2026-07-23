@@ -82,20 +82,20 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <header class="fixed left-0 top-0 z-50 w-full shrink-0 border-b bg-background/75 backdrop-blur-sm">
-    <div class="mx-auto flex h-(--header-height) items-center gap-2 px-2 sm:px-0">
-      <div class="flex min-w-0 items-center gap-2 md:w-(--sidebar-width) md:gap-6">
-        <SidebarTrigger class="shrink-0 opacity-80 md:ml-2.5" />
+  <header class="fixed left-0 top-0 z-50 w-full shrink-0 border-b border-hairline bg-surface-canvas/80 shadow-soft backdrop-blur-md">
+    <div class="mx-auto flex h-(--header-height) items-center gap-2 px-2 sm:px-3">
+      <div class="flex min-w-0 items-center gap-2 md:w-(--sidebar-width) md:gap-4 md:pl-1">
+        <SidebarTrigger class="shrink-0 opacity-70 hover:opacity-100" />
         <RouterLink
           :to="WorkspaceRoutePath.Chat"
-          class="flex min-w-0 items-center gap-1.5 transition-all duration-300 ease-in-out hover:scale-103 hover:brightness-80 sm:gap-2"
+          class="flex min-w-0 items-center gap-1.5 transition-opacity hover:opacity-80 sm:gap-2"
         >
           <AppIcon class="size-6 shrink-0 sm:size-7" />
           <LogoText class="truncate" />
         </RouterLink>
       </div>
 
-      <div class="ml-auto flex shrink-0 items-center justify-end space-x-1 sm:mr-6 sm:space-x-2">
+      <div class="ml-auto flex shrink-0 items-center justify-end gap-1 sm:mr-3 sm:gap-2">
         <nav class="flex items-center space-x-2">
           <LocaleToggle />
           <DarkModeToggle />

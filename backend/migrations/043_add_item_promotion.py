@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from app.core.database import engine
 
 
@@ -30,15 +31,13 @@ async def table_exists(conn, table_name: str) -> bool:
         True if table exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = :table_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name},
     )
     return result.scalar() is True
@@ -56,8 +55,7 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
         True if column exists, False otherwise
     """
     result = await conn.execute(
-        text(
-            """
+        text("""
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.columns
@@ -65,8 +63,7 @@ async def column_exists(conn, table_name: str, column_name: str) -> bool:
                 AND table_name = :table_name
                 AND column_name = :column_name
             );
-        """
-        ),
+        """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is True
@@ -82,22 +79,16 @@ async def upgrade() -> None:
 
         if not items_exist:
             print("gear_items table does not exist, skipping migration...")
-            print(
-                "Note: Table will be created with promote_count field when created from models"
-            )
+            print("Note: Table will be created with promote_count field when created from models")
             return
 
         # Add promote_count column to gear_items if it doesn't exist
         if not await column_exists(conn, "gear_items", "promote_count"):
             print("Adding promote_count column to gear_items table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE gear_items
                     ADD COLUMN promote_count INTEGER NOT NULL DEFAULT 0;
-                """
-                )
-            )
+                """))
             print("✓ Added promote_count column to gear_items table")
         else:
             print("promote_count column already exists, skipping...")
@@ -111,8 +102,7 @@ async def upgrade() -> None:
 
         print("Creating item_promotions table...")
         await conn.execute(
-            text(
-                """
+            text("""
                 CREATE TABLE item_promotions (
                     id VARCHAR(36) PRIMARY KEY,
                     item_id VARCHAR(36) NOT NULL,
@@ -129,18 +119,13 @@ async def upgrade() -> None:
                     CONSTRAINT unique_item_user_promotion
                         UNIQUE (item_id, user_id)
                 );
-            """
-            ),
+            """),
         )
 
         # Create indexes
         print("Creating indexes...")
-        await conn.execute(
-            text("CREATE INDEX ix_item_promotions_item_id ON item_promotions(item_id);")
-        )
-        await conn.execute(
-            text("CREATE INDEX ix_item_promotions_user_id ON item_promotions(user_id);")
-        )
+        await conn.execute(text("CREATE INDEX ix_item_promotions_item_id ON item_promotions(item_id);"))
+        await conn.execute(text("CREATE INDEX ix_item_promotions_user_id ON item_promotions(user_id);"))
 
         print("✓ Created item_promotions table with indexes")
 
@@ -164,14 +149,10 @@ async def downgrade() -> None:
         # Remove promote_count column from gear_items
         if await column_exists(conn, "gear_items", "promote_count"):
             print("Removing promote_count column from gear_items table...")
-            await conn.execute(
-                text(
-                    """
+            await conn.execute(text("""
                     ALTER TABLE gear_items
                     DROP COLUMN IF EXISTS promote_count;
-                """
-                )
-            )
+                """))
             print("✓ Removed promote_count column from gear_items table")
         else:
             print("promote_count column does not exist, skipping...")

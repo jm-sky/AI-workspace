@@ -19,3 +19,7 @@ class AgentMaxStepsExceededError(AgentError):
 
 class AgentToolError(AgentError):
     """Tool execution failed."""
+
+
+class AgentVisionRequiredError(AgentError):
+    """Image attachments require a vision-capable model."""

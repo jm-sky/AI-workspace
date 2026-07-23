@@ -21,7 +21,7 @@ Chat-first platforma agentowa: OpenRouter + własna pętla tool-calling, integra
 
 - **Frontend:** Vue 3, shadcn-vue, Pinia, TanStack Query — katalog `src/` (root monorepo)
 - **Backend:** FastAPI — `backend/`
-- **Baza:** PostgreSQL + Docker Compose (`backend/docker-compose.dev.yml`)
+- **Baza:** PostgreSQL + Docker Compose (`docker-compose.dev.yml` w root repo)
 - **AI:** OpenRouter (OpenAI SDK), własna pętla tool-calling; narzędzia w stylu MCP → format OpenAI tools
 - **Streaming:** SSE (serwer → klient)
 
@@ -39,7 +39,6 @@ Chat-first platforma agentowa: OpenRouter + własna pętla tool-calling, integra
 **CRITICAL:** NIGDY nie uruchamiaj Dockera w katalogu z prefiksem `_` (np. `_ai-workspace-dev`).
 
 ```bash
-cd backend
 docker compose -f docker-compose.dev.yml up -d
 docker exec ai-workspace-app python -m cli db migrate
 docker exec ai-workspace-app python -m pytest tests/ -v
@@ -55,7 +54,7 @@ Frontend dev: `pnpm dev` (port 5176, proxy `/api` → `localhost:8003`).
 | Faza 0 | Tenants, teams, kaskada config, tokeny OAuth integracji | ✅ |
 | Faza 1 | Agent loop + trace, czat SSE (pierwotnie Jira/GitLab 360°, odłożone — patrz niżej) | ✅ |
 | **Faza 1.5** | Design pass (`DESIGN.md`: ChatGPT + Linear) na czacie i widoku 360° | 🔄 w toku |
-| Faza 2 | Gmail MCP (Teams odłożony — brak dostępu) | — |
+| Faza 2 | Gmail MCP (Teams odłożony — brak dostępu) | ✅ v1 readonly |
 | Faza 3 | Edytor agentów, router, bogate bloki | — |
 | Faza 4 | Pamięć + RAG (pgvector) — embeddingi + memory_search/save już częściowo gotowe z Fazy 1 | 🔄 częściowo |
 | Faza 5 | Auto-router, tool search, onboarding tenantów | — |

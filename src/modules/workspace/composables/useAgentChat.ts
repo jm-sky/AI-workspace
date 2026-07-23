@@ -14,6 +14,7 @@ import type {
   IAgentStreamStepEvent,
   IRichBlock,
 } from '@/modules/workspace/types/agent'
+import type { IChatAttachment } from '@/modules/workspace/types/attachments'
 
 function mapPersistedStep(step: IAgentRunStep): IAgentStreamStepEvent {
   return {
@@ -49,7 +50,10 @@ function runToMessages(run: IAgentRun): IAgentChatMessage[] {
   return messages
 }
 
-export function useAgentChat(getSelectedModel?: () => string | undefined) {
+export function useAgentChat(
+  getSelectedModel?: () => string | undefined,
+  getSelectedAgentKey?: () => string | undefined,
+) {
   const messages = ref<IAgentChatMessage[]>([])
   const steps = ref<IAgentStreamStepEvent[]>([])
   const isStreaming = ref(false)
@@ -59,9 +63,15 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
   const activeRunId = ref<string | null>(null)
   const activeRun = ref<IAgentRun | null>(null)
   const activeSessionId = ref<string | null>(null)
+  const sessionAgentKey = ref<string | null>(null)
 
-  const sendMessage = async (message: string): Promise<string | undefined> => {
-    if (!message.trim() || isLoading.value) return undefined
+  const sendMessage = async (
+    message: string,
+    attachmentPayload?: IChatAttachment[],
+  ): Promise<string | undefined> => {
+    const trimmed = message.trim()
+    const files = attachmentPayload ?? []
+    if ((!trimmed && files.length === 0) || isLoading.value) return undefined
 
     isStreaming.value = true
     error.value = null
@@ -71,7 +81,8 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     const userMessage: IAgentChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: message.trim(),
+      content: trimmed,
+      attachments: files.length ? files : undefined,
     }
     messages.value.push(userMessage)
 
@@ -79,13 +90,16 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     let blocks: IRichBlock[] = []
     let runId: string | undefined
 
+    const agentKey = sessionAgentKey.value ?? getSelectedAgentKey?.()
+
     try {
       await streamAgentChat(
         {
-          message: message.trim(),
-          agentKey: 'github-workspace',
+          message: trimmed || ' ',
+          agentKey: activeSessionId.value ? undefined : agentKey,
           model: getSelectedModel?.(),
           sessionId: activeSessionId.value,
+          attachmentIds: files.map((f) => f.id),
         },
         {
           onStep: (event) => {
@@ -97,6 +111,9 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
             if (event.sessionId) {
               activeSessionId.value = event.sessionId
             }
+            if (event.agentKey) {
+              sessionAgentKey.value = event.agentKey
+            }
           },
           onComplete: (event) => {
             assistantContent = event.message
@@ -105,6 +122,9 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
             activeRunId.value = event.runId
             if (event.sessionId) {
               activeSessionId.value = event.sessionId
+            }
+            if (event.agentKey) {
+              sessionAgentKey.value = event.agentKey
             }
           },
           onError: (msg) => {
@@ -182,6 +202,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
       activeRunId.value = lastRun?.id ?? null
       activeRun.value = lastRun ?? null
       activeSessionId.value = session.id
+      sessionAgentKey.value = session.agentKey
     } catch (err) {
       error.value = getApiErrorMessage(err, 'Failed to load session')
       throw err
@@ -202,6 +223,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     activeRunId.value = null
     activeRun.value = null
     activeSessionId.value = null
+    sessionAgentKey.value = null
   }
 
   return {
@@ -214,6 +236,7 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     activeRunId,
     activeRun,
     activeSessionId,
+    sessionAgentKey,
     sendMessage,
     loadRun,
     loadSession,

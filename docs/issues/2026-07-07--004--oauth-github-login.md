@@ -8,10 +8,10 @@
 
 Pierwsza implementacja logowania przez GitHub OAuth w rodzinie core. Backport do pozostałych projektów: [gear-stack #014](../../gear-stack/docs/issues/2026-07-07--014--oauth-github-login.md).
 
-## Zakres (AI-workspace)
+## Zakres (ai-workspace)
 
 - `GitHubOAuthProvider` w `backend/app/core/oauth.py` (login, callback `/auth/github`)
-- Integracje GitHub App — osobny flow (`GITHUB_INTEGRATION_OAUTH_*`) — tylko w AI-workspace
+- Integracje GitHub App — osobny flow (`GITHUB_INTEGRATION_OAUTH_*`) — tylko w ai-workspace
 - `OAuthGitHubButton`, `useOAuth.ts`, trasa `fixedOAuthProvider: 'github'`
 
 ## Backporty

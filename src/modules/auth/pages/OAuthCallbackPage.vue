@@ -32,10 +32,7 @@ onMounted(async () => {
     const code = route.query.code as string
     const state = route.query.state as string
     const errorParam = route.query.error as string
-    const providerParam =
-      (route.params.provider as string)
-      || (route.meta.fixedOAuthProvider as string)
-      || ''
+    const providerParam = (route.params.provider as string) || ''
 
     provider.value = providerParam
 
@@ -81,9 +78,12 @@ onMounted(async () => {
     })
 
     // Handle response
-    if ('requiresTwoFactor' in response) {
-      // 2FA required - redirect to 2FA page
-      toast.info(t('auth.oauth.callback.two_factor_required'))
+    if ('requiresTwoFactor' in response && response.requiresTwoFactor) {
+      authStore.setTwoFactorToken(
+        response.twoFactorToken,
+        response.methods,
+        response.preferredMethod
+      )
       await router.push(AuthRoutePaths.twoFactorVerify)
       return
     }
