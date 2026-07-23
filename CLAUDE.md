@@ -54,7 +54,7 @@ Frontend dev: `pnpm dev` (port 5176, proxy `/api` → `localhost:8003`).
 | Faza 0 | Tenants, teams, kaskada config, tokeny OAuth integracji | ✅ |
 | Faza 1 | Agent loop + trace, czat SSE (pierwotnie Jira/GitLab 360°, odłożone — patrz niżej) | ✅ |
 | **Faza 1.5** | Design pass (`DESIGN.md`: ChatGPT + Linear) na czacie i widoku 360° | 🔄 w toku |
-| Faza 2 | Gmail MCP (Teams odłożony — brak dostępu) | — |
+| Faza 2 | Gmail MCP (Teams odłożony — brak dostępu) | ✅ v1 readonly |
 | Faza 3 | Edytor agentów, router, bogate bloki | — |
 | Faza 4 | Pamięć + RAG (pgvector) — embeddingi + memory_search/save już częściowo gotowe z Fazy 1 | 🔄 częściowo |
 | Faza 5 | Auto-router, tool search, onboarding tenantów | — |

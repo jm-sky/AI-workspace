@@ -104,3 +104,58 @@ async def test_execute_gmail_search_dispatches():
         {"query": "from:a@b.com", "limit": 5},
     )
     assert result["messages"][0]["id"] == "1"
+
+
+@pytest.mark.asyncio
+async def test_gmail_refresh_keeps_refresh_token(monkeypatch):
+    """Google often omits refresh_token on refresh — we must echo the old one."""
+    from datetime import UTC, datetime
+
+    import httpx
+
+    monkeypatch.setattr(
+        "app.modules.integrations.providers.gmail.settings.integrations.gmail_oauth_client_id",
+        "cid",
+    )
+    monkeypatch.setattr(
+        "app.modules.integrations.providers.gmail.settings.integrations.gmail_oauth_client_secret",
+        "secret",
+    )
+    monkeypatch.setattr(
+        "app.modules.integrations.providers.gmail.settings.integrations.gmail_oauth_redirect_uri",
+        "http://localhost/cb",
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "oauth2.googleapis.com":
+            return httpx.Response(
+                200,
+                json={
+                    "access_token": "new-access",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "scope": "https://www.googleapis.com/auth/gmail.readonly",
+                },
+            )
+        return httpx.Response(
+            200,
+            json={"email": "u@example.com", "name": "U", "id": "1", "picture": None},
+        )
+
+    real_client = httpx.AsyncClient
+
+    def factory(*_args, **_kwargs):
+        return real_client(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(
+        "app.modules.integrations.providers.gmail.httpx.AsyncClient",
+        factory,
+    )
+
+    provider = GmailIntegrationProvider()
+    result = await provider.refresh_access_token("old-refresh")
+    assert result.access_token == "new-access"
+    assert result.refresh_token == "old-refresh"
+    assert result.expires_at is not None
+    assert result.expires_at > datetime.now(UTC)
+    assert result.provider_metadata["email"] == "u@example.com"
