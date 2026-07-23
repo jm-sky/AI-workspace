@@ -382,7 +382,7 @@ class OAuthSettings(BaseSettings):
     github_redirect_uri: str = Field(
         default="",
         validation_alias="GITHUB_OAUTH_REDIRECT_URI",
-        description="GitHub login callback URL (e.g. /auth/github)",
+        description="GitHub login callback URL (e.g. /auth/callback/github)",
     )
 
 
