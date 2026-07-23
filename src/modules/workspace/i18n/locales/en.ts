@@ -23,6 +23,19 @@ export const workspaceEn = {
       newChat: 'New chat',
       showSessions: 'Sessions',
     },
+    attachments: {
+      attach: 'Attach image',
+      remove: 'Remove attachment',
+      preview: 'Preview image',
+      visionRequired: 'Select a vision-capable model to attach images',
+      errors: {
+        unsupportedType: 'Unsupported file type',
+        tooLarge: 'File is too large (max 10 MB)',
+        tooMany: 'Too many attachments (max 5)',
+        uploadFailed: 'Failed to upload attachment',
+        deleteFailed: 'Failed to remove attachment',
+      },
+    },
     memory: {
       title: 'Memory',
       subtitle: 'Semantic memories used by the agent across sessions',

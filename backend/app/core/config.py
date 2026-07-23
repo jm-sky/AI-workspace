@@ -561,6 +561,60 @@ class StorageSettings(BaseSettings):
         return v
 
 
+class AttachmentSettings(BaseSettings):
+    """Chat attachment upload limits and processing."""
+
+    model_config = _base_config
+
+    max_file_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        validation_alias="ATTACHMENT_MAX_FILE_BYTES",
+        description="Max bytes per chat attachment (stream-enforced)",
+        gt=0,
+    )
+    max_per_message: int = Field(
+        default=5,
+        validation_alias="ATTACHMENT_MAX_PER_MESSAGE",
+        description="Max attachments per chat message",
+        gt=0,
+    )
+    max_total_bytes: int = Field(
+        default=25 * 1024 * 1024,
+        validation_alias="ATTACHMENT_MAX_TOTAL_BYTES",
+        description="Max total attachment bytes per chat message",
+        gt=0,
+    )
+    max_text_chars: int = Field(
+        default=100_000,
+        validation_alias="ATTACHMENT_MAX_TEXT_CHARS",
+        description="Max extracted text characters kept for model context",
+        gt=0,
+    )
+    pdf_max_pages: int = Field(
+        default=50,
+        validation_alias="ATTACHMENT_PDF_MAX_PAGES",
+        description="Max PDF pages to extract",
+        gt=0,
+    )
+    model_max_edge: int = Field(
+        default=1536,
+        validation_alias="ATTACHMENT_MODEL_MAX_EDGE",
+        description="Max image edge length sent to the model",
+        gt=0,
+    )
+    thumbnail_max_edge: int = Field(
+        default=320,
+        validation_alias="ATTACHMENT_THUMBNAIL_MAX_EDGE",
+        description="Max thumbnail edge length",
+        gt=0,
+    )
+    upload_rate_limit: str = Field(
+        default="30/minute",
+        validation_alias="ATTACHMENT_UPLOAD_RATE_LIMIT",
+        description="SlowAPI rate limit string for attachment upload",
+    )
+
+
 class SentrySettings(BaseSettings):
     """Sentry error monitoring configuration."""
 
@@ -997,6 +1051,7 @@ class Settings(BaseSettings):
     oauth: OAuthSettings = Field(default_factory=OAuthSettings)
     email: EmailSettings = Field(default_factory=EmailSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
+    attachments: AttachmentSettings = Field(default_factory=AttachmentSettings)
     sentry: SentrySettings = Field(default_factory=SentrySettings)
     ai: AISettings = Field(default_factory=AISettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)

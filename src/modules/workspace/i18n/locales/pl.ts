@@ -23,6 +23,19 @@ export const workspacePl = {
       newChat: 'Nowy czat',
       showSessions: 'Sesje',
     },
+    attachments: {
+      attach: 'Dołącz obraz',
+      remove: 'Usuń załącznik',
+      preview: 'Podgląd obrazu',
+      visionRequired: 'Wybierz model z obsługą obrazów, aby dołączać zdjęcia',
+      errors: {
+        unsupportedType: 'Nieobsługiwany typ pliku',
+        tooLarge: 'Plik jest za duży (max 10 MB)',
+        tooMany: 'Za dużo załączników (max 5)',
+        uploadFailed: 'Nie udało się przesłać załącznika',
+        deleteFailed: 'Nie udało się usunąć załącznika',
+      },
+    },
     memory: {
       title: 'Pamięć',
       subtitle: 'Wspomnienia semantyczne używane przez agenta między sesjami',

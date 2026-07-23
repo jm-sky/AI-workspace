@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -14,6 +14,7 @@ import ChatToolbar from '@/modules/workspace/components/ChatToolbar.vue'
 import ChatToolSteps from '@/modules/workspace/components/ChatToolSteps.vue'
 import { useAgentChat } from '@/modules/workspace/composables/useAgentChat'
 import { useAgentSessions } from '@/modules/workspace/composables/useAgentSessions'
+import { useChatAttachments } from '@/modules/workspace/composables/useChatAttachments'
 import { useWorkspaceModels } from '@/modules/workspace/composables/useWorkspaceModels'
 
 const { t } = useI18n()
@@ -22,8 +23,19 @@ const router = useRouter()
 const input = ref('')
 const auditOpen = ref(false)
 
-const { getSelectedModelId, hasValidModel } = useWorkspaceModels()
+const { getSelectedModelId, hasValidModel, selectedModel } = useWorkspaceModels()
 const { error: sessionsError, loadSessions } = useAgentSessions()
+const {
+  attachments,
+  isUploading,
+  error: attachmentError,
+  addFiles,
+  removeAttachment,
+  takeAttachments,
+  IMAGE_ACCEPT,
+} = useChatAttachments()
+
+const visionDisabled = computed(() => !(selectedModel.value?.supports_vision ?? false))
 
 const {
   messages,
@@ -73,11 +85,31 @@ watch(
   { immediate: true },
 )
 
+watch(attachmentError, (code) => {
+  if (!code) return
+  const key = `workspace.attachments.errors.${code}`
+  const translated = t(key)
+  toast.error(translated === key ? code : translated)
+})
+
+const handlePick = async (files: FileList) => {
+  if (visionDisabled.value) {
+    toast.error(t('workspace.attachments.visionRequired'))
+    return
+  }
+  await addFiles(files, activeSessionId.value)
+}
+
 const handleSubmit = async () => {
   const text = input.value.trim()
-  if (!text || !hasValidModel.value) return
+  if ((!text && attachments.value.length === 0) || !hasValidModel.value) return
+  if (attachments.value.length && visionDisabled.value) {
+    toast.error(t('workspace.attachments.visionRequired'))
+    return
+  }
+  const pending = takeAttachments()
   input.value = ''
-  await sendMessage(text)
+  await sendMessage(text, pending)
   await loadSessions()
   if (activeSessionId.value) {
     await setSessionQuery(activeSessionId.value)
@@ -153,7 +185,22 @@ const handleCopyRun = async () => {
                   ? 'max-w-[85%] rounded-2xl border border-hairline bg-surface-user px-4 py-2.5 text-foreground shadow-soft'
                   : 'w-full'"
               >
-                <AgentMarkdown :content="msg.content" />
+                <div
+                  v-if="msg.attachments?.length"
+                  class="mb-2 flex flex-wrap gap-2"
+                >
+                  <img
+                    v-for="att in msg.attachments"
+                    :key="att.id"
+                    :src="att.previewUrl"
+                    :alt="att.originalFilename"
+                    class="size-16 rounded-lg object-cover"
+                  >
+                </div>
+                <AgentMarkdown
+                  v-if="msg.content.trim()"
+                  :content="msg.content"
+                />
                 <AgentRichBlocks
                   v-if="msg.blocks?.length"
                   :blocks="msg.blocks"
@@ -179,7 +226,13 @@ const handleCopyRun = async () => {
         :is-loading="isLoading"
         :is-streaming="isStreaming"
         :can-submit="hasValidModel && !isLoading"
+        :attachments="attachments"
+        :is-uploading="isUploading"
+        :vision-disabled="visionDisabled"
+        :accept="IMAGE_ACCEPT"
         @submit="handleSubmit"
+        @pick="handlePick"
+        @remove-attachment="removeAttachment"
       />
 
       <AgentAuditSheet

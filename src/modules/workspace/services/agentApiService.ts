@@ -32,6 +32,9 @@ export async function streamAgentChat(
       agentKey: request.agentKey ?? 'github-workspace',
       model: request.model,
       sessionId: request.sessionId ?? undefined,
+      attachmentIds: request.attachmentIds?.length
+        ? request.attachmentIds
+        : undefined,
     }),
   })
 

@@ -95,11 +95,14 @@ class AgentLoopService:
 
     async def run_stream(
         self,
-        user_message: str,
+        user_message: str | list[dict[str, Any]],
         *,
         history: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[AgentLoopEvent]:
         """Execute the loop, yielding SSE-friendly events.
+
+        ``user_message`` is a plain string, or OpenAI multimodal content parts
+        when chat attachments (images) are present.
 
         ``history`` holds prior conversation turns as plain
         ``{"role": ..., "content": ...}`` messages (no tool-call replay),

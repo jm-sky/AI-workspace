@@ -15,6 +15,7 @@ from app.modules.agent.exceptions import (
     AgentError,
     AgentNotConfiguredError,
     AgentToolsDisabledError,
+    AgentVisionRequiredError,
 )
 from app.modules.agent.schemas import AgentChatRequest
 from app.modules.agent.services.agent_run_service import AgentRunService
@@ -62,10 +63,11 @@ async def agent_chat_stream(
                 agent_key=request.agentKey,
                 model=request.model,
                 session_id=request.sessionId,
+                attachment_ids=request.attachmentIds,
             ):
                 payload = json.dumps(event.data, default=str)
                 yield f"event: {event.event}\ndata: {payload}\n\n"
-        except (AgentNotConfiguredError, AgentToolsDisabledError) as exc:
+        except (AgentNotConfiguredError, AgentToolsDisabledError, AgentVisionRequiredError) as exc:
             payload = json.dumps({"message": str(exc)})
             yield f"event: error\ndata: {payload}\n\n"
         except AgentError as exc:

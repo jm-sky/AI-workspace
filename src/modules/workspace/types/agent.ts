@@ -7,6 +7,7 @@ export interface IAgentChatRequest {
   agentKey?: string
   model?: string
   sessionId?: string | null
+  attachmentIds?: string[]
 }
 
 export interface IRichBlock {
@@ -75,6 +76,7 @@ export interface IAgentChatMessage {
   content: string
   runId?: string
   blocks?: IRichBlock[]
+  attachments?: import('@/modules/workspace/types/attachments').IChatAttachment[]
 }
 
 export interface IAgentStreamStepEvent {

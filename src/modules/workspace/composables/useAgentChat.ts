@@ -14,6 +14,7 @@ import type {
   IAgentStreamStepEvent,
   IRichBlock,
 } from '@/modules/workspace/types/agent'
+import type { IChatAttachment } from '@/modules/workspace/types/attachments'
 
 function mapPersistedStep(step: IAgentRunStep): IAgentStreamStepEvent {
   return {
@@ -60,8 +61,13 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
   const activeRun = ref<IAgentRun | null>(null)
   const activeSessionId = ref<string | null>(null)
 
-  const sendMessage = async (message: string): Promise<string | undefined> => {
-    if (!message.trim() || isLoading.value) return undefined
+  const sendMessage = async (
+    message: string,
+    attachmentPayload?: IChatAttachment[],
+  ): Promise<string | undefined> => {
+    const trimmed = message.trim()
+    const files = attachmentPayload ?? []
+    if ((!trimmed && files.length === 0) || isLoading.value) return undefined
 
     isStreaming.value = true
     error.value = null
@@ -71,7 +77,8 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     const userMessage: IAgentChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: message.trim(),
+      content: trimmed,
+      attachments: files.length ? files : undefined,
     }
     messages.value.push(userMessage)
 
@@ -82,10 +89,11 @@ export function useAgentChat(getSelectedModel?: () => string | undefined) {
     try {
       await streamAgentChat(
         {
-          message: message.trim(),
+          message: trimmed || ' ',
           agentKey: 'github-workspace',
           model: getSelectedModel?.(),
           sessionId: activeSessionId.value,
+          attachmentIds: files.map((f) => f.id),
         },
         {
           onStep: (event) => {

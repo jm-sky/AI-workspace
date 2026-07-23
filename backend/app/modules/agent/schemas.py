@@ -1,20 +1,27 @@
 """Pydantic schemas for agent API."""
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class AgentChatRequest(BaseModel):
     """User message to the workspace agent."""
 
-    message: str = Field(..., min_length=1, max_length=8000)
+    message: str = Field(default="", max_length=8000)
     agentKey: str = Field(default="github-workspace", alias="agent_key")
     model: str | None = None
     sessionId: str | None = Field(default=None, alias="session_id")
+    attachmentIds: list[str] = Field(default_factory=list, alias="attachment_ids", max_length=20)
 
     model_config = {"populate_by_name": True}
+
+    @model_validator(mode="after")
+    def require_message_or_attachments(self) -> Self:
+        if not self.message.strip() and not self.attachmentIds:
+            raise ValueError("message or attachmentIds is required")
+        return self
 
 
 class RichBlock(BaseModel):

@@ -12,6 +12,7 @@ from app.modules.agent.db_models import AgentRunDB, AgentRunStepDB, AgentSession
 from app.modules.agent.exceptions import (
     AgentNotConfiguredError,
     AgentToolsDisabledError,
+    AgentVisionRequiredError,
 )
 from app.modules.agent.guards import (
     SourceRoutingWarning,
@@ -29,6 +30,7 @@ from app.modules.agent.schemas import (
     AgentSessionSummary,
 )
 from app.modules.agent.services.agent_loop import AgentLoopEvent, AgentLoopService
+from app.modules.agent.services.chat_attachment_service import ChatAttachmentService
 from app.modules.agent.tools import build_tool_registry
 from app.modules.agent.tools.base import AgentToolRegistry
 from app.modules.ai.utils.models_config import get_model_by_id, has_live_catalog
@@ -105,6 +107,7 @@ class AgentRunService:
         agent_key: str = "github-workspace",
         model: str | None = None,
         session_id: str | None = None,
+        attachment_ids: list[str] | None = None,
     ) -> AsyncIterator[AgentLoopEvent]:
         resolved_model, rag_enabled = await self._resolve_model(
             user_id=tenant_ctx.user_id,
@@ -112,6 +115,19 @@ class AgentRunService:
             requested_model=model,
         )
         base_prompt = self._system_prompt(agent_key)
+
+        attachment_service = ChatAttachmentService(self.db)
+        attachments = await attachment_service.load_for_message(
+            attachment_ids or [],
+            tenant_ctx=tenant_ctx,
+        )
+        if any(a.kind == "image" for a in attachments):
+            model_meta = get_model_by_id(resolved_model) or {}
+            if not model_meta.get("supports_vision"):
+                raise AgentVisionRequiredError(
+                    f"Model '{resolved_model}' does not support image attachments. "
+                    "Choose a vision-capable model."
+                )
 
         # Resolve the conversation this turn belongs to (create on first turn).
         session = None
@@ -139,6 +155,14 @@ class AgentRunService:
             session_id=session_id,
         )
         await self.db.commit()
+
+        await attachment_service.bind_to_run(
+            attachments,
+            run_id=run.id,
+            session_id=session_id,
+        )
+
+        user_content = await attachment_service.build_user_content(message, attachments)
 
         tool_registry = build_tool_registry(
             tenant_ctx=tenant_ctx,
@@ -171,7 +195,7 @@ class AgentRunService:
         step_index = 0
 
         try:
-            async for event in loop.run_stream(message, history=history):
+            async for event in loop.run_stream(user_content, history=history):
                 if event.event == "step":
                     yield AgentLoopEvent(
                         event=event.event,
