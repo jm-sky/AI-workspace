@@ -1,7 +1,7 @@
 # Plan 002 — Załączniki w czacie (attachments picker)
 
-**Status:** `in progress`  
-**Data:** 2026-07-09 (aktualizacja 2026-07-23: etapy 1–3 obrazów)  
+**Status:** `done`  
+**Data:** 2026-07-09 (aktualizacja 2026-07-23: etapy 1–6)  
 **Obszar:** backend (`agent`, `core/storage`) + frontend (`workspace`)
 
 ## Cel
@@ -45,7 +45,13 @@ miniaturę i błędy walidacji zanim wyśle prompt.
 ```
 
 Załącznik po uploadzie jest „osierocony” (`run_id = NULL`) i dowiązywany do run-a przy
-wysłaniu wiadomości. Osierocone rekordy starsze niż 24 h — do sprzątnięcia (cron/CLI).
+wysłaniu wiadomości. Osierocone rekordy starsze niż `ATTACHMENT_ORPHAN_TTL_HOURS` (domyślnie 24 h)
+sprząta CLI:
+
+```bash
+docker exec ai-workspace-app python -m cli agent purge-orphans
+docker exec ai-workspace-app python -m cli agent purge-orphans --dry-run
+```
 
 ### Migracja `062_chat_attachments.py`
 
@@ -184,7 +190,7 @@ pliki nie-obrazy jako chip z ikoną + nazwą. Historia sesji musi je odtwarzać
 | **3** | Composer: picker, chipy, miniatury, lightbox, paste/DnD, i18n | Pełny UX obrazów | ✅ |
 | **4** | Ekstrakcja tekstu: `txt/md/json/csv/yaml` (decode + limit znaków) | Pliki tekstowe do modelu | ✅ |
 | **5** | PDF: `pypdf` (dodać do `requirements.txt`), cap stron, błędy szyfrowanych | PDF do modelu | ✅ |
-| **6** | Sprzątanie osieroconych załączników (CLI/cron), `StorageUsageCard` uwzględnia załączniki | Higiena | |
+| **6** | Sprzątanie osieroconych załączników (CLI/cron), `StorageUsageCard` uwzględnia załączniki | Higiena | ✅ |
 
 Etapy 1–3 to minimum użyteczne (obrazy). 4–5 dokładają formaty.
 
@@ -203,7 +209,7 @@ Etapy 1–3 to minimum użyteczne (obrazy). 4–5 dokładają formaty.
 ## Otwarte punkty
 
 1. Czy przechowywać oryginał obrazu obok wersji przetworzonej? (koszt + RODO) — **domyślnie nie**.
-2. Czy załączniki liczyć do `StorageUsageCard` / limitów planu (`feature_limits`)? Prawdopodobnie tak.
+2. Czy załączniki liczyć do `StorageUsageCard` / limitów planu (`feature_limits`)? — **tak** (`/users/me/storage/usage` sumuje `chat_attachments.size_bytes`).
 3. Audio/wideo — poza zakresem tego planu.
 4. Prompt injection z treści plików — czy dokładamy guard w `agent/guards/`?
 5. Czy `extracted_text` trzymać w DB (prosto, ale puchnie), czy w storage obok pliku?

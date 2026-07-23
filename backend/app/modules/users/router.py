@@ -371,10 +371,13 @@ async def get_storage_usage(
     Returns:
         Storage usage information including used bytes, limit bytes, and usage percentage
     """
+    from app.modules.agent.services.chat_attachment_service import ChatAttachmentService
     from app.modules.feature_limits.repository import FeatureLimitRepository
 
     image_repo = ItemImageRepository(db)
+    attachment_service = ChatAttachmentService(db)
     used_bytes = await image_repo.get_user_storage_usage(current_user.id)
+    used_bytes += await attachment_service.sum_user_storage_bytes(current_user.id)
 
     # Determine user role for limit lookup
     # CurrentUser from users module has role as string

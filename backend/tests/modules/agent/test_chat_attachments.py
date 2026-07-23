@@ -109,3 +109,66 @@ async def test_read_limited_rejects_oversized():
     with pytest.raises(HTTPException) as exc:
         await ChatAttachmentService._read_limited(FakeUpload(big), max_bytes=50)
     assert exc.value.status_code == 413
+
+
+@pytest.mark.asyncio
+async def test_purge_orphans_dry_run_does_not_delete():
+    from datetime import UTC, datetime, timedelta
+    from unittest.mock import AsyncMock, MagicMock
+
+    old = MagicMock()
+    old.run_id = None
+    old.storage_path = "a/path"
+    old.thumbnail_path = None
+    old.created_at = datetime.now(UTC) - timedelta(hours=48)
+
+    result = MagicMock()
+    result.scalars.return_value.all.return_value = [old]
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result)
+    db.delete = AsyncMock()
+    db.commit = AsyncMock()
+
+    storage = AsyncMock()
+    service = ChatAttachmentService.__new__(ChatAttachmentService)
+    service.db = db
+    service.storage = storage
+    service._cfg = type("Cfg", (), {"orphan_ttl_hours": 24})()
+
+    count = await service.purge_orphans(dry_run=True)
+    assert count == 1
+    storage.delete.assert_not_called()
+    db.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_purge_orphans_deletes_storage_and_rows():
+    from datetime import UTC, datetime, timedelta
+    from unittest.mock import AsyncMock, MagicMock
+
+    orphan = MagicMock()
+    orphan.run_id = None
+    orphan.storage_path = "chat/a.bin"
+    orphan.thumbnail_path = "chat/a.thumb"
+    orphan.created_at = datetime.now(UTC) - timedelta(hours=48)
+
+    result = MagicMock()
+    result.scalars.return_value.all.return_value = [orphan]
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=result)
+    db.delete = AsyncMock()
+    db.commit = AsyncMock()
+
+    storage = AsyncMock()
+    service = ChatAttachmentService.__new__(ChatAttachmentService)
+    service.db = db
+    service.storage = storage
+    service._cfg = type("Cfg", (), {"orphan_ttl_hours": 24})()
+
+    count = await service.purge_orphans()
+    assert count == 1
+    assert storage.delete.await_count == 2
+    db.delete.assert_awaited_once_with(orphan)
+    db.commit.assert_awaited()

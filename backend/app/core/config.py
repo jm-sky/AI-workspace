@@ -613,6 +613,12 @@ class AttachmentSettings(BaseSettings):
         validation_alias="ATTACHMENT_UPLOAD_RATE_LIMIT",
         description="SlowAPI rate limit string for attachment upload",
     )
+    orphan_ttl_hours: int = Field(
+        default=24,
+        validation_alias="ATTACHMENT_ORPHAN_TTL_HOURS",
+        description="Hours before unbound (run_id NULL) attachments are purged",
+        gt=0,
+    )
 
 
 class SentrySettings(BaseSettings):

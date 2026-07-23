@@ -5,14 +5,14 @@ from __future__ import annotations
 import base64
 import io
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import magic
 from fastapi import HTTPException, UploadFile, status
 from PIL import Image
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.id_utils import generate_id
@@ -364,6 +364,63 @@ class ChatAttachmentService:
             .values(run_id=run_id, session_id=session_id)
         )
         await self.db.commit()
+
+    async def sum_user_storage_bytes(self, user_id: str) -> int:
+        """Total size_bytes of chat attachments owned by the user."""
+        result = await self.db.execute(
+            select(func.coalesce(func.sum(ChatAttachment.size_bytes), 0)).where(
+                ChatAttachment.owner_user_id == user_id
+            )
+        )
+        return int(result.scalar_one())
+
+    async def purge_orphans(
+        self,
+        *,
+        older_than_hours: int | None = None,
+        dry_run: bool = False,
+        now: datetime | None = None,
+    ) -> int:
+        """Delete unbound attachments older than TTL (default from settings).
+
+        Orphans are rows with ``run_id IS NULL`` (uploaded but never sent).
+        Returns the number of attachments that would be / were deleted.
+        """
+        hours = older_than_hours if older_than_hours is not None else self._cfg.orphan_ttl_hours
+        cutoff = (now or datetime.now(UTC)) - timedelta(hours=hours)
+        result = await self.db.execute(
+            select(ChatAttachment).where(
+                ChatAttachment.run_id.is_(None),
+                ChatAttachment.created_at < cutoff,
+            )
+        )
+        orphans = list(result.scalars().all())
+        if dry_run or not orphans:
+            return len(orphans)
+
+        for row in orphans:
+            try:
+                await self.storage.delete(row.storage_path)
+            except Exception:
+                logger.warning(
+                    "Failed to delete orphan storage path %s",
+                    row.storage_path,
+                    exc_info=True,
+                )
+            if row.thumbnail_path:
+                try:
+                    await self.storage.delete(row.thumbnail_path)
+                except Exception:
+                    logger.warning(
+                        "Failed to delete orphan thumbnail %s",
+                        row.thumbnail_path,
+                        exc_info=True,
+                    )
+            await self.db.delete(row)
+
+        await self.db.commit()
+        logger.info("Purged %s orphan chat attachment(s) older than %sh", len(orphans), hours)
+        return len(orphans)
 
     async def build_user_content(
         self,
