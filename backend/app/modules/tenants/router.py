@@ -79,6 +79,14 @@ async def create_tenant(
         owner_user_id=current_user.id,
     )
 
+    from app.modules.agent.services.agent_definition_service import AgentDefinitionService
+
+    await AgentDefinitionService(repo.db).seed_builtins_for_tenant(
+        tenant.id,
+        created_by=current_user.id,
+    )
+    await repo.db.commit()
+
     session_jti = None
     tfa_verified = False
     tfa_method = None

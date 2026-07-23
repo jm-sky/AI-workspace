@@ -9,8 +9,8 @@ export const workspaceEn = {
     },
     chat: {
       title: 'Chat',
-      subtitle: 'GitHub workspace — ask about repos, issues, and PRs',
-      empty: 'Ask about your GitHub repositories, issues, or pull requests.',
+      subtitle: 'Ask your workspace agents about repos, mail, or anything else',
+      empty: 'Choose an agent and ask a question — GitHub, Gmail, memory, or general chat.',
       welcomeTitle: 'How can I help you today?',
       thinking: 'Thinking…',
       analyzing: 'Analyzing…',
@@ -22,6 +22,12 @@ export const workspaceEn = {
       send: 'Send',
       newChat: 'New chat',
       showSessions: 'Sessions',
+    },
+    agent: {
+      selectLabel: 'Agent',
+      selectPlaceholder: 'Select agent',
+      loadError: 'Failed to load agents',
+      lockedHint: 'Agent is fixed for this conversation. Start a new chat to switch.',
     },
     attachments: {
       attach: 'Attach file',

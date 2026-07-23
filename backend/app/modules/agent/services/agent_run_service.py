@@ -20,15 +20,15 @@ from app.modules.agent.guards import (
     provider_of_tool,
 )
 from app.modules.agent.guards.source_routing import format_warnings
-from app.modules.agent.prompts.github_workspace import GITHUB_WORKSPACE_SYSTEM_PROMPT
-from app.modules.agent.prompts.jira_360 import JIRA_360_SYSTEM_PROMPT
 from app.modules.agent.repositories import AgentRunRepository, AgentSessionRepository
+from app.modules.agent.routing import ExplicitAgentRouter
 from app.modules.agent.schemas import (
     AgentRunResponse,
     AgentRunStepResponse,
     AgentSessionDetail,
     AgentSessionSummary,
 )
+from app.modules.agent.services.agent_definition_service import AgentDefinitionService
 from app.modules.agent.services.agent_loop import AgentLoopEvent, AgentLoopService
 from app.modules.agent.services.chat_attachment_service import ChatAttachmentService
 from app.modules.agent.tools import build_tool_registry
@@ -39,11 +39,6 @@ from app.modules.memory.services.memory_service import MemoryService
 from app.modules.tenants.service import TenantContext
 from app.modules.workspace_config.repositories import WorkspaceConfigRepository
 from app.modules.workspace_config.resolver import WorkspaceConfigResolver
-
-AGENT_PROMPTS: dict[str, str] = {
-    "github-workspace": GITHUB_WORKSPACE_SYSTEM_PROMPT,
-    "jira-360": JIRA_360_SYSTEM_PROMPT,
-}
 
 
 class AgentRunService:
@@ -59,6 +54,8 @@ class AgentRunService:
         self.run_repo = AgentRunRepository(db)
         self.session_repo = AgentSessionRepository(db)
         self.config_resolver = WorkspaceConfigResolver(WorkspaceConfigRepository(db))
+        self.router = ExplicitAgentRouter()
+        self.agent_defs = AgentDefinitionService(db)
 
     async def _resolve_model(
         self,
@@ -66,8 +63,12 @@ class AgentRunService:
         user_id: str,
         tenant_ctx: TenantContext,
         requested_model: str | None,
+        agent_model: str | None = None,
     ) -> tuple[str, bool]:
-        """Return ``(resolved_model, rag_enabled)`` for the workspace."""
+        """Return ``(resolved_model, rag_enabled)`` for the workspace.
+
+        Agent-level ``model`` is used when the request does not override it.
+        """
         effective = await self.config_resolver.resolve(
             user_id=user_id,
             tenant_id=tenant_ctx.tenant_id,
@@ -76,7 +77,7 @@ class AgentRunService:
         if not effective.toolsEnabled:
             raise AgentToolsDisabledError("Agent tools are disabled for this workspace")
 
-        model = requested_model or effective.defaultModel
+        model = requested_model or agent_model or effective.defaultModel
 
         # An empty allow-list means the workspace sets no ceiling: any model the
         # catalog knows about is fair game. Without a live catalog we cannot tell
@@ -91,30 +92,47 @@ class AgentRunService:
 
         if model and model in effective.allowedModels:
             return model, effective.ragEnabled
+        # Agent model outside allow-list → fall back to first allowed / default
+        if effective.defaultModel and effective.defaultModel in effective.allowedModels:
+            return effective.defaultModel, effective.ragEnabled
         return effective.allowedModels[0], effective.ragEnabled
-
-    def _system_prompt(self, agent_key: str) -> str:
-        prompt = AGENT_PROMPTS.get(agent_key)
-        if prompt is None:
-            raise AgentNotConfiguredError(f"Unknown agent: {agent_key}")
-        return prompt
 
     async def run_stream(
         self,
         *,
         tenant_ctx: TenantContext,
         message: str,
-        agent_key: str = "github-workspace",
+        agent_key: str | None = None,
         model: str | None = None,
         session_id: str | None = None,
         attachment_ids: list[str] | None = None,
     ) -> AsyncIterator[AgentLoopEvent]:
-        resolved_model, rag_enabled = await self._resolve_model(
+        # Resolve session first so routing can lock to session agent_key.
+        session = None
+        if session_id:
+            session = await self.session_repo.get_session(session_id, user_id=tenant_ctx.user_id)
+
+        default_key = await self.agent_defs.get_default_key(tenant_ctx.tenant_id)
+        decision = self.router.resolve_key(
+            explicit_key=agent_key,
+            session_key=session.agent_key if session else None,
+            default_key=default_key,
+        )
+        definition = await self.agent_defs.require_definition(
+            tenant_ctx.tenant_id,
+            decision.key,
+        )
+        agent_key = definition.key
+        resolved = decision
+
+        resolved_model, workspace_rag = await self._resolve_model(
             user_id=tenant_ctx.user_id,
             tenant_ctx=tenant_ctx,
             requested_model=model,
+            agent_model=definition.model,
         )
-        base_prompt = self._system_prompt(agent_key)
+        rag_enabled = workspace_rag and definition.rag_enabled
+        base_prompt = definition.system_prompt
 
         attachment_service = ChatAttachmentService(self.db)
         attachments = await attachment_service.load_for_message(
@@ -129,10 +147,6 @@ class AgentRunService:
                     "Choose a vision-capable model."
                 )
 
-        # Resolve the conversation this turn belongs to (create on first turn).
-        session = None
-        if session_id:
-            session = await self.session_repo.get_session(session_id, user_id=tenant_ctx.user_id)
         if session is None:
             session = await self.session_repo.create_session(
                 tenant_id=tenant_ctx.tenant_id,
@@ -153,6 +167,7 @@ class AgentRunService:
             system_prompt=base_prompt,
             model=resolved_model,
             session_id=session_id,
+            run_metadata={"routingReason": resolved.reason},
         )
         await self.db.commit()
 
@@ -171,6 +186,7 @@ class AgentRunService:
             agent_key=agent_key,
             session_id=session_id,
             rag_enabled=rag_enabled,
+            tool_profile=definition.tool_profile,
         )
 
         system_prompt = await self._build_system_prompt(
@@ -199,7 +215,13 @@ class AgentRunService:
                 if event.event == "step":
                     yield AgentLoopEvent(
                         event=event.event,
-                        data={**event.data, "runId": run.id, "sessionId": session_id},
+                        data={
+                            **event.data,
+                            "runId": run.id,
+                            "sessionId": session_id,
+                            "agentKey": agent_key,
+                            "routingReason": resolved.reason,
+                        },
                     )
                 elif event.event == "run_complete":
                     self._apply_source_guard(
@@ -234,12 +256,22 @@ class AgentRunService:
                         total_tokens=event.data.get("totalTokens", 0),
                         cost_usd=event.data.get("costUsd"),
                         blocks=event.data.get("blocks"),
+                        run_metadata={
+                            **(run.run_metadata or {}),
+                            "routingReason": resolved.reason,
+                        },
                     )
                     await self.session_repo.touch_session(session, title=_derive_title(message))
                     await self.db.commit()
                     yield AgentLoopEvent(
                         event="run_complete",
-                        data={**event.data, "runId": run.id, "sessionId": session_id},
+                        data={
+                            **event.data,
+                            "runId": run.id,
+                            "sessionId": session_id,
+                            "agentKey": agent_key,
+                            "routingReason": resolved.reason,
+                        },
                     )
         except Exception as exc:
             await self.run_repo.complete_run(
@@ -250,7 +282,10 @@ class AgentRunService:
                 completion_tokens=0,
                 total_tokens=0,
                 cost_usd=None,
-                run_metadata={"error": str(exc)},
+                run_metadata={
+                    "error": str(exc),
+                    "routingReason": resolved.reason,
+                },
             )
             await self.db.commit()
             yield AgentLoopEvent(

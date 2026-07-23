@@ -2,9 +2,70 @@ export type AgentRunStatus = 'running' | 'completed' | 'failed'
 
 export type AgentStepType = 'model' | 'tool_call' | 'tool_result' | 'guard' | 'step'
 
+export type AgentRoutingReason = 'explicit' | 'session' | 'default'
+
+export interface IAgentSummary {
+  key: string
+  name: string
+  description: string
+  isDefault: boolean
+  toolProfile: string[]
+}
+
+export interface IAgentListResponse {
+  agents: IAgentSummary[]
+}
+
+export interface IAgentDetail {
+  id: string
+  key: string
+  name: string
+  description: string
+  systemPrompt: string
+  model?: string | null
+  effort?: string | null
+  toolProfile: string[]
+  memoryScopes: string[]
+  ragEnabled: boolean
+  routingHints: Record<string, unknown>
+  isEnabled: boolean
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface IAgentAdminListResponse {
+  agents: IAgentDetail[]
+}
+
+export interface IAgentCreateRequest {
+  key: string
+  name: string
+  description?: string
+  systemPrompt: string
+  model?: string | null
+  toolProfile?: string[]
+  memoryScopes?: string[]
+  ragEnabled?: boolean
+  isEnabled?: boolean
+  isDefault?: boolean
+}
+
+export interface IAgentUpdateRequest {
+  name?: string
+  description?: string
+  systemPrompt?: string
+  model?: string | null
+  toolProfile?: string[]
+  memoryScopes?: string[]
+  ragEnabled?: boolean
+  isEnabled?: boolean
+  isDefault?: boolean
+}
+
 export interface IAgentChatRequest {
   message: string
-  agentKey?: string
+  agentKey?: string | null
   model?: string
   sessionId?: string | null
   attachmentIds?: string[]
@@ -88,6 +149,8 @@ export interface IAgentStreamStepEvent {
   finishReason?: string
   runId?: string
   sessionId?: string
+  agentKey?: string
+  routingReason?: AgentRoutingReason
 }
 
 export interface IAgentStreamCompleteEvent {
@@ -99,4 +162,6 @@ export interface IAgentStreamCompleteEvent {
   completionTokens?: number
   totalTokens?: number
   costUsd?: number | null
+  agentKey?: string
+  routingReason?: AgentRoutingReason
 }

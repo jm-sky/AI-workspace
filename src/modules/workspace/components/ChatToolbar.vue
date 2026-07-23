@@ -5,13 +5,22 @@ import { useI18n } from 'vue-i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import AgentPicker from '@/modules/workspace/components/AgentPicker.vue'
 import WorkspaceModelSelector from '@/modules/workspace/components/WorkspaceModelSelector.vue'
 import type { IAgentRun } from '@/modules/workspace/types/agent'
 
-const { activeRun, stepCount, auditOpen } = defineProps<{
+const agentKey = defineModel<string>('agentKey', { required: true })
+
+const {
+  activeRun,
+  stepCount,
+  auditOpen,
+  agentLocked = false,
+} = defineProps<{
   activeRun?: IAgentRun | null
   stepCount?: number
   auditOpen?: boolean
+  agentLocked?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +34,11 @@ const auditDisabled = computed(() => !activeRun && (stepCount ?? 0) === 0)
 
 <template>
   <div class="flex shrink-0 flex-nowrap items-center gap-2">
+    <AgentPicker
+      v-model="agentKey"
+      :locked="agentLocked"
+    />
+
     <div class="min-w-0 flex-1">
       <WorkspaceModelSelector />
     </div>

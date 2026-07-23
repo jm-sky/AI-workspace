@@ -17,5 +17,6 @@ Plany implementacji funkcji i większych zmian.
 | 005 | [2026-07-23--005--memory-update.md](2026-07-23--005--memory-update.md) | Memory UPDATE — lifecycle (PATCH, tool, UI); wycinek gate-rag-basics | done |
 | 006 | [2026-07-23--006--rag-retrieval-chunks.md](2026-07-23--006--rag-retrieval-chunks.md) | RAG basics — retrieval iface, document_chunks, rag_search, ACL | done |
 | 007 | [2026-07-23--007--gmail-mcp.md](2026-07-23--007--gmail-mcp.md) | Faza 2 — Gmail OAuth + cienki MCP (search/list/get) | verification needed |
+| 008 | [2026-07-23--008--phase-3-agent-editor.md](2026-07-23--008--phase-3-agent-editor.md) | Faza 3 — edytor agentów (tenant-admin), routing (jawny wybór), chart blocks | in progress |
 
 When adding a new entry: pick next `NNN`, create `YYYY-MM-DD--NNN--slug.md`, add a row here.

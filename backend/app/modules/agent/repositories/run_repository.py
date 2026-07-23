@@ -26,6 +26,7 @@ class AgentRunRepository:
         system_prompt: str,
         model: str,
         session_id: str | None = None,
+        run_metadata: dict[str, Any] | None = None,
     ) -> AgentRunDB:
         run = AgentRunDB(
             id=generate_id(),
@@ -37,6 +38,7 @@ class AgentRunRepository:
             input_message=input_message,
             system_prompt=system_prompt,
             model=model,
+            run_metadata=run_metadata,
         )
         self.db.add(run)
         await self.db.flush()

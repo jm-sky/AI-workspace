@@ -9,8 +9,8 @@ export const workspacePl = {
     },
     chat: {
       title: 'Czat',
-      subtitle: 'Workspace GitHub — pytaj o repozytoria, issue i PR',
-      empty: 'Zapytaj o repozytoria GitHub, issue lub pull requesty.',
+      subtitle: 'Pytaj agentów workspace o repozytoria, pocztę lub cokolwiek innego',
+      empty: 'Wybierz agenta i zadaj pytanie — GitHub, Gmail, pamięć lub ogólny czat.',
       welcomeTitle: 'W czym mogę Ci dzisiaj pomóc?',
       thinking: 'Myślę…',
       analyzing: 'Analizuje…',
@@ -22,6 +22,12 @@ export const workspacePl = {
       send: 'Wyślij',
       newChat: 'Nowy czat',
       showSessions: 'Sesje',
+    },
+    agent: {
+      selectLabel: 'Agent',
+      selectPlaceholder: 'Wybierz agenta',
+      loadError: 'Nie udało się wczytać agentów',
+      lockedHint: 'Agent jest stały w tej rozmowie. Zacznij nowy czat, aby zmienić.',
     },
     attachments: {
       attach: 'Dołącz plik',

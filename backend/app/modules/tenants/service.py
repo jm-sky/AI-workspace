@@ -94,6 +94,12 @@ class TenantWorkspaceService:
             description=None,
             owner_user_id=user.id,
         )
+        from app.modules.agent.services.agent_definition_service import AgentDefinitionService
+
+        await AgentDefinitionService(self.tenant_repo.db).seed_builtins_for_tenant(
+            tenant.id,
+            created_by=user.id,
+        )
         await self.user_repo.set_active_workspace(user.id, tenant.id, None)
         return TenantContext(
             user_id=user.id,

@@ -13,7 +13,7 @@ Ustalenie po re-weryfikacji vs ai-kancelaria (po `git pull`). Memory injection *
 | P | ID | Temat | Uwagi |
 |---|----|-------|-------|
 | **P0** | [#022](2026-07-20--022--tool-search.md) | **Tool search** | `done` — core + meta *tool search*; poniżej progu → wszystkie |
-| **P0** | [#023](2026-07-20--023--agent-routing.md) | **Agent routing** | Auto-router + 2–3 agenci (różny prompt + lista tooli); jawny wybór zostaje |
+| **P0** | [#023](2026-07-20--023--agent-routing.md) | **Agent routing** | `done` — jawny wybór + 3 agenci; auto-router LLM → Faza 5 |
 | **P1** | [#024](2026-07-20--024--chat-attachments-vision.md) | **Załączniki + vision** | Plan [#020](2026-07-09--020--chat-attachments-plan.md) / [plan 002](../plans/2026-07-09--002--chat-attachments.md); wzorzec Kancelarii #012 |
 | P2 | [#016](2026-07-10--016--model-picker-performance.md) | Model picker performance | `done` |
 | P3 | [#005](2026-07-07--005--guest-layout-nav-z-index.md) | Guest layout z-index | `done` |
@@ -46,7 +46,7 @@ Ustalenie po re-weryfikacji vs ai-kancelaria (po `git pull`). Memory injection *
 | 020 | [2026-07-09--020--chat-attachments-plan.md](2026-07-09--020--chat-attachments-plan.md) | Plan załączników w czacie (attachments) | `done` |
 | 021 | [2026-07-08--021--backport-2fa-shared-core.md](2026-07-08--021--backport-2fa-shared-core.md) | Backport 2FA i shared-core UX z gear-stack | `done` |
 | 022 | [2026-07-20--022--tool-search.md](2026-07-20--022--tool-search.md) | Tool search — core + profil agenta / próg „wszystkie” | `done` |
-| 023 | [2026-07-20--023--agent-routing.md](2026-07-20--023--agent-routing.md) | Agent routing — auto-router + 2–3 agenci | `planned` |
+| 023 | [2026-07-20--023--agent-routing.md](2026-07-20--023--agent-routing.md) | Agent routing — auto-router + 2–3 agenci | `done` |
 | 024 | [2026-07-20--024--chat-attachments-vision.md](2026-07-20--024--chat-attachments-vision.md) | Załączniki w czacie + vision (OpenRouter) | `planned` |
 | 025 | [2026-07-20--025--backport-shared-core-security-fixes.md](2026-07-20--025--backport-shared-core-security-fixes.md) | Backport: rate limiting, admin auth bypass, WebAuthn login (shared core) | `done` |
 | 026 | [2026-07-22--026--oauth-session-and-state-backport.md](2026-07-22--026--oauth-session-and-state-backport.md) | Backport: OAuth session/2FA parity + CSRF state store (gear-stack 036+037) | `done` |

@@ -1,16 +1,56 @@
 import { JWT_STORE_KEY } from '@/shared/config/config'
 import { apiClient } from '@/shared/services/apiClient'
 import type {
+  IAgentAdminListResponse,
   IAgentChatRequest,
+  IAgentCreateRequest,
+  IAgentDetail,
+  IAgentListResponse,
   IAgentRun,
   IAgentRunsListResponse,
   IAgentSessionDetail,
   IAgentSessionsListResponse,
   IAgentStreamCompleteEvent,
   IAgentStreamStepEvent,
+  IAgentUpdateRequest,
 } from '@/modules/workspace/types/agent'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+
+export async function listAgents(): Promise<IAgentListResponse> {
+  const response = await apiClient.get<IAgentListResponse>('/agent/agents')
+  return response.data
+}
+
+export async function listAgentsManage(): Promise<IAgentAdminListResponse> {
+  const response = await apiClient.get<IAgentAdminListResponse>('/agent/agents/manage')
+  return response.data
+}
+
+export async function getAgentManage(agentId: string): Promise<IAgentDetail> {
+  const response = await apiClient.get<IAgentDetail>(`/agent/agents/manage/${agentId}`)
+  return response.data
+}
+
+export async function createAgent(body: IAgentCreateRequest): Promise<IAgentDetail> {
+  const response = await apiClient.post<IAgentDetail>('/agent/agents', body)
+  return response.data
+}
+
+export async function updateAgent(
+  agentId: string,
+  body: IAgentUpdateRequest,
+): Promise<IAgentDetail> {
+  const response = await apiClient.patch<IAgentDetail>(`/agent/agents/${agentId}`, body)
+  return response.data
+}
+
+export async function setDefaultAgent(agentId: string): Promise<IAgentDetail> {
+  const response = await apiClient.post<IAgentDetail>(
+    `/agent/agents/${agentId}/set-default`,
+  )
+  return response.data
+}
 
 export async function streamAgentChat(
   request: IAgentChatRequest,
@@ -29,7 +69,7 @@ export async function streamAgentChat(
     },
     body: JSON.stringify({
       message: request.message,
-      agentKey: request.agentKey ?? 'github-workspace',
+      agentKey: request.agentKey ?? undefined,
       model: request.model,
       sessionId: request.sessionId ?? undefined,
       attachmentIds: request.attachmentIds?.length

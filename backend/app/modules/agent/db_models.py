@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -99,10 +99,52 @@ class AgentRunStepDB(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
 
+class AgentDB(Base):
+    """Tenant-scoped agent definition (MVP dec. #10–11)."""
+
+    __tablename__ = "agents"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    key: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    system_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    effort: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    tool_profile: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
+    memory_scopes: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
+    rag_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    routing_hints: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="tenant")
+    team_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    limits: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    guardrails: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+
 class ChatAttachment(Base):
     """Uploaded file attached to a chat message / agent run."""
 
     __tablename__ = "chat_attachments"
+
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     owner_user_id: Mapped[str] = mapped_column(

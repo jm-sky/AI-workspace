@@ -1,9 +1,10 @@
 # Issue 023 — Agent routing (auto-router + 2–3 agenci)
 
 **Data:** 2026-07-20  
-**Status:** `planned`  
+**Status:** `done`  
 **Priorytet:** P0  
 **Faza MVP:** 3/5 (dec. #9 — hybryda; auto-router przyspieszony)  
+**Plan:** [008 — Faza 3](../plans/2026-07-23--008--phase-3-agent-editor.md) — Chunk A ✅ (jawny wybór); Chunk B ✅ (edytor); auto-router LLM → Faza 5  
 **Wzorzec Kancelarii:** [#069](../../../ai-kancelaria/docs/alfa/issues/2026-069-routing-pattern.md) — u nich to **filtr tooli po intencji** w jednym agencie; u nas cel = **wybór agenta** (prompt + lista tooli)
 
 ## Cel
@@ -46,5 +47,5 @@ Przykładowy zestaw na dogfooding (do potwierdzenia):
 
 ## Poza zakresem
 
-- Pełny edytor agentów dla adminów (Faza 3 — osobny chunk).
+- Pełny edytor agentów dla adminów — **Chunk B** w [plan 008](../plans/2026-07-23--008--phase-3-agent-editor.md).
 - Sub-agenty równoległe (Kancelaria #072) — osobna decyzja.

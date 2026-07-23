@@ -1,8 +1,11 @@
 """Build tool registry for a user session."""
 
+from collections.abc import Sequence
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.modules.agent.registry import BUILTIN_AGENTS, get_builtin_agent, get_default_agent_key
 from app.modules.agent.tools.base import AgentToolRegistry
 from app.modules.agent.tools.github import build_github_mcp_tools
 from app.modules.agent.tools.gitlab import GitLabSearchByJiraKeyTool
@@ -14,18 +17,28 @@ from app.modules.agent.tools.tool_search import ToolSearchTool
 from app.modules.integrations.service import IntegrationTokenService
 from app.modules.tenants.service import TenantContext
 
+# Backward-compatible map derived from the built-in registry (tests / callers).
 AGENT_TOOL_PROFILES: dict[str, list[str]] = {
-    # Profile = default / quick tools. Provider MCP buckets (github, gmail, …)
-    # can later be discoverable across agents via tool_search; for now wire
-    # gmail into the primary workspace agent.
-    "github-workspace": ["github", "gmail", "memory", "rag"],
-    "jira-360": ["jira", "gitlab", "memory", "rag"],
+    key: list(agent.tool_profile) for key, agent in BUILTIN_AGENTS.items()
 }
 
 # Always loaded when tool search mode is active (profile tools may be deferred).
 CORE_TOOL_NAMES: frozenset[str] = frozenset(
     {"tool_search", "memory_search", "memory_save", "memory_update"}
 )
+
+
+def _resolve_tool_profile(
+    agent_key: str,
+    tool_profile: Sequence[str] | None,
+) -> list[str]:
+    if tool_profile is not None:
+        return list(tool_profile)
+    agent = get_builtin_agent(agent_key)
+    if agent is not None:
+        return list(agent.tool_profile)
+    fallback = get_builtin_agent(get_default_agent_key())
+    return list(fallback.tool_profile) if fallback else ["memory"]
 
 
 def build_tool_registry(
@@ -36,6 +49,7 @@ def build_tool_registry(
     agent_key: str = "github-workspace",
     session_id: str | None = None,
     rag_enabled: bool = False,
+    tool_profile: Sequence[str] | None = None,
 ) -> AgentToolRegistry:
     """Create in-process MCP-compatible tools with per-user token injection.
 
@@ -43,7 +57,7 @@ def build_tool_registry(
     only core tools (+ ``tool_search``) are exposed initially; the rest are
     deferred until discovered via search.
     """
-    profile = AGENT_TOOL_PROFILES.get(agent_key, ["github", "memory", "rag"])
+    profile = _resolve_tool_profile(agent_key, tool_profile)
     tools = []
 
     if "github" in profile:

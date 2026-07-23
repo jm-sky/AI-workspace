@@ -22,6 +22,7 @@ const route = useRoute()
 const router = useRouter()
 const input = ref('')
 const auditOpen = ref(false)
+const selectedAgentKey = ref('')
 
 const { getSelectedModelId, hasValidModel, selectedModel } = useWorkspaceModels()
 const { error: sessionsError, loadSessions } = useAgentSessions()
@@ -47,12 +48,21 @@ const {
   activeRunId,
   activeRun,
   activeSessionId,
+  sessionAgentKey,
   error,
   sendMessage,
   loadSession,
   copyActiveRun,
   clearChat,
-} = useAgentChat(getSelectedModelId)
+} = useAgentChat(getSelectedModelId, () => selectedAgentKey.value || undefined)
+
+watch(sessionAgentKey, (key) => {
+  if (key) selectedAgentKey.value = key
+})
+
+const agentLocked = computed(
+  () => Boolean(activeSessionId.value) || messages.value.length > 0,
+)
 
 const setSessionQuery = async (sessionId?: string) => {
   await router.replace({
@@ -133,9 +143,11 @@ const handleCopyRun = async () => {
       <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div class="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-2 px-3 py-3 sm:px-4">
           <ChatToolbar
+            v-model:agent-key="selectedAgentKey"
             :active-run="activeRun"
             :step-count="steps.length"
             :audit-open="auditOpen"
+            :agent-locked="agentLocked"
             @open-audit="auditOpen = true"
           />
 
@@ -199,7 +211,7 @@ const handleCopyRun = async () => {
                       :src="att.previewUrl"
                       :alt="att.originalFilename"
                       class="size-16 rounded-lg object-cover"
-                    >
+                    />
                     <span
                       v-else
                       class="rounded-lg border border-hairline bg-muted px-2 py-1 text-xs"

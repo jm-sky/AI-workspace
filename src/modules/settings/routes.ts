@@ -6,6 +6,7 @@ export const SettingsRoutePaths = {
   security: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/security`,
   connections: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/connections`,
   storage: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/storage`,
+  agents: `${import.meta.env.VITE_SETTINGS_PATH ?? '/settings'}/agents`,
   integrationsOAuthCallback:
     import.meta.env.VITE_INTEGRATIONS_OAUTH_CALLBACK_PATH
     ?? '/settings/integrations/callback/:provider',
@@ -17,6 +18,7 @@ export const SettingsRouteNames = {
   security: 'settings-security',
   connections: 'settings-connections',
   storage: 'settings-storage',
+  agents: 'settings-agents',
   integrationsOAuthCallback: 'integrations-oauth-callback',
 } as const
 
@@ -50,6 +52,12 @@ export const settingsRoutes: RouteRecordRaw[] = [
         name: SettingsRouteNames.connections,
         component: () => import('@/modules/settings/pages/ConnectionsSettingsPage.vue'),
         meta: { title: 'settings.nav.connections' },
+      },
+      {
+        path: 'agents',
+        name: SettingsRouteNames.agents,
+        component: () => import('@/modules/settings/pages/AgentsSettingsPage.vue'),
+        meta: { title: 'settings.nav.agents' },
       },
       {
         path: 'storage',
