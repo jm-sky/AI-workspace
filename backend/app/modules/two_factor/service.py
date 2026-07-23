@@ -59,7 +59,7 @@ class TwoFactorService:
 
         Delegates to ``AuthService._issue_login_tokens`` (the same helper the
         password/OAuth login paths use) so these tokens carry the same `tv`
-        (token version) and `jti` (session id) claims — and, in AI-workspace,
+        (token version) and `jti` (session id) claims — and, in ai-workspace,
         workspace claims. Without `tv`/`jti`, `_verify_user_token` rejects
         every request from a user whose `tokenVersion` isn't 0 (e.g. anyone
         who ever reset their password) with 401 "Token has been revoked"

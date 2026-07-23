@@ -11,7 +11,7 @@ W gear-stack naprawiono dwa powiązane problemy bezpieczeństwa w ścieżce OAut
 1. **036 — session / 2FA parity** — `login_with_oauth` mintował tokeny poza `_issue_login_tokens` (brak `jti`/`tv`/session tracking) i `AuthServiceWith2FA` nie override'ował OAuth, więc konta z 2FA omijały challenge.
 2. **037 — CSRF `state`** — backend generował `state`, ale callback go nigdy nie weryfikował (tylko frontend).
 
-AI-workspace już wołał `_issue_login_tokens` w OAuth (wraz z `ensure_personal_workspace` + workspace claims), więc backport 036 to głównie: wydzielenie `_resolve_oauth_user`, override 2FA dla OAuth, oraz jawne `requiresEmailVerification=False`.
+ai-workspace już wołał `_issue_login_tokens` w OAuth (wraz z `ensure_personal_workspace` + workspace claims), więc backport 036 to głównie: wydzielenie `_resolve_oauth_user`, override 2FA dla OAuth, oraz jawne `requiresEmailVerification=False`.
 
 ## Zmiany
 

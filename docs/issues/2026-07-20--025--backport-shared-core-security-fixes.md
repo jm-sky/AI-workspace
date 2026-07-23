@@ -2,11 +2,11 @@
 
 **Data:** 2026-07-20
 **Status:** `done` (2026-07-20)
-**Źródło:** [.docs/issues/2026-07-20--016--project-review-sweep.md](../../../.docs/issues/2026-07-20--016--project-review-sweep.md) (meta-repo) — review ops-monitor wykrył, że 5 z 6 findings to bugi w gear-stack (źródle prawdy rodziny), nie regresja ops-monitor. Naprawione najpierw w gear-stack, potem backportowane 1:1 do ops-monitor i zbory-chwz, teraz do AI-workspace.
+**Źródło:** [.docs/issues/2026-07-20--016--project-review-sweep.md](../../../.docs/issues/2026-07-20--016--project-review-sweep.md) (meta-repo) — review ops-monitor wykrył, że 5 z 6 findings to bugi w gear-stack (źródle prawdy rodziny), nie regresja ops-monitor. Naprawione najpierw w gear-stack, potem backportowane 1:1 do ops-monitor i zbory-chwz, teraz do ai-workspace.
 
 ## Kontekst
 
-Wszystkie poniższe znaleziska zweryfikowano jako identycznie obecne w AI-workspace przed backportem (nie zakładano na podstawie samego wzorca — sprawdzono kod plik po pliku; większość plików była bajt-w-bajt identyczna z oryginałem gear-stack sprzed poprawki).
+Wszystkie poniższe znaleziska zweryfikowano jako identycznie obecne w ai-workspace przed backportem (nie zakładano na podstawie samego wzorca — sprawdzono kod plik po pliku; większość plików była bajt-w-bajt identyczna z oryginałem gear-stack sprzed poprawki).
 
 ## Zmiany
 
@@ -30,4 +30,4 @@ Wszystkie poniższe znaleziska zweryfikowano jako identycznie obecne w AI-worksp
 
 ## Uwaga
 
-Ten backport nie dotyczy modułów specyficznych dla AI-workspace (`agent`, `tenants`, `teams`, `workspace_config`, `integrations`) — obejmuje wyłącznie shared-core auth/2FA/admin/rate-limiting odziedziczone z gear-stack.
+Ten backport nie dotyczy modułów specyficznych dla ai-workspace (`agent`, `tenants`, `teams`, `workspace_config`, `integrations`) — obejmuje wyłącznie shared-core auth/2FA/admin/rate-limiting odziedziczone z gear-stack.

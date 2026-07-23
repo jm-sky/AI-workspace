@@ -8,7 +8,7 @@ export const config = {
     name: import.meta.env.VITE_APP_NAME ?? 'AI Workspace',
     description: import.meta.env.VITE_APP_DESCRIPTION ?? 'AI-native workspace for organizations — chat-first agent platform.',
     // Public repo URL for the footer GitHub link; set to null to hide the link
-    githubUrl: 'https://github.com/jm-sky/AI-workspace' as string | null,
+    githubUrl: 'https://github.com/jm-sky/ai-workspace' as string | null,
   },
   i18n: {
     defaultLocale: (import.meta.env.VITE_DEFAULT_LOCALE ?? 'en') as SupportedLocale,

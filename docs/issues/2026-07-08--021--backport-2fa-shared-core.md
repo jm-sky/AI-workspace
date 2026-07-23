@@ -11,7 +11,7 @@ Backport z rodziny core (gear-stack jako źródło) — bez dedykowanego promptu
 
 ## Decyzja
 
-AI-workspace dziedziczy boilerplate gear-stack. Poprawki 2FA i UX z referencji muszą być zsynchronizowane, żeby auth i logowanie zachowywały się tak samo jak w pozostałych apkach VPS.
+ai-workspace dziedziczy boilerplate gear-stack. Poprawki 2FA i UX z referencji muszą być zsynchronizowane, żeby auth i logowanie zachowywały się tak samo jak w pozostałych apkach VPS.
 
 ## Implementacja
 
