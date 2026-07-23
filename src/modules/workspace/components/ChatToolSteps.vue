@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  BookOpen,
   Brain,
   Check,
   Github,
@@ -32,6 +33,7 @@ const PROVIDER_ICON: Record<string, Component> = {
   gitlab: Gitlab,
   github: Github,
   memory: Brain,
+  rag: BookOpen,
 }
 
 const providerOf = (tool: string): string => {

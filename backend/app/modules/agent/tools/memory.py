@@ -1,4 +1,4 @@
-"""Memory tools for the agent loop (search + save)."""
+"""Memory tools for the agent loop (search + save + update)."""
 
 from typing import Any
 
@@ -145,3 +145,94 @@ class MemorySaveTool(AgentTool):
             source=MemorySource.AGENT.value,
         )
         return {"saved": True, "id": entry.id, "scope": entry.scope}
+
+
+class MemoryUpdateTool(AgentTool):
+    """Update an existing memory entry (correct or refine a fact)."""
+
+    def __init__(
+        self,
+        *,
+        tenant_ctx: TenantContext,
+        db: AsyncSession,
+        agent_key: str,
+        session_id: str | None = None,
+    ):
+        self.tenant_ctx = tenant_ctx
+        self.memory_service = MemoryService(db)
+        self.agent_key = agent_key
+        self.session_id = session_id
+
+    @property
+    def definition(self) -> AgentToolDefinition:
+        return AgentToolDefinition(
+            name="memory_update",
+            description=(
+                "Update an existing memory by id after memory_search. "
+                "Use to correct or refine a fact instead of saving a duplicate."
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Memory entry id from memory_search",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Updated memory text",
+                    },
+                    "scope": {
+                        "type": "string",
+                        "enum": ["user", "agent", "session"],
+                        "description": "Optional new scope",
+                    },
+                },
+                "required": ["id"],
+            },
+        )
+
+    async def execute(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        if not settings.ai.memory_enabled:
+            return {"updated": False, "message": "Memory is disabled"}
+
+        entry_id = str(arguments.get("id", "")).strip()
+        if not entry_id:
+            return {"error": "id is required"}
+
+        content_raw = arguments.get("content")
+        content = str(content_raw).strip() if content_raw is not None else None
+        if content_raw is not None and not content:
+            return {"error": "content must not be empty"}
+
+        scope = arguments.get("scope")
+        if scope is not None:
+            scope = str(scope)
+
+        if content is None and scope is None:
+            return {"error": "at least one of content or scope is required"}
+
+        agent_key = self.agent_key if scope == MemoryScope.AGENT.value else None
+        session_id = self.session_id if scope == MemoryScope.SESSION.value else None
+
+        try:
+            entry = await self.memory_service.update_entry(
+                tenant_ctx=self.tenant_ctx,
+                entry_id=entry_id,
+                content=content,
+                scope=scope,
+                agent_key=agent_key,
+                session_id=session_id,
+            )
+        except ValueError as exc:
+            return {"error": str(exc)}
+
+        if entry is None:
+            return {"error": "Memory not found"}
+
+        return {
+            "updated": True,
+            "id": entry.id,
+            "scope": entry.scope,
+            "content": entry.content,
+        }

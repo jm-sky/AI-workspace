@@ -209,7 +209,7 @@ Zajęte dziś: app `8003`, Postgres `5435`, Redis `6382`, Vite `5176`.
 | ID | Krok | Treść |
 |----|------|--------|
 | docs-research-buy-vs-build | 2–3 | Research spike LightRAG vs Graphiti vs Flexible + wpis research |
-| gate-rag-basics | 2 | Domknąć podstawy RAG (retrieval, ACL, memory UPDATE) |
+| gate-rag-basics | 2 | Domknąć podstawy RAG (retrieval, ACL, memory UPDATE). **✅ done** — UPDATE ([005](2026-07-23--005--memory-update.md)) + retrieval/chunki ([006](2026-07-23--006--rag-retrieval-chunks.md)) |
 | spike-docker-mcp | 3 | Spike LightRAG 1–2 dni (metryki + porty powyżej) |
 | decide-path | 3 | Go/no-go LightRAG; aktualizacja MVP.md |
 | path-mcp-or-pages | 3 | Migracja `wiki_pages`/`wiki_links` + serwis + toole (+ adapter LightRAG jeśli go) |

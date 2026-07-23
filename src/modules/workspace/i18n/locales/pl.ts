@@ -39,8 +39,13 @@ export const workspacePl = {
       total: '{count} wspomnień',
       saved: 'Zapisano w pamięci',
       saveFailed: 'Nie udało się zapisać',
+      updated: 'Zaktualizowano wspomnienie',
+      updateFailed: 'Nie udało się zaktualizować',
       deleted: 'Usunięto wspomnienie',
       deleteFailed: 'Nie udało się usunąć',
+      edit: 'Edytuj',
+      saveEdit: 'Zapisz',
+      cancelEdit: 'Anuluj',
       delete: 'Usuń',
       similarity: 'podobieństwo {value}',
       scopes: {

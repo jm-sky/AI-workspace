@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Brain, Search, Trash2 } from 'lucide-vue-next'
+import { Brain, Check, Pencil, Search, Trash2, X } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
@@ -16,12 +16,15 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import ChatLayout from '@/layouts/ChatLayout.vue'
 import { useMemoryBrowser } from '@/modules/workspace/composables/useMemoryBrowser'
-import type { MemoryScope } from '@/modules/workspace/types/memory'
+import type { IMemoryEntry, MemoryScope } from '@/modules/workspace/types/memory'
 
 const { t } = useI18n()
 
 const newContent = ref('')
 const newScope = ref<MemoryScope>('user')
+const editingId = ref<string | null>(null)
+const editContent = ref('')
+const editScope = ref<MemoryScope>('user')
 
 const {
   total,
@@ -35,6 +38,7 @@ const {
   loadEntries,
   runSemanticSearch,
   addMemory,
+  editMemory,
   removeMemory,
 } = useMemoryBrowser()
 
@@ -58,9 +62,37 @@ const handleAdd = async () => {
   }
 }
 
+const startEdit = (entry: IMemoryEntry) => {
+  editingId.value = entry.id
+  editContent.value = entry.content
+  editScope.value = entry.scope === 'session' ? 'user' : entry.scope
+}
+
+const cancelEdit = () => {
+  editingId.value = null
+  editContent.value = ''
+  editScope.value = 'user'
+}
+
+const handleSaveEdit = async () => {
+  const entryId = editingId.value
+  const content = editContent.value.trim()
+  if (!entryId || !content) return
+  try {
+    await editMemory(entryId, content, editScope.value)
+    cancelEdit()
+    toast.success(t('workspace.memory.updated'))
+  } catch {
+    toast.error(t('workspace.memory.updateFailed'))
+  }
+}
+
 const handleDelete = async (entryId: string) => {
   try {
     await removeMemory(entryId)
+    if (editingId.value === entryId) {
+      cancelEdit()
+    }
     toast.success(t('workspace.memory.deleted'))
   } catch {
     toast.error(t('workspace.memory.deleteFailed'))
@@ -185,7 +217,52 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
             :key="entry.id"
             class="flex items-start justify-between gap-3 p-4"
           >
-            <div class="min-w-0 flex-1 space-y-1">
+            <div
+              v-if="editingId === entry.id"
+              class="min-w-0 flex-1 space-y-2"
+            >
+              <Textarea
+                v-model="editContent"
+                rows="3"
+                :aria-label="t('workspace.memory.edit')"
+              />
+              <div class="flex flex-wrap items-center gap-2">
+                <Select v-model="editScope">
+                  <SelectTrigger class="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">
+                      {{ t('workspace.memory.scopes.user') }}
+                    </SelectItem>
+                    <SelectItem value="agent">
+                      {{ t('workspace.memory.scopes.agent') }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  :disabled="isSaving || !editContent.trim()"
+                  @click="handleSaveEdit"
+                >
+                  <Check class="size-4" />
+                  {{ t('workspace.memory.saveEdit') }}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  :disabled="isSaving"
+                  @click="cancelEdit"
+                >
+                  <X class="size-4" />
+                  {{ t('workspace.memory.cancelEdit') }}
+                </Button>
+              </div>
+            </div>
+            <div
+              v-else
+              class="min-w-0 flex-1 space-y-1"
+            >
               <p class="text-sm whitespace-pre-wrap">
                 {{ entry.content }}
               </p>
@@ -200,14 +277,27 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString()
                 <span>{{ formatDate(entry.createdAt) }}</span>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              :aria-label="t('workspace.memory.delete')"
-              @click="handleDelete(entry.id)"
+            <div
+              v-if="editingId !== entry.id"
+              class="flex shrink-0 gap-1"
             >
-              <Trash2 class="size-4 text-destructive" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                :aria-label="t('workspace.memory.edit')"
+                @click="startEdit(entry)"
+              >
+                <Pencil class="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                :aria-label="t('workspace.memory.delete')"
+                @click="handleDelete(entry.id)"
+              >
+                <Trash2 class="size-4 text-destructive" />
+              </Button>
+            </div>
           </li>
         </ul>
       </div>

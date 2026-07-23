@@ -7,9 +7,9 @@ from typing import Any
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.common.embeddings import EmbeddingService
 from app.common.id_utils import generate_id
 from app.modules.memory.db_models import MemoryEntry
-from app.modules.memory.services.embedding_service import EmbeddingService
 
 
 class MemoryRepository:
@@ -104,6 +104,84 @@ class MemoryRepository:
             return False
         await self.db.delete(entry)
         return True
+
+    async def update(
+        self,
+        entry_id: str,
+        *,
+        tenant_id: str,
+        user_id: str,
+        content: str | None = None,
+        scope: str | None = None,
+        agent_key: str | None = None,
+        session_id: str | None = None,
+        clear_agent_key: bool = False,
+        clear_session_id: bool = False,
+        metadata: dict[str, Any] | None = None,
+        update_metadata: bool = False,
+        embedding: list[float] | None = None,
+    ) -> MemoryEntry | None:
+        """Partial update with optional re-embedding. ACL via tenant_id + user_id."""
+        entry = await self.get_by_id(entry_id, tenant_id=tenant_id, user_id=user_id)
+        if entry is None:
+            return None
+
+        now = datetime.now(UTC)
+        set_parts = ["updated_at = :updated_at"]
+        params: dict[str, Any] = {
+            "id": entry_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "updated_at": now,
+        }
+
+        if content is not None:
+            set_parts.append("content = :content")
+            params["content"] = content
+            entry.content = content
+
+        if scope is not None:
+            set_parts.append("scope = :scope")
+            params["scope"] = scope
+            entry.scope = scope
+
+        if clear_agent_key:
+            set_parts.append("agent_key = NULL")
+            entry.agent_key = None
+        elif agent_key is not None:
+            set_parts.append("agent_key = :agent_key")
+            params["agent_key"] = agent_key
+            entry.agent_key = agent_key
+
+        if clear_session_id:
+            set_parts.append("session_id = NULL")
+            entry.session_id = None
+        elif session_id is not None:
+            set_parts.append("session_id = :session_id")
+            params["session_id"] = session_id
+            entry.session_id = session_id
+
+        if update_metadata:
+            set_parts.append("entry_metadata = CAST(:metadata AS jsonb)")
+            params["metadata"] = json.dumps(metadata) if metadata is not None else None
+            entry.entry_metadata = metadata
+
+        if embedding is not None:
+            set_parts.append("embedding = CAST(:embedding AS vector)")
+            params["embedding"] = EmbeddingService.vector_to_pg_literal(embedding)
+
+        await self.db.execute(
+            text(f"""
+                UPDATE memory_entries
+                SET {', '.join(set_parts)}
+                WHERE id = :id
+                  AND tenant_id = :tenant_id
+                  AND user_id = :user_id
+                """),
+            params,
+        )
+        entry.updated_at = now
+        return entry
 
     async def list_entries(
         self,

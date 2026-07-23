@@ -64,7 +64,8 @@ class AgentRunService:
         user_id: str,
         tenant_ctx: TenantContext,
         requested_model: str | None,
-    ) -> str:
+    ) -> tuple[str, bool]:
+        """Return ``(resolved_model, rag_enabled)`` for the workspace."""
         effective = await self.config_resolver.resolve(
             user_id=user_id,
             tenant_id=tenant_ctx.tenant_id,
@@ -84,11 +85,11 @@ class AgentRunService:
                 raise AgentNotConfiguredError("No model configured for workspace")
             if has_live_catalog() and not get_model_by_id(model):
                 raise AgentNotConfiguredError(f"Unknown model for workspace: {model}")
-            return model
+            return model, effective.ragEnabled
 
         if model and model in effective.allowedModels:
-            return model
-        return effective.allowedModels[0]
+            return model, effective.ragEnabled
+        return effective.allowedModels[0], effective.ragEnabled
 
     def _system_prompt(self, agent_key: str) -> str:
         prompt = AGENT_PROMPTS.get(agent_key)
@@ -105,7 +106,7 @@ class AgentRunService:
         model: str | None = None,
         session_id: str | None = None,
     ) -> AsyncIterator[AgentLoopEvent]:
-        resolved_model = await self._resolve_model(
+        resolved_model, rag_enabled = await self._resolve_model(
             user_id=tenant_ctx.user_id,
             tenant_ctx=tenant_ctx,
             requested_model=model,
@@ -145,6 +146,7 @@ class AgentRunService:
             db=self.db,
             agent_key=agent_key,
             session_id=session_id,
+            rag_enabled=rag_enabled,
         )
 
         system_prompt = await self._build_system_prompt(

@@ -9,7 +9,7 @@ services:
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-backend}
       - POSTGRES_USER=${POSTGRES_USER:-backend}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ai-workspace-db-secret}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
     volumes:
       - ai_workspace_postgres_data:/var/lib/postgresql/data
     ports:
@@ -33,7 +33,7 @@ services:
     container_name: ai-workspace-redis
     restart: unless-stopped
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-ai-workspace-redis-secret}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
     ports:
       - "127.0.0.1:${REDIS_FORWARD_PORT:-6382}:6379"  # Only localhost access
     volumes:
@@ -41,11 +41,11 @@ services:
     command: >
       redis-server
       --appendonly yes
-      --requirepass ${REDIS_PASSWORD:-ai-workspace-redis-secret}
+      --requirepass ${REDIS_PASSWORD:-changeme}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD:-ai-workspace-redis-secret} ping | grep PONG"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD:-changeme} ping | grep PONG"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -79,8 +79,8 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - PROJECT_NAME=${PROJECT_NAME:-ai-workspace}
       - APP_PORT=${APP_PORT:-8000}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-ai-workspace-db-secret}@db:5432/${POSTGRES_DB:-backend}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-ai-workspace-redis-secret}@redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-backend}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-backend}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
       - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
     ports:
       - "127.0.0.1:${APP_PORT:-8003}:8000"  # Only localhost access (Caddy proxy)

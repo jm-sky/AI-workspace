@@ -202,23 +202,34 @@ def test_build_tool_registry_below_threshold_no_search():
             "app.modules.agent.tools.MemorySaveTool",
             side_effect=lambda **kw: _StubTool("memory_save", "Save memory"),
         ),
+        patch(
+            "app.modules.agent.tools.MemoryUpdateTool",
+            side_effect=lambda **kw: _StubTool("memory_update", "Update memory"),
+        ),
+        patch(
+            "app.modules.agent.tools.RagSearchTool",
+            side_effect=lambda **kw: _StubTool("rag_search", "Search documents"),
+        ),
         patch("app.modules.agent.tools.settings") as mock_settings,
     ):
         mock_settings.ai.tool_search_enabled = True
         mock_settings.ai.tool_search_threshold = 15
         mock_settings.ai.tool_search_top_k = 5
 
-        # Only 2 memory tools → below threshold
+        # Memory + rag tools → still below threshold
         registry = build_tool_registry(
             tenant_ctx=fake_ctx,  # type: ignore[arg-type]
             token_service=fake_token,  # type: ignore[arg-type]
             db=fake_db,  # type: ignore[arg-type]
             agent_key="github-workspace",
+            rag_enabled=True,
         )
 
     names = {t["function"]["name"] for t in registry.openai_tools()}
     assert "tool_search" not in names
     assert "memory_search" in names
+    assert "memory_update" in names
+    assert "rag_search" in names
     assert not registry.has_deferred()
 
 
@@ -245,6 +256,14 @@ def test_build_tool_registry_above_threshold_defers():
             "app.modules.agent.tools.MemorySaveTool",
             side_effect=lambda **kw: _StubTool("memory_save", "Save memory"),
         ),
+        patch(
+            "app.modules.agent.tools.MemoryUpdateTool",
+            side_effect=lambda **kw: _StubTool("memory_update", "Update memory"),
+        ),
+        patch(
+            "app.modules.agent.tools.RagSearchTool",
+            side_effect=lambda **kw: _StubTool("rag_search", "Search documents"),
+        ),
         patch("app.modules.agent.tools.settings") as mock_settings,
     ):
         mock_settings.ai.tool_search_enabled = True
@@ -256,9 +275,17 @@ def test_build_tool_registry_above_threshold_defers():
             token_service=object(),  # type: ignore[arg-type]
             db=object(),  # type: ignore[arg-type]
             agent_key="github-workspace",
+            rag_enabled=True,
         )
 
     active = {t["function"]["name"] for t in registry.openai_tools()}
-    assert active == {"tool_search", "memory_search", "memory_save"}
+    assert active == {
+        "tool_search",
+        "memory_search",
+        "memory_save",
+        "memory_update",
+    }
+    assert "rag_search" not in active
     assert registry.has_deferred()
-    assert len(registry.all_openai_tools()) == 13  # 10 github + 2 memory + tool_search
+    # 10 github + 3 memory + 1 rag + tool_search
+    assert len(registry.all_openai_tools()) == 15

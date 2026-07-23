@@ -7,19 +7,20 @@ from app.modules.agent.tools.base import AgentToolRegistry
 from app.modules.agent.tools.github import build_github_mcp_tools
 from app.modules.agent.tools.gitlab import GitLabSearchByJiraKeyTool
 from app.modules.agent.tools.jira import JiraGetIssueTool
-from app.modules.agent.tools.memory import MemorySaveTool, MemorySearchTool
+from app.modules.agent.tools.memory import MemorySaveTool, MemorySearchTool, MemoryUpdateTool
+from app.modules.agent.tools.rag import RagSearchTool
 from app.modules.agent.tools.tool_search import ToolSearchTool
 from app.modules.integrations.service import IntegrationTokenService
 from app.modules.tenants.service import TenantContext
 
 AGENT_TOOL_PROFILES: dict[str, list[str]] = {
-    "github-workspace": ["github", "memory"],
-    "jira-360": ["jira", "gitlab", "memory"],
+    "github-workspace": ["github", "memory", "rag"],
+    "jira-360": ["jira", "gitlab", "memory", "rag"],
 }
 
 # Always loaded when tool search mode is active (profile tools may be deferred).
 CORE_TOOL_NAMES: frozenset[str] = frozenset(
-    {"tool_search", "memory_search", "memory_save"}
+    {"tool_search", "memory_search", "memory_save", "memory_update"}
 )
 
 
@@ -30,6 +31,7 @@ def build_tool_registry(
     db: AsyncSession,
     agent_key: str = "github-workspace",
     session_id: str | None = None,
+    rag_enabled: bool = False,
 ) -> AgentToolRegistry:
     """Create in-process MCP-compatible tools with per-user token injection.
 
@@ -37,7 +39,7 @@ def build_tool_registry(
     only core tools (+ ``tool_search``) are exposed initially; the rest are
     deferred until discovered via search.
     """
-    profile = AGENT_TOOL_PROFILES.get(agent_key, ["github", "memory"])
+    profile = AGENT_TOOL_PROFILES.get(agent_key, ["github", "memory", "rag"])
     tools = []
 
     if "github" in profile:
@@ -61,7 +63,21 @@ def build_tool_registry(
                     agent_key=agent_key,
                     session_id=session_id,
                 ),
+                MemoryUpdateTool(
+                    tenant_ctx=tenant_ctx,
+                    db=db,
+                    agent_key=agent_key,
+                    session_id=session_id,
+                ),
             ]
+        )
+    if "rag" in profile:
+        tools.append(
+            RagSearchTool(
+                tenant_ctx=tenant_ctx,
+                db=db,
+                rag_enabled=rag_enabled,
+            )
         )
 
     registry = AgentToolRegistry(tools=tools)

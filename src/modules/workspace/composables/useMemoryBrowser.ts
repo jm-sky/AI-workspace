@@ -4,9 +4,16 @@ import {
   deleteMemory,
   listMemories,
   searchMemories,
+  updateMemory,
 } from '@/modules/workspace/services/memoryApiService'
 import { getApiErrorMessage } from '@/shared/utils/apiError'
-import type { IMemoryEntry, MemoryScope } from '@/modules/workspace/types/memory'
+import type {
+  IMemoryEntry,
+  IMemoryUpdateRequest,
+  MemoryScope,
+} from '@/modules/workspace/types/memory'
+
+const DEFAULT_AGENT_KEY = 'github-workspace'
 
 export function useMemoryBrowser() {
   const entries = ref<IMemoryEntry[]>([])
@@ -25,6 +32,15 @@ export function useMemoryBrowser() {
     }
     return entries.value
   })
+
+  const replaceEntry = (updated: IMemoryEntry) => {
+    entries.value = entries.value.map((entry) =>
+      entry.id === updated.id ? updated : entry,
+    )
+    semanticResults.value = semanticResults.value.map((entry) =>
+      entry.id === updated.id ? updated : entry,
+    )
+  }
 
   const loadEntries = async () => {
     isLoading.value = true
@@ -84,6 +100,32 @@ export function useMemoryBrowser() {
     }
   }
 
+  const editMemory = async (
+    entryId: string,
+    content: string,
+    scope: MemoryScope,
+  ) => {
+    isSaving.value = true
+    error.value = null
+    try {
+      const payload: IMemoryUpdateRequest = {
+        content: content.trim(),
+        scope,
+      }
+      if (scope === 'agent') {
+        payload.agentKey = DEFAULT_AGENT_KEY
+      }
+      const updated = await updateMemory(entryId, payload)
+      replaceEntry(updated)
+      return updated
+    } catch (err) {
+      error.value = getApiErrorMessage(err, 'Failed to update memory')
+      throw err
+    } finally {
+      isSaving.value = false
+    }
+  }
+
   const removeMemory = async (entryId: string) => {
     error.value = null
     try {
@@ -110,6 +152,7 @@ export function useMemoryBrowser() {
     loadEntries,
     runSemanticSearch,
     addMemory,
+    editMemory,
     removeMemory,
   }
 }

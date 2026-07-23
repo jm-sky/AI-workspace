@@ -39,8 +39,13 @@ export const workspaceEn = {
       total: '{count} memories',
       saved: 'Memory saved',
       saveFailed: 'Failed to save memory',
+      updated: 'Memory updated',
+      updateFailed: 'Failed to update memory',
       deleted: 'Memory deleted',
       deleteFailed: 'Failed to delete memory',
+      edit: 'Edit',
+      saveEdit: 'Save',
+      cancelEdit: 'Cancel',
       delete: 'Delete',
       similarity: 'similarity {value}',
       scopes: {

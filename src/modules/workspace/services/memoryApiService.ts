@@ -4,6 +4,7 @@ import type {
   IMemoryEntry,
   IMemoryListResponse,
   IMemorySearchRequest,
+  IMemoryUpdateRequest,
   MemoryScope,
 } from '@/modules/workspace/types/memory'
 
@@ -30,6 +31,14 @@ export async function createMemory(
   request: IMemoryCreateRequest,
 ): Promise<IMemoryEntry> {
   const response = await apiClient.post<IMemoryEntry>('/memory', request)
+  return response.data
+}
+
+export async function updateMemory(
+  entryId: string,
+  request: IMemoryUpdateRequest,
+): Promise<IMemoryEntry> {
+  const response = await apiClient.patch<IMemoryEntry>(`/memory/${entryId}`, request)
   return response.data
 }
 

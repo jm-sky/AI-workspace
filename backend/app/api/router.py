@@ -12,6 +12,7 @@ from app.modules.feature_limits.router import router as feature_limits_router
 from app.modules.integrations.router import router as integrations_router
 from app.modules.logs.router import router as logs_router
 from app.modules.memory.router import router as memory_router
+from app.modules.rag.router import router as rag_router
 from app.modules.settings.router import router as settings_router
 from app.modules.teams.router import router as teams_router
 from app.modules.tenants.router import router as tenants_router
@@ -61,6 +62,7 @@ api_router.include_router(workspace_config_router)
 api_router.include_router(ai_models_router, prefix="/ai", tags=["AI Models"])
 api_router.include_router(integrations_router)
 api_router.include_router(memory_router)
+api_router.include_router(rag_router)
 
 try:
     from app.modules.two_factor.router import router as two_factor_router

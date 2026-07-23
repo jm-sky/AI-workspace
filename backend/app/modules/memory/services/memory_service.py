@@ -4,11 +4,11 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.common.embeddings import EmbeddingService
 from app.core.config import settings
 from app.modules.memory.db_models import MemoryEntry
 from app.modules.memory.repositories import MemoryRepository
 from app.modules.memory.schemas import MemoryEntryResponse
-from app.modules.memory.services.embedding_service import EmbeddingService
 from app.modules.memory.types import MemoryScope, MemorySource
 from app.modules.tenants.service import TenantContext
 
@@ -118,6 +118,81 @@ class MemoryService:
         if deleted:
             await self.db.commit()
         return deleted
+
+    async def update_entry(
+        self,
+        *,
+        tenant_ctx: TenantContext,
+        entry_id: str,
+        content: str | None = None,
+        scope: str | None = None,
+        agent_key: str | None = None,
+        session_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        update_metadata: bool = False,
+    ) -> MemoryEntryResponse | None:
+        """Partial update. Re-embeds only when content changes. Returns None if ACL miss."""
+        existing = await self.repo.get_by_id(
+            entry_id,
+            tenant_id=tenant_ctx.tenant_id,
+            user_id=tenant_ctx.user_id,
+        )
+        if existing is None:
+            return None
+
+        new_content: str | None = None
+        if content is not None:
+            new_content = content.strip()
+            if not new_content:
+                raise ValueError("content must not be empty")
+
+        content_changed = new_content is not None and new_content != existing.content.strip()
+
+        clear_agent_key = False
+        clear_session_id = False
+        next_agent_key: str | None = None
+        next_session_id: str | None = None
+
+        if scope is not None:
+            if scope == MemoryScope.USER.value:
+                clear_agent_key = True
+                clear_session_id = True
+            elif scope == MemoryScope.AGENT.value:
+                if not agent_key:
+                    raise ValueError("agentKey is required when scope is agent")
+                next_agent_key = agent_key
+                clear_session_id = True
+            elif scope == MemoryScope.SESSION.value:
+                if not session_id:
+                    raise ValueError("sessionId is required when scope is session")
+                next_session_id = session_id
+                clear_agent_key = True
+            else:
+                raise ValueError(f"Invalid scope: {scope}")
+
+        embedding: list[float] | None = None
+        if content_changed and new_content is not None:
+            embedding = await self._embedder().embed(new_content)
+
+        entry = await self.repo.update(
+            entry_id,
+            tenant_id=tenant_ctx.tenant_id,
+            user_id=tenant_ctx.user_id,
+            content=new_content,
+            scope=scope,
+            agent_key=next_agent_key,
+            session_id=next_session_id,
+            clear_agent_key=clear_agent_key,
+            clear_session_id=clear_session_id,
+            metadata=metadata,
+            update_metadata=update_metadata,
+            embedding=embedding,
+        )
+        if entry is None:
+            return None
+
+        await self.db.commit()
+        return self._to_response(entry)
 
     async def build_injection_context(
         self,

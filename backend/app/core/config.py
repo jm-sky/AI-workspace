@@ -713,6 +713,38 @@ class AISettings(BaseSettings):
         ge=0,
         le=20,
     )
+    rag_chunk_size: int = Field(
+        default=1200,
+        validation_alias="AI_RAG_CHUNK_SIZE",
+        description="Character window size for RAG document chunking",
+        gt=0,
+    )
+    rag_chunk_overlap: int = Field(
+        default=150,
+        validation_alias="AI_RAG_CHUNK_OVERLAP",
+        description="Character overlap between consecutive RAG chunks",
+        ge=0,
+    )
+    rag_max_chunks_per_document: int = Field(
+        default=200,
+        validation_alias="AI_RAG_MAX_CHUNKS_PER_DOCUMENT",
+        description="Hard cap on chunks created per ingested document",
+        gt=0,
+    )
+    rag_similarity_threshold: float = Field(
+        default=0.5,
+        validation_alias="AI_RAG_SIMILARITY_THRESHOLD",
+        description="Minimum cosine similarity for RAG chunk retrieval",
+        ge=0.0,
+        le=1.0,
+    )
+    rag_search_limit: int = Field(
+        default=8,
+        validation_alias="AI_RAG_SEARCH_LIMIT",
+        description="Default max chunks returned by rag_search",
+        ge=1,
+        le=50,
+    )
     audit_raw_enabled: bool = Field(
         default=True,
         validation_alias="AI_AUDIT_RAW_ENABLED",
