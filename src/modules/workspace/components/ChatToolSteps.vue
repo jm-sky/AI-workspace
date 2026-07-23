@@ -6,6 +6,7 @@ import {
   Github,
   Gitlab,
   Loader2,
+  Mail,
   Ticket,
   TriangleAlert,
   Wrench,
@@ -32,6 +33,7 @@ const PROVIDER_ICON: Record<string, Component> = {
   jira: Ticket,
   gitlab: Gitlab,
   github: Github,
+  gmail: Mail,
   memory: Brain,
   rag: BookOpen,
 }

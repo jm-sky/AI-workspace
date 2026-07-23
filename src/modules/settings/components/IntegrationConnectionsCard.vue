@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { Github, Link2, Trash2 } from 'lucide-vue-next'
+import { Github, Link2, Mail, Trash2 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { useAuth } from '@/modules/auth/composables/useAuth'
 import {
+  defaultGmailScopes,
   defaultGithubScopes,
   useIntegrationOAuth,
   visibilityLabelKey,
@@ -34,7 +35,8 @@ const { handleError } = useHandleError()
 const queryClient = useQueryClient()
 const { connect, isPending: isConnecting } = useIntegrationOAuth()
 
-const selectedScopes = ref<string[]>(defaultGithubScopes())
+const selectedGithubScopes = ref<string[]>(defaultGithubScopes())
+const selectedGmailScopes = ref<string[]>(defaultGmailScopes())
 const visibilityScope = ref<IntegrationVisibilityScope>('user')
 const selectedTeamId = ref<string | undefined>(undefined)
 
@@ -53,7 +55,9 @@ const { data: connections, isLoading: isConnectionsLoading } = useQuery<Integrat
 })
 
 const githubProvider = computed(() => setup.value?.providers.find(p => p.id === 'github'))
+const gmailProvider = computed(() => setup.value?.providers.find(p => p.id === 'gmail'))
 const githubEnabled = computed(() => githubProvider.value?.enabled ?? false)
+const gmailEnabled = computed(() => gmailProvider.value?.enabled ?? false)
 const canManageShared = computed(() => setup.value?.canManageShared ?? false)
 const teams = computed(() => setup.value?.teams ?? [])
 
@@ -74,18 +78,18 @@ const deleteConnectionMutation = useMutation({
   },
 })
 
-const toggleScope = (scopeId: string, checked: boolean | 'indeterminate') => {
+const toggleGithubScope = (scopeId: string, checked: boolean | 'indeterminate') => {
   const option = githubProvider.value?.scopes.find(s => s.id === scopeId)
   if (option?.required) {
     return
   }
   if (checked === true) {
-    if (!selectedScopes.value.includes(scopeId)) {
-      selectedScopes.value = [...selectedScopes.value, scopeId]
+    if (!selectedGithubScopes.value.includes(scopeId)) {
+      selectedGithubScopes.value = [...selectedGithubScopes.value, scopeId]
     }
   }
   else {
-    selectedScopes.value = selectedScopes.value.filter(id => id !== scopeId)
+    selectedGithubScopes.value = selectedGithubScopes.value.filter(id => id !== scopeId)
   }
 }
 
@@ -95,7 +99,19 @@ const handleConnectGithub = async () => {
   }
   await connect({
     provider: 'github',
-    scopes: selectedScopes.value,
+    scopes: selectedGithubScopes.value,
+    visibilityScope: visibilityScope.value,
+    teamId: visibilityScope.value === 'team' ? selectedTeamId.value : null,
+  })
+}
+
+const handleConnectGmail = async () => {
+  if (!gmailEnabled.value) {
+    return
+  }
+  await connect({
+    provider: 'gmail',
+    scopes: selectedGmailScopes.value,
     visibilityScope: visibilityScope.value,
     teamId: visibilityScope.value === 'team' ? selectedTeamId.value : null,
   })
@@ -111,6 +127,7 @@ const handleDelete = async (connection: IntegrationConnection) => {
 const getProviderLabel = (provider: string): string => {
   const labels: Record<string, string> = {
     github: t('settings.integrations.providers.github'),
+    gmail: t('settings.integrations.providers.gmail'),
     jira: 'Jira',
     gitlab: 'GitLab',
   }
@@ -119,6 +136,9 @@ const getProviderLabel = (provider: string): string => {
 
 const getConnectionSubtitle = (connection: IntegrationConnection): string => {
   const meta = connection.providerMetadata
+  if (meta?.email) {
+    return String(meta.email)
+  }
   if (meta?.login) {
     return String(meta.login)
   }
@@ -199,9 +219,9 @@ const hasConnections = computed(() => (connections.value?.length ?? 0) > 0)
               >
                 <Checkbox
                   :id="`scope-${scope.id}`"
-                  :model-value="selectedScopes.includes(scope.id)"
+                  :model-value="selectedGithubScopes.includes(scope.id)"
                   :disabled="scope.required"
-                  @update:model-value="toggleScope(scope.id, $event)"
+                  @update:model-value="toggleGithubScope(scope.id, $event)"
                 />
                 <div class="grid gap-1">
                   <Label
@@ -263,13 +283,115 @@ const hasConnections = computed(() => (connections.value?.length ?? 0) > 0)
 
             <Button
               type="button"
-              :disabled="isConnecting || selectedScopes.length === 0"
+              :disabled="isConnecting || selectedGithubScopes.length === 0"
               @click="handleConnectGithub"
             >
               <Github class="size-4" />
               {{ isConnecting
                 ? t('settings.integrations.connect.redirecting')
                 : t('settings.integrations.connect.github') }}
+            </Button>
+          </template>
+        </div>
+
+        <div
+          v-if="gmailProvider"
+          class="space-y-4 rounded-lg border p-4"
+        >
+          <div class="flex items-center gap-2">
+            <Mail class="size-5" />
+            <h3 class="font-medium text-sm">
+              {{ t('settings.integrations.providers.gmail') }}
+            </h3>
+          </div>
+
+          <p
+            v-if="!gmailEnabled"
+            class="text-sm text-muted-foreground"
+          >
+            {{ t('settings.integrations.gmail_not_configured') }}
+          </p>
+
+          <template v-else>
+            <div class="space-y-2">
+              <Label>{{ t('settings.integrations.scopes.title') }}</Label>
+              <div
+                v-for="scope in gmailProvider.scopes"
+                :key="scope.id"
+                class="flex items-start gap-2"
+              >
+                <Checkbox
+                  :id="`gmail-scope-${scope.id}`"
+                  :model-value="selectedGmailScopes.includes(scope.id)"
+                  :disabled="scope.required"
+                />
+                <div class="grid gap-1">
+                  <Label
+                    :for="`gmail-scope-${scope.id}`"
+                    class="font-normal"
+                  >
+                    {{ t(scope.labelKey, scope.id) }}
+                  </Label>
+                  <p class="text-xs text-muted-foreground">
+                    {{ t(scope.descriptionKey, '') }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-2 sm:grid-cols-2">
+              <div class="space-y-2">
+                <Label>{{ t('settings.integrations.visibility.title') }}</Label>
+                <Select v-model="visibilityScope">
+                  <SelectTrigger>
+                    <SelectValue :placeholder="t('settings.integrations.visibility.title')" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="option in visibilityOptions"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ t(visibilityLabelKey(option)) }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p class="text-xs text-muted-foreground">
+                  {{ t(`settings.integrations.visibility.${visibilityScope}_hint`) }}
+                </p>
+              </div>
+
+              <div
+                v-if="visibilityScope === 'team'"
+                class="space-y-2"
+              >
+                <Label>{{ t('settings.integrations.visibility.team_select') }}</Label>
+                <Select v-model="selectedTeamId">
+                  <SelectTrigger>
+                    <SelectValue :placeholder="t('settings.integrations.visibility.team_select')" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="team in teams"
+                      :key="team.id"
+                      :value="team.id"
+                    >
+                      {{ team.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              :disabled="isConnecting || selectedGmailScopes.length === 0"
+              @click="handleConnectGmail"
+            >
+              <Mail class="size-4" />
+              {{ isConnecting
+                ? t('settings.integrations.connect.redirecting_gmail')
+                : t('settings.integrations.connect.gmail') }}
             </Button>
           </template>
         </div>

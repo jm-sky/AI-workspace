@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.modules.agent.tools.base import AgentToolRegistry
 from app.modules.agent.tools.github import build_github_mcp_tools
 from app.modules.agent.tools.gitlab import GitLabSearchByJiraKeyTool
+from app.modules.agent.tools.gmail import build_gmail_mcp_tools
 from app.modules.agent.tools.jira import JiraGetIssueTool
 from app.modules.agent.tools.memory import MemorySaveTool, MemorySearchTool, MemoryUpdateTool
 from app.modules.agent.tools.rag import RagSearchTool
@@ -14,7 +15,10 @@ from app.modules.integrations.service import IntegrationTokenService
 from app.modules.tenants.service import TenantContext
 
 AGENT_TOOL_PROFILES: dict[str, list[str]] = {
-    "github-workspace": ["github", "memory", "rag"],
+    # Profile = default / quick tools. Provider MCP buckets (github, gmail, …)
+    # can later be discoverable across agents via tool_search; for now wire
+    # gmail into the primary workspace agent.
+    "github-workspace": ["github", "gmail", "memory", "rag"],
     "jira-360": ["jira", "gitlab", "memory", "rag"],
 }
 
@@ -44,6 +48,8 @@ def build_tool_registry(
 
     if "github" in profile:
         tools.extend(build_github_mcp_tools(tenant_ctx=tenant_ctx, token_service=token_service))
+    if "gmail" in profile:
+        tools.extend(build_gmail_mcp_tools(tenant_ctx=tenant_ctx, token_service=token_service))
     if "jira" in profile:
         tools.append(JiraGetIssueTool(tenant_ctx=tenant_ctx, token_service=token_service))
     if "gitlab" in profile:

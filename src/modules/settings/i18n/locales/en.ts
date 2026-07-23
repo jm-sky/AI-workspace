@@ -188,10 +188,12 @@ export const settingsEn = {
       no_connections: 'No integrations connected yet.',
       tenant_required: 'Select an active workspace (tenant) before connecting integrations.',
       github_not_configured: 'GitHub OAuth is not configured on the server.',
+      gmail_not_configured: 'Gmail OAuth is not configured on the server.',
       github_app_permissions_hint:
         'GitHub App: API permissions come from your app manifest on GitHub (not from scope checkboxes below). Ensure Issues, Pull requests, and Contents (read) are enabled.',
       providers: {
         github: 'GitHub',
+        gmail: 'Gmail',
       },
       scopes: {
         title: 'Permissions (scopes)',
@@ -200,6 +202,16 @@ export const settingsEn = {
           read_user_desc: 'Required to identify your GitHub account.',
           repo: 'Repository access',
           repo_desc: 'Read issues, pull requests, and repository metadata.',
+        },
+        gmail: {
+          openid: 'OpenID',
+          openid_desc: 'Sign-in identity for the Google account.',
+          email: 'Email address',
+          email_desc: 'Read your Google account email (userinfo.email).',
+          profile: 'Profile',
+          profile_desc: 'Read your Google profile name and picture.',
+          readonly: 'Gmail read-only',
+          readonly_desc: 'Search and read messages (no send or modify).',
         },
       },
       visibility: {
@@ -214,7 +226,9 @@ export const settingsEn = {
       },
       connect: {
         github: 'Connect GitHub',
+        gmail: 'Connect Gmail',
         redirecting: 'Redirecting to GitHub…',
+        redirecting_gmail: 'Redirecting to Google…',
       },
       connection: {
         linked: 'Connected',

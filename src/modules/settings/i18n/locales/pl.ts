@@ -187,11 +187,13 @@ export const settingsPl = {
       connections_title: 'Aktywne połączenia',
       no_connections: 'Brak podłączonych integracji.',
       tenant_required: 'Wybierz aktywny workspace (tenant), zanim podłączysz integracje.',
-      github_not_configured: 'OAuth GitHub nie jest skonfigurowany na serwerie.',
+      github_not_configured: 'OAuth GitHub nie jest skonfigurowany na serwerze.',
+      gmail_not_configured: 'OAuth Gmail nie jest skonfigurowany na serwerze.',
       github_app_permissions_hint:
         'GitHub App: uprawnienia API wynikają z manifestu aplikacji na GitHubie (nie z pól scope poniżej). Włącz Issues, Pull requests i Contents (odczyt).',
       providers: {
         github: 'GitHub',
+        gmail: 'Gmail',
       },
       scopes: {
         title: 'Uprawnienia (scope)',
@@ -200,6 +202,16 @@ export const settingsPl = {
           read_user_desc: 'Wymagane do identyfikacji konta GitHub.',
           repo: 'Dostęp do repozytoriów',
           repo_desc: 'Odczyt issue, pull requestów i metadanych repozytoriów.',
+        },
+        gmail: {
+          openid: 'OpenID',
+          openid_desc: 'Tożsamość logowania konta Google.',
+          email: 'Adres e-mail',
+          email_desc: 'Odczyt e-maila konta Google (userinfo.email).',
+          profile: 'Profil',
+          profile_desc: 'Odczyt nazwy i zdjęcia profilu Google.',
+          readonly: 'Gmail tylko do odczytu',
+          readonly_desc: 'Wyszukiwanie i odczyt wiadomości (bez wysyłania i zmian).',
         },
       },
       visibility: {
@@ -214,7 +226,9 @@ export const settingsPl = {
       },
       connect: {
         github: 'Połącz GitHub',
+        gmail: 'Połącz Gmail',
         redirecting: 'Przekierowanie do GitHub…',
+        redirecting_gmail: 'Przekierowanie do Google…',
       },
       connection: {
         linked: 'Połączone',

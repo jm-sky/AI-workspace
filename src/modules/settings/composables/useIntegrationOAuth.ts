@@ -47,6 +47,15 @@ export function defaultGithubScopes(): string[] {
   return ['read:user', 'repo']
 }
 
+export function defaultGmailScopes(): string[] {
+  return [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/gmail.readonly',
+  ]
+}
+
 export function visibilityLabelKey(scope: IntegrationVisibilityScope): string {
   return `settings.integrations.visibility.${scope}`
 }

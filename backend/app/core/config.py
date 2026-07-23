@@ -1022,6 +1022,21 @@ class IntegrationSettings(BaseSettings):
         validation_alias="GITHUB_APP_ID",
         description="GitHub App ID (numeric) — enables App-specific OAuth behavior",
     )
+    gmail_oauth_client_id: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_CLIENT_ID",
+        description="Google OAuth client ID for Gmail integration",
+    )
+    gmail_oauth_client_secret: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_CLIENT_SECRET",
+        description="Google OAuth client secret for Gmail integration",
+    )
+    gmail_oauth_redirect_uri: str = Field(
+        default="",
+        validation_alias="GMAIL_INTEGRATION_OAUTH_REDIRECT_URI",
+        description="Gmail integration OAuth callback URL (frontend route)",
+    )
 
 
 class HealthSettings(BaseSettings):

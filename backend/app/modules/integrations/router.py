@@ -16,7 +16,6 @@ from app.modules.integrations.oauth_state import (
     verify_integration_oauth_state,
 )
 from app.modules.integrations.providers import integration_oauth_registry
-from app.modules.integrations.providers.github import GitHubIntegrationProvider
 from app.modules.integrations.repositories import (
     IntegrationTokenRepository,
     get_integration_token_repository,
@@ -51,8 +50,10 @@ def _get_service(
     return IntegrationTokenService(repo)
 
 
-def _github_provider() -> GitHubIntegrationProvider:
-    return integration_oauth_registry.get(IntegrationProvider.GITHUB.value)  # type: ignore[return-value]
+def _provider_kind(provider_id: str) -> str:
+    if provider_id == IntegrationProvider.GITHUB.value and settings.integrations.github_app_id:
+        return "github_app"
+    return "oauth_app"
 
 
 @router.get("/setup", response_model=IntegrationSetupResponse)
@@ -64,23 +65,26 @@ async def get_integration_setup(
         user_id=tenant_ctx.user_id,
         tenant_id=tenant_ctx.tenant_id,
     )
-    github = _github_provider()
-    providers = [
-        IntegrationProviderSetupResponse(
-            id=IntegrationProvider.GITHUB.value,
-            enabled=github.is_configured(),
-            kind="github_app" if settings.integrations.github_app_id else "oauth_app",
-            scopes=[
-                IntegrationScopeOptionResponse(
-                    id=str(scope["id"]),
-                    labelKey=str(scope["labelKey"]),
-                    descriptionKey=str(scope["descriptionKey"]),
-                    required=bool(scope.get("required", False)),
-                )
-                for scope in INTEGRATION_PROVIDER_SCOPES.get(IntegrationProvider.GITHUB.value, [])
-            ],
+    providers: list[IntegrationProviderSetupResponse] = []
+    for provider_id in integration_oauth_registry.supported_providers():
+        provider = integration_oauth_registry.get(provider_id)
+        enabled = bool(getattr(provider, "is_configured", lambda: False)())
+        providers.append(
+            IntegrationProviderSetupResponse(
+                id=provider_id,
+                enabled=enabled,
+                kind=_provider_kind(provider_id),
+                scopes=[
+                    IntegrationScopeOptionResponse(
+                        id=str(scope["id"]),
+                        labelKey=str(scope["labelKey"]),
+                        descriptionKey=str(scope["descriptionKey"]),
+                        required=bool(scope.get("required", False)),
+                    )
+                    for scope in INTEGRATION_PROVIDER_SCOPES.get(provider_id, [])
+                ],
+            )
         )
-    ]
     return IntegrationSetupResponse(
         tenantId=tenant_ctx.tenant_id,
         tenantRole=tenant_ctx.tenant_role,
