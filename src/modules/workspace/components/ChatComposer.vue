@@ -17,7 +17,6 @@ const {
   canSubmit = true,
   attachments = [],
   isUploading = false,
-  visionDisabled = false,
   accept = 'image/jpeg,image/png,image/webp,image/gif',
 } = defineProps<{
   isLoading?: boolean
@@ -25,7 +24,6 @@ const {
   canSubmit?: boolean
   attachments?: IChatAttachment[]
   isUploading?: boolean
-  visionDisabled?: boolean
   accept?: string
 }>()
 
@@ -109,7 +107,6 @@ const onDrop = (event: DragEvent) => {
         <ChatAttachmentPicker
           :accept="accept"
           :disabled="isLoading || isUploading"
-          :vision-disabled="visionDisabled"
           @pick="emit('pick', $event)"
         />
         <Textarea

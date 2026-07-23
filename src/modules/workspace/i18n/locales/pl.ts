@@ -24,10 +24,15 @@ export const workspacePl = {
       showSessions: 'Sesje',
     },
     attachments: {
-      attach: 'Dołącz obraz',
+      attach: 'Dołącz plik',
       remove: 'Usuń załącznik',
       preview: 'Podgląd obrazu',
       visionRequired: 'Wybierz model z obsługą obrazów, aby dołączać zdjęcia',
+      kinds: {
+        image: 'Obraz',
+        text: 'Tekst',
+        pdf: 'PDF',
+      },
       errors: {
         unsupportedType: 'Nieobsługiwany typ pliku',
         tooLarge: 'Plik jest za duży (max 10 MB)',

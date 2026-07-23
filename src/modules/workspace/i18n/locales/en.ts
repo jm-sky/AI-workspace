@@ -24,10 +24,15 @@ export const workspaceEn = {
       showSessions: 'Sessions',
     },
     attachments: {
-      attach: 'Attach image',
+      attach: 'Attach file',
       remove: 'Remove attachment',
       preview: 'Preview image',
       visionRequired: 'Select a vision-capable model to attach images',
+      kinds: {
+        image: 'Image',
+        text: 'Text',
+        pdf: 'PDF',
+      },
       errors: {
         unsupportedType: 'Unsupported file type',
         tooLarge: 'File is too large (max 10 MB)',

@@ -6,9 +6,55 @@ import {
 import { getApiErrorMessage } from '@/shared/utils/apiError'
 import type { IChatAttachment } from '@/modules/workspace/types/attachments'
 
-const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
+const IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+const TEXT_EXT = new Set(['txt', 'md', 'json', 'csv', 'yaml', 'yml'])
+const PDF_EXT = new Set(['pdf'])
+
+export const ATTACHMENT_ACCEPT = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'text/plain',
+  'text/markdown',
+  'text/csv',
+  'application/json',
+  'application/pdf',
+  '.txt',
+  '.md',
+  '.json',
+  '.csv',
+  '.yaml',
+  '.yml',
+  '.pdf',
+].join(',')
+
 const MAX_PER_MESSAGE = 5
 const MAX_FILE_BYTES = 10 * 1024 * 1024
+
+const extensionOf = (name: string) => {
+  const parts = name.toLowerCase().split('.')
+  return parts.length > 1 ? parts.at(-1)! : ''
+}
+
+export const isImageFile = (file: File) => IMAGE_MIME.has(file.type)
+
+export const isAllowedAttachmentFile = (file: File): boolean => {
+  if (IMAGE_MIME.has(file.type)) return true
+  if (file.type === 'application/pdf') return true
+  if (
+    file.type === 'text/plain'
+    || file.type === 'text/markdown'
+    || file.type === 'text/csv'
+    || file.type === 'application/json'
+    || file.type === 'application/yaml'
+    || file.type === 'text/yaml'
+  ) {
+    return true
+  }
+  const ext = extensionOf(file.name)
+  return TEXT_EXT.has(ext) || PDF_EXT.has(ext)
+}
 
 export function useChatAttachments() {
   const attachments = ref<IChatAttachment[]>([])
@@ -18,6 +64,7 @@ export function useChatAttachments() {
 
   const attachmentIds = computed(() => attachments.value.map((a) => a.id))
   const canAddMore = computed(() => attachments.value.length < MAX_PER_MESSAGE)
+  const hasImages = computed(() => attachments.value.some((a) => a.kind === 'image'))
 
   const revokePreview = (item: IChatAttachment) => {
     if (item.previewUrl?.startsWith('blob:')) {
@@ -42,9 +89,12 @@ export function useChatAttachments() {
     return pending
   }
 
-  const validateFile = (file: File): string | null => {
-    if (!IMAGE_ACCEPT.split(',').includes(file.type)) {
+  const validateFile = (file: File, visionAllowed: boolean): string | null => {
+    if (!isAllowedAttachmentFile(file)) {
       return 'unsupportedType'
+    }
+    if (isImageFile(file) && !visionAllowed) {
+      return 'visionRequired'
     }
     if (file.size > MAX_FILE_BYTES) {
       return 'tooLarge'
@@ -58,6 +108,7 @@ export function useChatAttachments() {
   const addFiles = async (
     files: FileList | File[],
     sessionId?: string | null,
+    visionAllowed = true,
   ) => {
     const list = Array.from(files)
     if (list.length === 0) return
@@ -66,7 +117,7 @@ export function useChatAttachments() {
     error.value = null
     try {
       for (const file of list) {
-        const code = validateFile(file)
+        const code = validateFile(file, visionAllowed)
         if (code) {
           error.value = code
           continue
@@ -74,7 +125,7 @@ export function useChatAttachments() {
         const uploaded = await uploadChatAttachment(file, sessionId)
         attachments.value.push({
           ...uploaded,
-          previewUrl: URL.createObjectURL(file),
+          previewUrl: uploaded.kind === 'image' ? URL.createObjectURL(file) : undefined,
         })
       }
     } catch (err) {
@@ -89,19 +140,12 @@ export function useChatAttachments() {
     try {
       await deleteChatAttachment(attachmentId)
     } catch (err) {
-      // Still remove from UI if already gone on server
       error.value = getApiErrorMessage(err, 'deleteFailed')
     }
     if (item) {
       revokePreview(item)
     }
     attachments.value = attachments.value.filter((a) => a.id !== attachmentId)
-  }
-
-  const takeAttachmentIds = (): string[] => {
-    const ids = [...attachmentIds.value]
-    // Keep local previews until send completes; caller clears after send
-    return ids
   }
 
   return {
@@ -111,12 +155,12 @@ export function useChatAttachments() {
     error,
     previewAttachment,
     canAddMore,
+    hasImages,
     addFiles,
     removeAttachment,
     clearAttachments,
     takeAttachments,
-    takeAttachmentIds,
-    IMAGE_ACCEPT,
+    ATTACHMENT_ACCEPT,
     MAX_PER_MESSAGE,
     MAX_FILE_BYTES,
   }

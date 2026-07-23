@@ -182,8 +182,8 @@ pliki nie-obrazy jako chip z ikoną + nazwą. Historia sesji musi je odtwarzać
 | **1** | Migracja 062, `AttachmentSettings`, `attachments` service (sniff, limity, storage), `POST/GET/DELETE /agent/attachments`, testy bezpieczeństwa | Upload obrazu działa przez API | ✅ |
 | **2** | `supports_vision`, content parts w `agent_loop`, `attachmentIds` w `AgentChatRequest`, dowiązanie do run-a | Model „widzi” obraz | ✅ |
 | **3** | Composer: picker, chipy, miniatury, lightbox, paste/DnD, i18n | Pełny UX obrazów | ✅ |
-| **4** | Ekstrakcja tekstu: `txt/md/json/csv/yaml` (decode + limit znaków) | Pliki tekstowe do modelu | |
-| **5** | PDF: `pypdf` (dodać do `requirements.txt`), cap stron, błędy szyfrowanych | PDF do modelu | |
+| **4** | Ekstrakcja tekstu: `txt/md/json/csv/yaml` (decode + limit znaków) | Pliki tekstowe do modelu | ✅ |
+| **5** | PDF: `pypdf` (dodać do `requirements.txt`), cap stron, błędy szyfrowanych | PDF do modelu | ✅ |
 | **6** | Sprzątanie osieroconych załączników (CLI/cron), `StorageUsageCard` uwzględnia załączniki | Higiena | |
 
 Etapy 1–3 to minimum użyteczne (obrazy). 4–5 dokładają formaty.

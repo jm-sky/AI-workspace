@@ -29,13 +29,14 @@ const {
   attachments,
   isUploading,
   error: attachmentError,
+  hasImages,
   addFiles,
   removeAttachment,
   takeAttachments,
-  IMAGE_ACCEPT,
+  ATTACHMENT_ACCEPT,
 } = useChatAttachments()
 
-const visionDisabled = computed(() => !(selectedModel.value?.supports_vision ?? false))
+const visionAllowed = computed(() => selectedModel.value?.supports_vision ?? false)
 
 const {
   messages,
@@ -87,23 +88,23 @@ watch(
 
 watch(attachmentError, (code) => {
   if (!code) return
+  if (code === 'visionRequired') {
+    toast.error(t('workspace.attachments.visionRequired'))
+    return
+  }
   const key = `workspace.attachments.errors.${code}`
   const translated = t(key)
   toast.error(translated === key ? code : translated)
 })
 
 const handlePick = async (files: FileList) => {
-  if (visionDisabled.value) {
-    toast.error(t('workspace.attachments.visionRequired'))
-    return
-  }
-  await addFiles(files, activeSessionId.value)
+  await addFiles(files, activeSessionId.value, visionAllowed.value)
 }
 
 const handleSubmit = async () => {
   const text = input.value.trim()
   if ((!text && attachments.value.length === 0) || !hasValidModel.value) return
-  if (attachments.value.length && visionDisabled.value) {
+  if (hasImages.value && !visionAllowed.value) {
     toast.error(t('workspace.attachments.visionRequired'))
     return
   }
@@ -189,13 +190,23 @@ const handleCopyRun = async () => {
                   v-if="msg.attachments?.length"
                   class="mb-2 flex flex-wrap gap-2"
                 >
-                  <img
+                  <template
                     v-for="att in msg.attachments"
                     :key="att.id"
-                    :src="att.previewUrl"
-                    :alt="att.originalFilename"
-                    class="size-16 rounded-lg object-cover"
                   >
+                    <img
+                      v-if="att.kind === 'image' && att.previewUrl"
+                      :src="att.previewUrl"
+                      :alt="att.originalFilename"
+                      class="size-16 rounded-lg object-cover"
+                    >
+                    <span
+                      v-else
+                      class="rounded-lg border border-hairline bg-muted px-2 py-1 text-xs"
+                    >
+                      {{ att.originalFilename }}
+                    </span>
+                  </template>
                 </div>
                 <AgentMarkdown
                   v-if="msg.content.trim()"
@@ -228,8 +239,7 @@ const handleCopyRun = async () => {
         :can-submit="hasValidModel && !isLoading"
         :attachments="attachments"
         :is-uploading="isUploading"
-        :vision-disabled="visionDisabled"
-        :accept="IMAGE_ACCEPT"
+        :accept="ATTACHMENT_ACCEPT"
         @submit="handleSubmit"
         @pick="handlePick"
         @remove-attachment="removeAttachment"

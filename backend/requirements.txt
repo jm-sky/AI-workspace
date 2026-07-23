@@ -27,6 +27,7 @@ python-dotenv>=1.2.2
 # Image Processing & File Storage
 Pillow>=12.3.0  # Image processing
 python-magic>=0.4.27  # MIME type validation
+pypdf>=5.0.0  # PDF text extraction for chat attachments
 aiofiles>=24.1.0  # Async file operations
 aioboto3>=13.3.0  # Async S3 client (optional, for S3 storage)
 

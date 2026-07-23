@@ -34,10 +34,10 @@ async def upload_attachment(
     file: UploadFile = File(...),
     sessionId: str | None = Form(default=None),
 ) -> ChatAttachmentResponse:
-    """Upload a chat attachment (images in stages 1–3)."""
+    """Upload a chat attachment (image, text, or PDF)."""
     _ = request
     _ = current_user
-    return await service.upload_image(
+    return await service.upload(
         tenant_ctx=tenant_ctx,
         file=file,
         session_id=sessionId,

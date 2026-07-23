@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
+import { FileText, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import type { IChatAttachment } from '@/modules/workspace/types/attachments'
@@ -26,16 +26,21 @@ const formatSize = (bytes: number) => {
   <div class="relative flex items-center gap-2 rounded-xl border border-hairline bg-surface-canvas p-1.5 pr-8">
     <button
       type="button"
-      class="size-12 shrink-0 overflow-hidden rounded-lg bg-muted"
-      :aria-label="t('workspace.attachments.preview')"
-      @click="emit('preview')"
+      class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted"
+      :aria-label="attachment.kind === 'image' ? t('workspace.attachments.preview') : attachment.originalFilename"
+      :disabled="attachment.kind !== 'image'"
+      @click="attachment.kind === 'image' && emit('preview')"
     >
       <img
-        v-if="attachment.previewUrl || attachment.kind === 'image'"
+        v-if="attachment.kind === 'image' && attachment.previewUrl"
         :src="attachment.previewUrl"
         :alt="attachment.originalFilename"
         class="size-full object-cover"
       >
+      <FileText
+        v-else
+        class="size-5 text-muted-foreground"
+      />
     </button>
     <div class="min-w-0">
       <p class="truncate text-xs font-medium">
@@ -43,6 +48,9 @@ const formatSize = (bytes: number) => {
       </p>
       <p class="text-[11px] text-muted-foreground">
         {{ formatSize(attachment.sizeBytes) }}
+        <span v-if="attachment.kind !== 'image'">
+          · {{ t(`workspace.attachments.kinds.${attachment.kind}`) }}
+        </span>
       </p>
     </div>
     <Button

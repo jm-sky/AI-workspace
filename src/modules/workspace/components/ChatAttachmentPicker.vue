@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 defineProps<{
   accept: string
   disabled?: boolean
-  visionDisabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,7 +37,7 @@ const onChange = (event: Event) => {
       class="sr-only"
       :accept="accept"
       multiple
-      :disabled="disabled || visionDisabled"
+      :disabled="disabled"
       @change="onChange"
     >
     <Button
@@ -46,8 +45,8 @@ const onChange = (event: Event) => {
       variant="ghost"
       size="icon"
       class="shrink-0 rounded-xl"
-      :disabled="disabled || visionDisabled"
-      :title="visionDisabled ? t('workspace.attachments.visionRequired') : t('workspace.attachments.attach')"
+      :disabled="disabled"
+      :title="t('workspace.attachments.attach')"
       :aria-label="t('workspace.attachments.attach')"
       @click="openPicker"
     >
