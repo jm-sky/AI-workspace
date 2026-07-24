@@ -2,9 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from app.modules.auth.auth_utils import verify_token
+from app.modules.auth.cookies import set_refresh_cookie
 from app.modules.auth.dependencies import CurrentUser, get_current_token
 from app.modules.tenants.db_models import TenantDB, TenantMembershipDB
 from app.modules.tenants.repositories import TenantRepository, get_tenant_repository
@@ -29,10 +30,13 @@ def _switch_response(
     tenant: TenantDB,
     membership: TenantMembershipDB,
     team_id: str | None,
+    response: Response,
 ) -> SwitchTenantResponse:
+    refresh_token = str(tokens["refreshToken"])
+    set_refresh_cookie(response, refresh_token)
     return SwitchTenantResponse(
         accessToken=str(tokens["accessToken"]),
-        refreshToken=str(tokens["refreshToken"]),
+        refreshToken=refresh_token,
         tokenType=str(tokens["tokenType"]),
         expiresIn=int(tokens["expiresIn"]),
         tenant=TenantResponse(
@@ -65,11 +69,17 @@ async def list_tenants(
     return TenantListResponse(tenants=tenants)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=SwitchTenantResponse)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=SwitchTenantResponse,
+    response_model_exclude={"refreshToken"},
+)
 async def create_tenant(
     payload: TenantCreateRequest,
     current_user: CurrentUser,
     token: Annotated[str, Depends(get_current_token)],
+    response: Response,
     repo: Annotated[TenantRepository, Depends(get_tenant_repository)],
     workspace_service: Annotated[TenantWorkspaceService, Depends(get_tenant_workspace_service)],
 ) -> SwitchTenantResponse:
@@ -112,14 +122,20 @@ async def create_tenant(
         tenant=tenant,
         membership=membership,
         team_id=None,
+        response=response,
     )
 
 
-@router.post("/switch", response_model=SwitchTenantResponse)
+@router.post(
+    "/switch",
+    response_model=SwitchTenantResponse,
+    response_model_exclude={"refreshToken"},
+)
 async def switch_tenant(
     payload: SwitchTenantRequest,
     current_user: CurrentUser,
     token: Annotated[str, Depends(get_current_token)],
+    response: Response,
     workspace_service: Annotated[TenantWorkspaceService, Depends(get_tenant_workspace_service)],
     repo: Annotated[TenantRepository, Depends(get_tenant_repository)],
 ) -> SwitchTenantResponse:
@@ -156,4 +172,5 @@ async def switch_tenant(
         tenant=tenant,
         membership=membership,
         team_id=payload.teamId,
+        response=response,
     )

@@ -58,7 +58,6 @@ export const config = {
 }
 
 export const DARK_MODE_STORAGE_KEY = `${config.app.id}:dark-mode`
-export const JWT_STORE_KEY = `${config.app.id}:token`
 export const LOCALE_STORAGE_KEY = `${config.app.id}:locale`
 export const SETTINGS_STORAGE_KEY = `${config.app.id}:settings`
 export const CORE_SETTINGS_STORAGE_KEY = `${config.app.id}:core-settings`

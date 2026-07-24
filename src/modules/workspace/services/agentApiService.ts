@@ -1,4 +1,4 @@
-import { JWT_STORE_KEY } from '@/shared/config/config'
+import { useAuthStore } from '@/modules/auth/store/useAuthStore'
 import { apiClient } from '@/shared/services/apiClient'
 import type {
   IAgentAdminListResponse,
@@ -60,9 +60,10 @@ export async function streamAgentChat(
     onError?: (message: string) => void
   },
 ): Promise<void> {
-  const token = localStorage.getItem(JWT_STORE_KEY)
+  const token = useAuthStore().token
   const response = await fetch(`${API_BASE}/agent/chat/stream`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -176,8 +177,9 @@ export async function getAgentSession(
 }
 
 export async function fetchAgentRun(runId: string): Promise<IAgentRun> {
-  const token = localStorage.getItem(JWT_STORE_KEY)
+  const token = useAuthStore().token
   const response = await fetch(`${API_BASE}/agent/runs/${runId}/export`, {
+    credentials: 'include',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!response.ok) {

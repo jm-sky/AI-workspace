@@ -17,7 +17,6 @@ export interface ITenantCreateRequest {
 
 export interface ISwitchTenantResponse {
   accessToken: string
-  refreshToken: string
   tokenType: string
   expiresIn: number
   tenant: ITenant

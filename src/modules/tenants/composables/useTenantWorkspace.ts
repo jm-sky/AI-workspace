@@ -15,7 +15,6 @@ function applySwitchResponse(response: ISwitchTenantResponse) {
   const tenantStore = useTenantStore()
 
   authStore.setToken(response.accessToken)
-  authStore.setRefreshToken(response.refreshToken)
   tenantStore.setActiveTenant(response.tenant)
   tenantStore.syncFromToken(response.accessToken)
 }
