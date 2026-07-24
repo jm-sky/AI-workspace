@@ -28,9 +28,11 @@ pnpm install --frozen-lockfile
 echo -e "${YELLOW}🔨 Building frontend...${NC}"
 # Clean up dist directory to avoid permission issues
 rm -rf dist
-# Increase Node.js memory limit to avoid "Heap Limit Reached" errors on VPS
-export NODE_OPTIONS="--max-old-space-size=4096"
-pnpm build
+# Cap Node heap below typical free RAM on this VPS (no swap).
+# Run type-check and vite sequentially — `pnpm build` uses run-p and doubles peak RSS (OOM / exit 137).
+export NODE_OPTIONS="--max-old-space-size=2048"
+pnpm type-check
+pnpm build-only
 echo -e "${GREEN}✅ Frontend build completed${NC}"
 
 # Deploy to /var/www/ai-workspace
